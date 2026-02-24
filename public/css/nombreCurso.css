@@ -1,0 +1,76 @@
+.curso-nombre {
+    font-size: 1.7rem;
+    /* un poco más grande */
+    font-weight: 700;
+    /* negrita */
+    background: linear-gradient(90deg, #442600, #d2a211);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    /* sombra suave */
+    letter-spacing: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    /* espacio entre ícono y texto */
+}
+
+.curso-nombre i {
+    font-size: 1.5rem;
+    background: linear-gradient(90deg, #ff8c00, #ffcc33);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* para el tamaño de curso nombre */
+@media (max-width: 768px) {
+    .curso-nombre {
+        font-size: 20px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .curso-nombre {
+        font-size: 15px !important;
+    }
+}
+
+.table-sm td,
+.table-sm th {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    font-size: 13px;
+}
+
+.mi-select,
+textarea.form-control {
+    padding: 2px 6px;
+    font-size: 13px;
+    height: auto;
+}
+
+/* para el tamaño de las letras */
+@media (max-width: 768px) {
+    h1.titulo-asistencia {
+        font-size: 22px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    h1.titulo-asistencia {
+        font-size: 18px !important;
+    }
+}
+
+/* para el tamaño de las lineas */
+@media (max-width: 768px) {
+    .lineas {
+        font-size: 15px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .lineas {
+        font-size: 8px !important;
+    }
+}
