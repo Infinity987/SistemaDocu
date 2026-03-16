@@ -28,7 +28,7 @@
 
 @section('content')
     @can('docente.calificaciones')
-        @dump($listAlumnos)
+        {{-- @dump($listAlumnos) --}}
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-12">

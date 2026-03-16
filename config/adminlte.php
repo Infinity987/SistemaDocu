@@ -323,38 +323,113 @@ return [
         //     'type' => 'sidebar-menu-search',
         //     'text' => 'search',
         // ],
+
+        //INICION ROL ADMIN
         [
             'header' => 'ADMINISTRADOR',
-            'can' => 'admin.users.index',
+            'can' => 'rol-admin',
         ],
         [
             'text' => 'Docentes y Usuarios',
             'route' => 'admin.users.index',
             'icon' => 'fas fa-fw fa-user',
             'active' => ['admin/users*'],
-            'can' => 'admin.users.index'
+            'can' => 'rol-admin'
         ],
         [
             'text' => 'Encargados',
             'route' => 'encargados.index',
             'icon' => 'fas fa-user-tie',
             'active' => ['admin/encargados*'],
-            'can' => 'encargados.index'
+            'can' => 'rol-admin'
         ],
+                [
+            'header' => 'PROCESO MATRICULA',
+            'can' => 'rol-admin',
+        ],
+        [
+            'text' => 'Datos Estudiantes',
+            'route' => 'admin.verpostulantes',
+            'icon' => 'fas fa-users', // Representa grupo de personas: postulantes + alumnos
+            'can' => 'rol-admin',
+            'active' => ['admin/postulantes/*'],
+        ],
+        [
+            'text' => 'Ver Malla Curricular',
+            'route' => 'malla.index',
+            'icon' => 'fas fa-th-list', // Representa estructura o malla de materias
+            'can' => 'rol-admin'
+        ],
+        [
+            'text' => 'Matricula',
+            'route' => 'matricula_proceso.index',
+            'icon' => 'fas fa-edit', // Representa proceso de inscripción o edición
+            'can' => 'rol-admin'
+        ],
+        [
+            'text' => 'Ver historial Alumnos',
+            'route' => 'historialalumno.index',
+            'icon' => 'fas fa-history', // Representa historial o registro de eventos
+            'can' => 'rol-admin'
+        ],
+        [
+            'text' => 'Semestre Aca.',
+            'route' => 'semestre.index',
+            'icon' => 'fas fa-layer-group', // Ya está correcto: representa agrupación por semestres
+            'can' => 'rol-admin'
+        ],
+        ['header' => 'ASIGNAR DOCENTE CURSO', 'can' => 'rol-admin',],
+        [
+            'text' => 'Asignar',
+            'route' => 'asignarCurso.index',
+            'icon' => 'fas fa-chalkboard-teacher',
+            'can' => 'rol-admin'
+        ],
+        ['header' => 'HORARIO', 'can' => 'rol-admin',],
+        [
+            'text' => 'Asignar - Ver',
+            'route' => 'horario.index',
+            'icon' => 'fas fa-calendar-day',
+            'active' => ['admin/horario*'],
+            'can' => 'rol-admin'
+        ],
+        ['header' => 'REPORTE SIS. ACA', 'can' => 'rol-admin',],
+        [
+            'text' => 'Acta Evaluación',
+            'route' => 'actaEvalu.index',
+            'icon' => 'fas fa-clipboard',
+            'active' => ['admin/reporte/acta*'],
+            'can' => 'rol-admin'
+        ],
+        [
+            'text' => 'Calificaciones cursos',
+            'route' => 'califiCurso.index',
+            'icon' => 'fas fa-clipboard-list',
+            'active' => ['admin/reporte/calificaciones*'],
+            'can' => 'rol-admin'
+        ],
+        [
+            'text' => 'Reporte notas general',
+            'route' => 'notageneral.index',
+            'icon' => 'fas fa-clipboard',
+            'can' => 'rol-admin'
+        ],
+        // FIN ROL ADMIN
 
-        ['header' => 'PROCESO ADMISION', 'can' => 'admin.verpostulantes',],
+        // INICIO ROL ADMISON
+        ['header' => 'PROCESO ADMISION', 'can' => 'rol-admision',],
         [
             'text' => 'Datos Postulantes',
             'route' => 'admin.verpostulantes',
             'icon' => 'fas fa-fw fa-user',
-            'can' => 'admin.verpostulantes',
+            'can' => 'rol-admision',
             'active' => ['admin/postulantes/*'],
         ],
         [
             'text' => 'Inscripcion',
             'route' => 'inscripcion.index',
             'icon' => 'fas fa-check-circle',
-            'can' => 'inscripcion.index'
+            'can' => 'rol-admision'
         ],
 
         [
@@ -365,13 +440,13 @@ return [
                     'text' => 'Procesos',
                     'route' => 'procesos.index',
                     'icon' => 'fas fa-calendar-alt',
-                    'can' => 'procesos.index'
+                    'can' => 'rol-admision'
                 ],
                 [
                     'text' => 'Cuadro de Vacantes',
                     'route' => 'procesos.indexvacantes',
                     'icon' => 'fas fa-bars',
-                    'can' => 'procesos.indexvacantes'
+                    'can' => 'rol-admision'
                 ],
 
 
@@ -381,7 +456,7 @@ return [
             'text' => 'Padron',
             'route' => 'padron.index',
             'icon' => 'fas fa-fw fa-lock',
-            'can' => 'padron.index'
+            'can' => 'rol-admision'
         ],
         [
             'text' => 'Resultados',
@@ -391,35 +466,35 @@ return [
                     'text' => 'Proceso resultado',
                     'route' => 'resultado.index',
                     'icon' => 'fas fa-fw fa-user',
-                    'can' => 'resultado.index'
+                    'can' => 'rol-admision'
 
                 ],
                 [
                     'text' => 'Alumnos ingresantes',
                     'route' => 'ingre.index',
                     'icon' => 'fas fa-fw fa-user',
-                    'can' => 'ingre.index'
+                    'can' => 'rol-admision'
 
                 ],
                 [
                     'text' => 'Ver primeranota',
                     'route' => 'resultadoprimera.index',
                     'icon' => 'fas fa-fw fa-user',
-                    'can' => 'resultadoprimera.index'
+                    'can' => 'rol-admision'
 
                 ],
                 [
                     'text' => 'Ver Ingresantes',
                     'route' => 'resultadoingresantes.index',
                     'icon' => 'fas fa-fw fa-user',
-                    'can' => 'resultadoingresantes.index'
+                    'can' => 'rol-admision'
 
                 ],
                 [
                     'text' => 'Constancia de Ingreso',
                     'route' => 'constancia.index',
                     'icon' => 'fas fa-fw fa-user',
-                    'can' => 'constancia.index'
+                    'can' => 'rol-admision'
 
                 ],
 
@@ -430,84 +505,11 @@ return [
             'text' => 'Reportes',
             'route' => 'Reportes.index',
             'icon' => 'fas fa-fw fa-lock',
-            'can' => 'Reportes.index'
+            'can' => 'rol-admision'
         ],
-
-        [
-            'header' => 'PROCESO MATRICULA',
-            'can' => 'admin.users.index',
-        ],
-        [
-            'text' => 'Datos Estudiantes',
-            'route' => 'admin.verpostulantes',
-            'icon' => 'fas fa-users', // Representa grupo de personas: postulantes + alumnos
-            'can' => 'admin.users.index',
-            'active' => ['admin/postulantes/*'],
-        ],
-        [
-            'text' => 'Ver Malla Curricular',
-            'route' => 'malla.index',
-            'icon' => 'fas fa-th-list', // Representa estructura o malla de materias
-            'can' => 'malla.index'
-        ],
-        [
-            'text' => 'Matricula',
-            'route' => 'matricula_proceso.index',
-            'icon' => 'fas fa-edit', // Representa proceso de inscripción o edición
-            'can' => 'matricula_proceso.index'
-        ],
-        [
-            'text' => 'Ver historial Alumnos',
-            'route' => 'historialalumno.index',
-            'icon' => 'fas fa-history', // Representa historial o registro de eventos
-            'can' => 'historialalumno.index'
-        ],
-        [
-            'text' => 'Semestre Aca.',
-            'route' => 'semestre.index',
-            'icon' => 'fas fa-layer-group', // Ya está correcto: representa agrupación por semestres
-            'can' => 'semestre.index'
-        ],
+        // FIN ROL ADMISION
 
 
-        ['header' => 'ASIGNAR DOCENTE CURSO', 'can' => 'asignarCurso.index',],
-        [
-            'text' => 'Asignar',
-            'route' => 'asignarCurso.index',
-            'icon' => 'fas fa-chalkboard-teacher',
-            'can' => 'asignarCurso.index'
-        ],
-
-        ['header' => 'HORARIO', 'can' => 'horario.index',],
-        [
-            'text' => 'Asignar - Ver',
-            'route' => 'horario.index',
-            'icon' => 'fas fa-calendar-day',
-            'active' => ['admin/horario*'],
-            'can' => 'horario.index'
-        ],
-
-        ['header' => 'REPORTE SIS. ACA', 'can' => 'actaEvalu.index',],
-        [
-            'text' => 'Acta Evaluación',
-            'route' => 'actaEvalu.index',
-            'icon' => 'fas fa-clipboard',
-            'active' => ['admin/reporte/acta*'],
-            'can' => 'actaEvalu.index'
-        ],
-        [
-            'text' => 'Calificaciones cursos',
-            'route' => 'califiCurso.index',
-            'icon' => 'fas fa-clipboard-list',
-            'active' => ['admin/reporte/calificaciones*'],
-            'can' => 'actaEvalu.index' //cambiar o actualizar
-        ],
-        [
-            'text' => 'Reporte notas general',
-            'route' => 'notageneral.index',
-            'icon' => 'fas fa-clipboard',
-            'can' => 'notageneral.index'
-        ],
 
         ['header' => 'ACCESO', 'can' => 'postulante.index',],
         [
@@ -543,28 +545,76 @@ return [
             ]
         ],
 
-        ['header' => 'DOCENTE', 'can' => 'docente.index',],
+        // INICIO ROL DOCENTE
+        ['header' => 'DOCENTE', 'can' => 'rol-docente'],
         [
             'text' => 'Datos',
             'route' => 'docente.datos',
             'icon' => 'fas fa-user',
             'active' => ['docente/Datos*'],
-            'can' => 'docente.horario'
+            'can' => 'rol-docente',
         ],
         [
             'text' => 'Horario',
             'route' => 'docente.horario',
             'icon' => 'fas fa-calendar-week',
             'active' => ['docente/verHorario*'],
-            'can' => 'docente.horario'
+            'can' => 'rol-docente',
         ],
         [
             'text' => 'Cursos',
             'route' => 'docente.calificaciones',
             'icon' => 'fas fa-pen-fancy',
             'active' => ['docente/verAlumnos*'],
-            'can' => 'docente.calificaciones'
+            'can' => 'rol-docente',
         ],
+        // FIN ROL DOCENTE
+
+        // INICIO TRAMITE DOCUMENTARIO
+        [
+            'header' => 'DOCUMENTOS',
+            'can' => 'rol-documentario',
+        ],
+        [
+            'text' => 'Crear',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['admin/Docu*'],
+            'can' => 'rol-documentario'
+        ],
+        [
+            'text' => 'Bandeja',
+            'route' => 'documentario.mesapar.bandeja',
+            'icon' => 'fas fa-inbox',
+            'active' => ['admin/recibidos*'],
+            'can' => 'rol-documentario'
+        ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['admin/searchDocu*'],
+            'can' => 'rol-documentario'
+        ],
+
+        [
+            'header' => 'REPORTES',
+            'can' => 'rol-documentario'
+        ],
+        [
+            'text' => 'Depencias',
+            'route' => 'documentario.reporDepen.index',
+            'icon' => 'fas fa-chart-pie',
+            'active' => ['reporDepen*'],
+            'can' => 'rol-documentario'
+        ],
+        // FIN TRAMITE DOCUMENTARIO
+
+
+
+
+
+
         ['header' => 'ALUMNO', 'can' => 'alumno.index',],
         ['header' => 'EGRESADO', 'can' => 'egresado.index',],
         // [

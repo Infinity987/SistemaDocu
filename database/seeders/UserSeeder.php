@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class UserSeeder extends Seeder
 {
@@ -22,12 +23,20 @@ class UserSeeder extends Seeder
         ])->assignRole('admin');
 
         DB::connection('mysql_segunda')->table('userProfile')->insert([
-            'nombre' => 'Administrador',
+            'nombre' => 'Administrador SISTEMA',
             'num_celualr' => '000000000',
             'correo' => 'administrador@admin.com',
             'id_users' => $id_admin->id,
         ]);
 
-        User::factory(0)->create();
+        $fechaHoraPeru = Carbon::now('America/Lima');
+        $fechayhora = $fechaHoraPeru->toDateTimeString();
+
+        DB::connection('mysql_documentario')->table('dependencia_user')->insert([
+            'user_id' => $id_admin->id,
+            'dependencia_id' => 1,
+            'created_at' => $fechayhora,
+            'estado' => 1
+        ]);
     }
 }
