@@ -47,8 +47,8 @@
                                         <span aria-hidden="true">&times;</span>
                                     </button>
                                 </div>
-                                <form action="{{ route('documentario.registrarDocu') }}" method="post" id="form_regis_doc"
-                                    enctype="multipart/form-data">
+                                <form action="{{ route('documentario.registrarDocu') }}" method="post" id="form_regis_doc">
+
                                     @csrf
                                     <div class="modal-body">
                                         <div class="container-fluid">
@@ -57,9 +57,7 @@
                                                     value ="{{ $id_depen }}">
                                                 <input type="hidden" id="id_usuTrabajador" name="id_usuTrabajador"
                                                     value ="{{ $id_usuTrabajador }}">
-                                                <input type="hidden" name="firma_x" id="firma_x">
-                                                <input type="hidden" name="firma_y" id="firma_y">
-                                                <input type="hidden" name="firmas_json" id="firmas_json">
+
 
                                                 <div class="col-sm-4">
                                                     <div class="form-group">
@@ -100,6 +98,8 @@
                                                     </div>
                                                 </div>
 
+
+
                                                 <div class="col-sm-2" id="num_ex">
                                                     <div class="form-group">
                                                         <label for="num_expe">N° expe. local:</label>
@@ -110,13 +110,51 @@
                                             </div>
                                             <div class="row">
 
-                                                @if ($id_depen == 19)
-                                                    <div class="col-sm-6">
+                                                @if ($id_depen == 24)
+                                                    <div class="col-sm-12">
                                                         <div class="form-group">
-                                                            <label>Usuario: <span style="color: red">*</span></label>
+                                                            <label>Tipo de Remitente: <span style="color: red">*</span></label>
+                                                            <select id="tipo_remitente" name="tipo_remitente"
+                                                                class="form-control">
+                                                                <option value="natural">Persona Natural</option>
+                                                                <option value="juridica">Entidad Externa (Jurídica)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-12" id="div_persona_natural">
+                                                        <div class="form-group">
+                                                            <label>Usuario / Persona Natural: <span
+                                                                    style="color: red">*</span></label>
                                                             <select id="usuario" class="form-control select2"
                                                                 name="usuario" style="width: 100%;"></select>
                                                             <span id="usuario_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div id="div_entidad_externa" class="col-sm-12" style="display:none;">
+                                                        <div class="row">
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label>Entidad remitente:</label>
+                                                                    <select id="entidad" name="id_entidad_externa"
+                                                                        class="form-control select2"></select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <div class="form-group">
+                                                                    <label>N° Oficio/Informe Externo:</label>
+                                                                    <input type="text" name="numero_documento_externo"
+                                                                        class="form-control"
+                                                                        placeholder="Ej: Oficio N.º 123-2026-MPP">
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-12 mb-3">
+                                                                <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
+                                                                    target="_blank" class="btn btn-outline-info btn-sm">
+                                                                    <i class="fas fa-search"></i> Consultar RUC en SUNAT
+                                                                </a>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 @endif
@@ -158,7 +196,10 @@
                                                 </div>
                                             </div>
 
+
+
                                             <div class="row">
+
                                                 <div class="col-sm-12">
                                                     <div class="form-group">
                                                         <label>Asunto <span style="color: red">*</span></label>
@@ -168,7 +209,7 @@
                                                     </div>
                                                 </div>
 
-                                                @if ($id_depen == 2)
+                                             
                                                     <div class="col-sm-12">
                                                         <div class="form-group">
                                                             <label for="para_su">Para su: <span
@@ -186,7 +227,7 @@
 
                                                         </div>
                                                     </div>
-                                                @endif
+                                               
 
 
 
@@ -198,58 +239,45 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="col-sm-12">
-                                                    <div class="form-group">
-                                                        <label for="entregaOpciones">Modo de Entrega</label>
-                                                        <select class="form-control" id="entregaOpciones"
-                                                            name="entregaOpciones">
-                                                            <option value="">Seleccione la opcion</option>
-                                                            <option value="1">Entregar documentos en físico</option>
-                                                            <option value="2">Entregar documentos virtual</option>
-                                                            <option value="3">Entregar documentos virtual y fisico
-                                                            </option>
-                                                        </select>
+                                                <div class="row">
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <div class="custom-control custom-checkbox">
+                                                                <input class="custom-control-input" type="checkbox"
+                                                                    id="check_fisico" name="con_anexos_fisicos">
+                                                                <label for="check_fisico"
+                                                                    class="custom-control-label">¿Contiene anexos
+                                                                    físicos?</label>
+                                                            </div>
+                                                            <input type="text" id="detalle_fisico"
+                                                                name="detalle_anexos_fisicos" class="form-control mt-2"
+                                                                placeholder="01 CD, Planos..." style="display: none;">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <label for="archivo_pdf">Subir Documento (PDF):</label>
+                                                            <div class="input-group">
+                                                                <div class="custom-file">
+                                                                    <input type="file" class="custom-file-input"
+                                                                        id="archivo_pdf" name="archivo_pdf"
+                                                                        accept="application/pdf">
+                                                                    <label class="custom-file-label"
+                                                                        for="archivo_pdf">Seleccionar PDF</label>
+                                                                </div>
+                                                            </div>
+                                                            <small class="text-muted">Opcional si hay anexos físicos
+                                                                pesados.</small>
+                                                            <span id="archivo_pdf_error" class="text-danger"></span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="col-sm-12">
-                                                    <!-- Este es el área para subir archivos, estará oculta inicialmente -->
-                                                    <div class="form-group" id="subirArchivo" style="display: none;">
-                                                        <label for="archivo">Subir Archivo</label>
-                                                        <input type="file" class="form-control" id="archivo_virtual"
-                                                            name="archivo_virtual">
-                                                        <canvas id="pdf-canvas" width="600" height="800"
-                                                            style="border: 1px solid #ccc;"></canvas>
-                                                    </div>
-                                                </div>
-
-                                                <div class="d-flex justify-content-center align-items-center my-2">
-                                                    <button type="button" id="btn-anterior"
-                                                        class="btn btn-sm btn-secondary mr-2">Anterior</button>
-                                                    <span>Página <span id="pagina-actual">1</span> de <span
-                                                            id="total-paginas">1</span></span>
-                                                    <button type="button" id="btn-siguiente"
-                                                        class="btn btn-sm btn-secondary ml-2">Siguiente</button>
-                                                </div>
-
-
-                                                <div class="col-sm-12">
-                                                    <div class="form-group">
-                                                        <label for="pagina_firma">¿En qué página deseas que aparezca la
-                                                            firma?</label>
-                                                        <select multiple class="form-control" id="pagina_firma"
-                                                            name="pagina_firma[]">
-                                                            <!-- Aquí podrías generar dinámicamente las opciones desde JS -->
-                                                            @for ($i = 1; $i <= 10; $i++)
-                                                                <option value="{{ $i }}">{{ $i }}
-                                                                </option>
-                                                            @endfor
-                                                        </select>
-
-                                                    </div>
-                                                </div>
-
-
+                                                <button type="button" onclick="descargarWordBorrador()"
+                                                    class="btn btn-outline-info">
+                                                    <i class="fas fa-file-word"></i> Generar Borrador
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -267,7 +295,7 @@
             </div>
 
             <div class="row justify-content-center pb-2">
-                @if ($id_depen == 19)
+                @if ($id_depen == 24)
                     <div class="col-lg-2 col-sm-6 pb-1 pt-1">
                         <button data-tipo="1" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
                                 class="far fa-file-alt"></i>
@@ -470,171 +498,6 @@
                         .cont_estado);
                 });
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const entregaOpciones = document.getElementById('entregaOpciones');
-            const subirArchivoDiv = document.getElementById('subirArchivo');
-            const paginaFirmaInput = document.getElementById('pagina_firma');
-            const paginaFirmaDiv = paginaFirmaInput.closest('.form-group');
-
-            const mostrarFirmaInicial = entregaOpciones.value === '2' || entregaOpciones.value === '3';
-            paginaFirmaDiv.style.display = mostrarFirmaInicial ? 'block' : 'none';
-            paginaFirmaInput.required = mostrarFirmaInicial;
-
-            if (subirArchivoDiv) {
-                subirArchivoDiv.style.display = mostrarFirmaInicial ? 'block' : 'none';
-            }
-
-            entregaOpciones.addEventListener('change', function() {
-                const mostrarFirma = this.value === '2' || this.value === '3';
-                paginaFirmaDiv.style.display = mostrarFirma ? 'block' : 'none';
-                paginaFirmaInput.required = mostrarFirma;
-
-                if (subirArchivoDiv) {
-                    subirArchivoDiv.style.display = mostrarFirma ? 'block' : 'none';
-                }
-            });
-
-            // ================================
-            // Código relacionado al PDF:
-            // ================================
-
-            let archivoPDF = null;
-            let paginaActual = 1;
-            let totalPaginas = 1;
-            let coordenadasFirmas = {};
-
-            const archivoInput = document.getElementById('archivo_virtual');
-            const canvas = document.getElementById('pdf-canvas');
-
-            archivoInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file && file.type === 'application/pdf') {
-                    const fileReader = new FileReader();
-
-                    fileReader.onload = function() {
-                        const typedarray = new Uint8Array(this.result);
-                        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-                            archivoPDF = pdf;
-                            totalPaginas = pdf.numPages;
-
-                            paginaActual = parseInt(document.getElementById('pagina_firma')
-                                .value || 1);
-                            document.getElementById('total-paginas').textContent = totalPaginas;
-                            document.getElementById('pagina-actual').textContent = paginaActual;
-
-                            renderizarPagina(paginaActual);
-                        });
-                    };
-
-                    fileReader.readAsArrayBuffer(file);
-                }
-            });
-
-            document.getElementById('pagina_firma').addEventListener('change', function() {
-                const nuevaPagina = parseInt(this.value || 1);
-                if (archivoPDF && nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
-                    paginaActual = nuevaPagina;
-                    document.getElementById('pagina-actual').textContent = paginaActual;
-                    renderizarPagina(paginaActual);
-                }
-            });
-
-            canvas.addEventListener('click', function(e) {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const pagina = paginaActual;
-                if (!coordenadasFirmas[pagina]) {
-                    coordenadasFirmas[pagina] = [];
-                }
-
-                const firmaIndex = coordenadasFirmas[pagina].findIndex(firma => {
-                    return x >= firma.x + 105 && x <= firma.x + 120 && y >= firma.y - 5 && y <=
-                        firma.y + 10;
-                });
-
-                if (firmaIndex !== -1) {
-                    coordenadasFirmas[pagina].splice(firmaIndex, 1);
-                    renderizarPagina(pagina);
-                    return;
-                }
-
-                coordenadasFirmas[pagina].push({
-                    x,
-                    y
-                });
-                renderizarPagina(pagina);
-            });
-
-            function renderizarPagina(pagina) {
-                archivoPDF.getPage(pagina).then(page => {
-                    const scale = 0.7;
-                    const viewport = page.getViewport({
-                        scale
-                    });
-
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    const context = canvas.getContext('2d');
-
-                    page.render({
-                        canvasContext: context,
-                        viewport
-                    }).promise.then(() => {
-                        if (coordenadasFirmas[pagina]) {
-                            coordenadasFirmas[pagina].forEach(({
-                                x,
-                                y
-                            }) => {
-                                context.fillStyle = 'rgba(255,0,0,0.3)';
-                                context.fillRect(x, y, 120, 40);
-                                context.strokeStyle = 'red';
-                                context.lineWidth = 2;
-                                context.strokeRect(x, y, 120, 40);
-                                context.fillStyle = 'black';
-                                context.font = '12px Arial';
-                                context.fillText('Aquí irá la firma', x + 10, y + 25);
-
-                                context.fillStyle = 'white';
-                                context.fillRect(x + 105, y - 5, 15, 15);
-                                context.fillStyle = 'red';
-                                context.fillText('✖', x + 107, y + 7);
-                            });
-                        }
-                    });
-                }).catch(err => {
-                    console.error('Página inválida:', err);
-                });
-            }
-
-            document.getElementById('btn-anterior').addEventListener('click', function() {
-                if (paginaActual > 1) {
-                    paginaActual--;
-                    actualizarPagina();
-                }
-            });
-
-            document.getElementById('btn-siguiente').addEventListener('click', function() {
-                if (paginaActual < totalPaginas) {
-                    paginaActual++;
-                    actualizarPagina();
-                }
-            });
-
-            function actualizarPagina() {
-                document.getElementById('pagina_firma').value = paginaActual;
-                document.getElementById('pagina-actual').textContent = paginaActual;
-                renderizarPagina(paginaActual);
-            }
-
-            // Enviar formulario
-            document.getElementById('form_regis_doc').addEventListener('submit', function() {
-                document.getElementById('firmas_json').value = JSON.stringify(coordenadasFirmas);
-            });
-        });
     </script>
 
     <script>
@@ -648,6 +511,71 @@
         }
 
         $(document).ready(function() {
+
+            $(document).ready(function() {
+                // Escuchar el cambio en el tipo de remitente
+                $('#tipo_remitente').on('change', function() {
+                    let valor = $(this).val();
+
+                    if (valor === 'natural') {
+                        // Mostrar usuario, ocultar entidad
+                        $('#div_persona_natural').fadeIn();
+                        $('#div_entidad_externa').hide();
+
+                        // Limpiar los valores del que se oculta para evitar envíos cruzados
+                        $('#entidad').val(null).trigger('change');
+                    } else {
+                        // Mostrar entidad, ocultar usuario
+                        $('#div_entidad_externa').fadeIn();
+                        $('#div_persona_natural').hide();
+
+                        // Limpiar los valores del que se oculta
+                        $('#usuario').val(null).trigger('change');
+                    }
+                });
+
+                // Resetear al cerrar el modal para que siempre inicie en Persona Natural
+                $('#exampleModalCenter').on('hidden.bs.modal', function() {
+                    $('#tipo_remitente').val('natural').trigger('change');
+                });
+            });
+
+            $('#check_fisico').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#detalle_fisico').fadeIn().attr('required', true);
+                } else {
+                    $('#detalle_fisico').fadeOut().removeAttr('required').val('');
+                }
+            });
+
+            // Para mostrar el nombre del archivo seleccionado en el input de AdminLTE
+            $('.custom-file-input').on('change', function() {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
+            $('#entidad').select2({
+                dropdownParent: $('#exampleModalCenter'),
+                placeholder: 'Buscar entidad...',
+                ajax: {
+                    url: '{{ route('documentario.buscarEntidad') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2
+            });
+
             $('#num_ex').hide();
             $('#exampleModalCenter').on('shown.bs.modal', function() {
 
@@ -881,6 +809,43 @@
             })
         }
 
+        function descargarWordBorrador() {
+            // 1. Obtener el formulario original
+            let originalForm = document.getElementById('form_regis_doc');
+            if (!originalForm) return;
+
+            // 2. Crear un formulario temporal (clon)
+            let tempForm = originalForm.cloneNode(true);
+
+            // 3. Configurar el clon
+            tempForm.style.display = 'none';
+            tempForm.action = "{{ route('documentario.mesaPartes.word') }}";
+            tempForm.target = "_blank";
+            tempForm.method = "POST";
+
+            // 4. Copiar los valores de los selects (cloneNode no copia los valores seleccionados)
+            let selectsOriginales = originalForm.querySelectorAll('select');
+            let selectsClonados = tempForm.querySelectorAll('select');
+            selectsOriginales.forEach((select, index) => {
+                selectsClonados[index].value = select.value;
+            });
+
+            // 5. Copiar valores de textareas
+            let textsOriginales = originalForm.querySelectorAll('textarea');
+            let textsClonados = tempForm.querySelectorAll('textarea');
+            textsOriginales.forEach((text, index) => {
+                textsClonados[index].value = text.value;
+            });
+
+            // 6. Ejecutar el envío y eliminar el clon
+            document.body.appendChild(tempForm);
+            tempForm.submit();
+
+            setTimeout(() => {
+                document.body.removeChild(tempForm);
+            }, 500);
+        }
+
         function cargarTabla(tipo) {
 
             if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
@@ -1021,5 +986,12 @@
                 icon: "success"
             });
         @endif
+    </script>
+
+    <script>
+        function toggleEntidadExterna(checkbox) {
+            const fields = document.getElementById('entidadExternaFields');
+            fields.style.display = checkbox.checked ? 'block' : 'none';
+        }
     </script>
 @stop

@@ -23,10 +23,11 @@
                     </form>
                 </li>
                 <li>
-                    <button type="button" class="dropdown-item" data-toggle="modal" data-target="#formModal"
-                        data-id="{{ $iddocument }}">
-                        <i class="fas fa-reply"></i> Responder documento
-                    </button>
+                     <form action="{{ route('documentario.enviardocumentos.responderDocumento', $iddocument) }}" method="get">
+        <button class="dropdown-item" type="submit">
+            <i class="fas fa-reply"></i> Responder documento
+        </button>
+    </form>
 
                 </li>
 
