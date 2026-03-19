@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Yajra\DataTables\Facades\Datatables;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Events\DocumentoRecibido;
 
 
 class enviardocumentos extends Controller
@@ -299,5 +300,88 @@ class enviardocumentos extends Controller
 return view('mesaPartes.responderdocumento', compact(
     'usuario','depen','id_depen','rol','dependencias','detalledocumento','documento','cont_est','cont_fecha'
 ));
+}
+
+public function derivarDirector($id)
+{
+    try {
+        DB::connection('mysql_documentario')->beginTransaction();
+
+        $idDirector = 7; 
+        $idMesaPartes = 24;
+        $idTipoFUT = 1; 
+
+       
+        $docOriginal = DB::connection('mysql_documentario')->table('documentos')
+            ->where('iddocumentos', $id)
+            ->first();
+
+    
+        $queryUltimo = DB::connection('mysql_documentario')->table('documentos')
+            ->where('emisor', $idMesaPartes)
+            ->where('est_firma', 0);
+
+        if ($docOriginal->idtipo_documento == $idTipoFUT) {
+          
+            $ultimoExpediente = $queryUltimo->where('idtipo_documento', $idTipoFUT)
+                ->max('numero_de_exp');
+        } else {
+            
+            $ultimoExpediente = $queryUltimo->where('idtipo_documento', '!=', $idTipoFUT)
+                ->max('numero_de_exp');
+        }
+
+        $nuevoExpediente = $ultimoExpediente ? (int)$ultimoExpediente + 1 : 1;
+
+        $nuevoIdDoc = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
+            'numero_de_exp'           => $nuevoExpediente,
+            'fecha_ingreso'           => now(),
+            'asunto'                  => $docOriginal->asunto,
+            'idtipo_documento'        => $docOriginal->idtipo_documento,
+            'emisor'                  => $idMesaPartes,
+            'idusuario'               => Auth::id(),
+            'iddetalle_tramite'       => $docOriginal->iddetalle_tramite,
+            'recomendacion'           => "Derivado por Mesa de Partes: " . $docOriginal->recomendacion,
+            'iddocumento_referencia'  => $id, 
+            'folio'                   => $docOriginal->folio,
+            'est_firma'               => 0, 
+        ]);
+
+       
+        DB::connection('mysql_documentario')->table('movimiento')
+            ->where('iddocumentos', $id)
+            ->where('iddependencias_receptor', $idMesaPartes)
+            ->where('idestado', 2)
+            ->update([
+                'idestado' => 3, 
+                'fecha_finalizacion' => now()
+            ]);
+
+       
+        DB::connection('mysql_documentario')->table('movimiento')->insert([
+            'iddocumentos'            => $nuevoIdDoc,
+            'iddependencias_emior'    => $idMesaPartes,
+            'iddependencias_receptor' => $idDirector, 
+            'fecha_de_envio'          => now(),
+            'idestado'                => 1 
+        ]);
+
+         $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                                        FROM estado
+                                        LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                                        AND movimiento.iddependencias_receptor = ?
+                                        WHERE estado.idestado IN (1,2,3)
+                                        GROUP BY estado.idestado;', [$idDirector]);
+
+        DB::connection('mysql_documentario')->commit();
+        
+        $tipoMsj = ($docOriginal->idtipo_documento == $idTipoFUT) ? "FUT" : "General";
+        event(new DocumentoRecibido($idDirector, $cont_estados));
+        return back()->with('success', "Derivado con éxito. Nuevo Exp. $tipoMsj: $nuevoExpediente");
+
+    } catch (\Exception $e) {
+        DB::connection('mysql_documentario')->rollBack();
+        return back()->with('error', 'Error al derivar: ' . $e->getMessage());
+    }
 }
 }

@@ -223,6 +223,7 @@ $request->validate($reglas, $mensajes);
             'anexos_fisicos'   => $request->detalle_anexos_fisicos,
             'estado_actu'              => 1,
             'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
+            'est_firma'                 => 1,
         ]);
 
         // 4. Determinar Receptores (Todas o Selección)

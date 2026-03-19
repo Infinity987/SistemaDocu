@@ -30,6 +30,7 @@ Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware(
 route::post('/enviardocumentos/responder', [enviardocumentos::class, 'responder'])->name('enviardocumentos.responder');
 route::post('/enviardocumentos/responderoficinas', [enviardocumentos::class, 'responderoficinas'])->name('enviardocumentos.responderoficinas');
 route::get('/enviardocumentos/solucionar/{id}', [enviardocumentos::class, 'solucionar'])->name('enviardocumentos.solucionar');
+Route::post('/enviardocumentos/derivar-director/{id}', [enviardocumentos::class, 'derivarDirector'])->name('enviardocumentos.derivarDirector');
 
 route::get('/enviardocumentos/responder/{iddocument}', [enviardocumentos::class, 'responderDocumento'])->middleware('auth')->name('enviardocumentos.responderDocumento');
 //pdf de director

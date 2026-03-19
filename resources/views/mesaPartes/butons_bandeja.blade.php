@@ -10,32 +10,45 @@
         </form>
     </div>
 @elseif ($estado === 2)
-    <div class="d-grid gap-2 d-md-flex justify-content-md-center" aria-label="Opciones de documento">
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
         <div class="btn-group">
-            <button type="button" class="btn btn-sm bg-gradient-success dropdown-toggle" data-bs-toggle="dropdown"
-                aria-expanded="false">
+            <button type="button" class="btn btn-sm bg-gradient-success dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="fas fa-cogs"></i> Acciones
             </button>
             <ul class="dropdown-menu">
-                <li>
-                    <form action="{{ route('documentario.enviardocumentos.solucionar', $iddocument) }}" method="get">
-                        <button class="dropdown-item" type="submit"><i class="fas fa-tools"></i> Dar solución</button>
-                    </form>
-                </li>
-                <li>
-                     <form action="{{ route('documentario.enviardocumentos.responderDocumento', $iddocument) }}" method="get">
-        <button class="dropdown-item" type="submit">
-            <i class="fas fa-reply"></i> Responder documento
-        </button>
-    </form>
-
-                </li>
-
+                
+                @if ($id_depen == 24)
+                    {{-- SOLO PARA MESA DE PARTES --}}
+                    <li>
+                        <form action="{{ route('documentario.enviardocumentos.derivarDirector', $iddocument) }}" method="POST">
+                            @csrf
+                            <button class="dropdown-item" type="submit">
+                                <i class="fas fa-share-square"></i> Derivar al Director
+                            </button>
+                        </form>
+                    </li>
+                @else
+                    {{-- PARA TODAS LAS DEMÁS OFICINAS --}}
+                    <li>
+                        <form action="{{ route('documentario.enviardocumentos.solucionar', $iddocument) }}" method="get">
+                            <button class="dropdown-item" type="submit">
+                                <i class="fas fa-tools"></i> Dar solución
+                            </button>
+                        </form>
+                    </li>
+                    <li>
+                        <form action="{{ route('documentario.enviardocumentos.responderDocumento', $iddocument) }}" method="get">
+                            <button class="dropdown-item" type="submit">
+                                <i class="fas fa-reply"></i> Responder documento
+                            </button>
+                        </form>
+                    </li>
+                @endif
 
             </ul>
         </div>
     </div>
-@elseif ($estado === 3)
+    @elseif ($estado === 3)
     <div class="d-grid gap-2 d-md-flex justify-content-md-center" aria-label="Basic mixed styles example">
         <form action="{{ route('documentario.mesapar.showEmitido', $iddocument) }}" method="get">
             <button type="submit" class="btn btn-block bg-gradient-success btn-sm" data-toggle="modal"
