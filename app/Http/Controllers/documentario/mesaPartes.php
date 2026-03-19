@@ -48,10 +48,13 @@ class mesaPartes extends Controller
     public function emitidos($idtipo_docu, $emisor)
     {
         $query_emitidos = DB::connection('mysql_documentario')->select('SELECT documentos.iddocumentos, documentos.numero_de_exp, documentos.fecha_ingreso, documentos.asunto, documentos.folio, movi_est.id_estado FROM documentos
-        INNER JOIN (SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado FROM `movimiento` GROUP BY movi_iddocu ) AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
-        WHERE idtipo_documento = ? AND emisor = ? GROUP BY documentos.iddocumentos, documentos.numero_de_exp, documentos.fecha_ingreso, documentos.asunto, documentos.folio, movi_est.id_estado ORDER BY documentos.iddocumentos DESC;', [
+        INNER JOIN (SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado
+            FROM `movimiento` GROUP BY movi_iddocu ) AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
+            WHERE idtipo_documento = ? AND emisor = ? AND est_firma = ?
+            GROUP BY documentos.iddocumentos, documentos.numero_de_exp, documentos.fecha_ingreso, documentos.asunto, documentos.folio, movi_est.id_estado ORDER BY documentos.iddocumentos DESC;', [
             $idtipo_docu,
-            $emisor
+            $emisor,
+            1
         ]);
 
         if (request()->ajax()) {
@@ -59,43 +62,109 @@ class mesaPartes extends Controller
         }
     }
 
-    public function num_tipo_documento_expe($id_tipo_docu, $emisor)
+    public function emitidos_m($idtipo_docu, $emisor)
     {
-        try {
-            DB::beginTransaction();
-            $filtraTipoDocu = DB::connection('mysql_documentario')->table('documentos')
-                ->select('iddocumentos', 'numero_de_exp', 'fecha_ingreso', 'emisor',)
-                ->where('idtipo_documento', $id_tipo_docu)
-                ->where('emisor', $emisor)
-                ->orderBy('numero_de_exp', 'DESC')
-                ->first();
-            DB::commit();
-            return response()->json($filtraTipoDocu);
-        } catch (\Throwable $th) {
-            DB::rollBack();
+        $operador = ($idtipo_docu == 1) ? '=' : '>';
+        $valorFiltro = 1;
+
+        $query_emitidos = DB::connection('mysql_documentario')->select("
+            SELECT
+                documentos.iddocumentos,
+                documentos.numero_de_exp,
+                documentos.fecha_ingreso,
+                documentos.asunto,
+                documentos.folio,
+                tipo_documento.nombre_documento,
+                movi_est.id_estado
+            FROM documentos
+            INNER JOIN (
+                SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado
+                FROM `movimiento`
+                GROUP BY movi_iddocu
+            ) AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
+            INNER JOIN tipo_documento ON documentos.idtipo_documento = tipo_documento.idtipo_documento
+            WHERE documentos.idtipo_documento $operador ?
+            AND emisor = ? AND est_firma = ?
+            GROUP BY
+                documentos.iddocumentos,
+                documentos.numero_de_exp,
+                documentos.fecha_ingreso,
+                documentos.asunto,
+                documentos.folio,
+                tipo_documento.nombre_documento,
+                movi_est.id_estado
+            ORDER BY documentos.iddocumentos DESC;
+        ", [
+            $valorFiltro, // Siempre evaluamos contra el ID 1 (FUT)
+            $emisor, 0
+        ]);
+
+        if (request()->ajax()) {
+            return datatables::of($query_emitidos)
+                ->addColumn('btn', 'mesaPartes.butons')
+                ->rawColumns(['btn'])
+                ->toJson();
         }
     }
 
+    public function num_tipo_documento_expe($id_tipo_docu, $emisor)
+    {
+        // Buscamos el máximo número actual para ese tipo y emisor
+        $ultimo = DB::connection('mysql_documentario')
+            ->table('documentos')
+            ->where('idtipo_documento', $id_tipo_docu)
+            ->where('emisor', $emisor)
+            ->where('est_firma', 1)
+            ->max('numero_de_exp');
+
+        return response()->json([
+            'numero_de_exp' => $ultimo ?? 0
+        ]);
+    }
+
+    public function num_tipo_documento_expe_m($id_tipo_docu, $emisor)
+    {
+        $query = DB::connection('mysql_documentario')
+            ->table('documentos')
+            ->where('emisor', $emisor)
+            ->where('est_firma', 0);
+
+        // Lógica de segmentación de contadores
+        if ($id_tipo_docu == 1) {
+            // Contador exclusivo para FUT
+            $query->where('idtipo_documento', 1);
+        } else {
+            // Contador compartido para Oficios(2), Informes(3), Requerimientos(4), etc.
+            $query->where('idtipo_documento', '>', 1);
+        }
+
+        $ultimo = $query->max('numero_de_exp');
+
+        return response()->json([
+            'numero_de_exp' => $ultimo ?? 0
+        ]);
+    }
+
     public function buscarEntidad(Request $request)
-{
-    $query = $request->input('q');
+    {
+        $query = $request->input('q');
 
-    $entidades = DB::connection('mysql_documentario')->table('entidades_externas')
-        ->where('razon_social_nombre', 'like', "%{$query}%")
-        ->orWhere('ruc', 'like', "%{$query}%")
-        ->orWhere('codigo_enti', 'like', "%{$query}%")
-        ->limit(20)
-        ->get();
+        $entidades = DB::connection('mysql_documentario')->table('entidades_externas')
+            ->where('razon_social_nombre', 'like', "%{$query}%")
+            ->orWhere('ruc', 'like', "%{$query}%")
+            ->orWhere('codigo_enti', 'like', "%{$query}%")
+            ->limit(20)
+            ->get();
 
-    $results = $entidades->map(function ($entidad) {
-        return [
-            'id' => $entidad->id,
-            'text' => $entidad->razon_social_nombre . ' - ID: ' . $entidad->id
-        ];
-    });
+        $results = $entidades->map(function ($entidad) {
+            return [
+                'id' => $entidad->id,
+                'text' => $entidad->razon_social_nombre . ' - ID: ' . $entidad->id
+            ];
+        });
 
-    return response()->json($results);
-}
+        return response()->json($results);
+    }
 
     public function buscarUsuario(Request $request)
     {
@@ -110,85 +179,85 @@ class mesaPartes extends Controller
         return response()->json($usu);
     }
 
-    public function traerDepen()
+    public function traerDepen(Request $request)
     {
-        $usuario = Auth::user();
+        $busqueda = $request->get('q');
         $id_depen = session('dependencia_id');
-        $depens = DB::connection('mysql_documentario')->table('dependencias')->whereNotIn('iddependencias', [1, $id_depen])->get();
+        $depens = DB::connection('mysql_documentario')->table('dependencias')
+            ->where('nombre_dependencia', 'like', "%{$busqueda}%")
+            ->whereNotIn('iddependencias', [1, $id_depen])
+            ->get();
         return response()->json($depens);
     }
 
+    public function generarWordBorrador(Request $request)
+    {
+        // ... validaciones ...
 
+        try {
+            // CORRECCIÓN AQUÍ: Cambiamos 'borrador_crear.docx' por 'responder.docx'
+            $templatePath = storage_path('app/templates/responder.docx');
 
-     public function generarWordBorrador(Request $request)
-{
-    // ... validaciones ...
+            if (!file_exists($templatePath)) {
+                return "Error: No se encuentra la plantilla en: " . $templatePath;
+            }
 
-    try {
-        // CORRECCIÓN AQUÍ: Cambiamos 'borrador_crear.docx' por 'responder.docx'
-        $templatePath = storage_path('app/templates/responder.docx');
-        
-        if (!file_exists($templatePath)) {
-            return "Error: No se encuentra la plantilla en: " . $templatePath;
+            $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+            // Importante: Asegúrate de que los nombres de las variables
+            // coincidan con los de tu archivo responder.docx
+            $tipoDocNombre = DB::connection('mysql_documentario')->table('tipo_documento')
+                ->where('idtipo_documento', $request->tipo_documento)
+                ->value('nombre_documento');
+
+            // Usa los nombres que espera tu plantilla responder.docx
+            $template->setValue('asunto', $request->asunto);
+            $template->setValue('folio', $request->folio);
+            $template->setValue('tipo_doc', $tipoDocNombre ?? 'Documento'); // o como se llame en el Word
+            $template->setValue('fecha', now()->format('d/m/Y'));
+
+            // Como es un registro nuevo, la referencia suele ir vacía
+            $template->setValue('referencia', '');
+
+            $fileName = 'Borrador_' . time() . '.docx';
+            $tempFile = tempnam(sys_get_temp_dir(), 'word');
+            $template->saveAs($tempFile);
+
+            return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            return "Error en el servidor: " . $e->getMessage();
+        }
+    }
+
+    public function registrarDocu(Request $request)
+    {
+        // dd($request);
+        // 1. Datos base
+        $usuario_id_sistema = Auth::user()->id;
+        $emisor_id = $request->emisor;
+        $fecha_actual = $request->fecha_actual;
+        // ... dentro de public function registrarDocu(Request $request)
+
+        $reglas = [
+            'tipo_documento'   => 'required|not_in:0',
+            'asunto'           => 'required|string',
+            'folio'            => 'required|integer|min:1',
+        ];
+
+        // Validación específica para Mesa de Partes (ID 19)
+        if ($request->emisor == 19) {
+            if ($request->tipo_remitente == 'natural') {
+                // Si es persona natural, SOLO validamos el usuario
+                $reglas['usuario'] = 'required|not_in:0';
+            } else {
+                // Si es entidad, SOLO validamos los campos de entidad
+                $reglas['id_entidad_externa'] = 'required|exists:entidades_externas,id';
+                $reglas['numero_documento_externo'] = 'required|string|max:255';
+            }
         }
 
-        $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
-
-        // Importante: Asegúrate de que los nombres de las variables 
-        // coincidan con los de tu archivo responder.docx
-        $tipoDocNombre = DB::connection('mysql_documentario')->table('tipo_documento')
-            ->where('idtipo_documento', $request->tipo_documento)
-            ->value('nombre_documento');
-
-        // Usa los nombres que espera tu plantilla responder.docx
-        $template->setValue('asunto', $request->asunto);
-        $template->setValue('folio', $request->folio);
-        $template->setValue('tipo_doc', $tipoDocNombre ?? 'Documento'); // o como se llame en el Word
-        $template->setValue('fecha', now()->format('d/m/Y'));
-        
-        // Como es un registro nuevo, la referencia suele ir vacía
-        $template->setValue('referencia', ''); 
-
-        $fileName = 'Borrador_' . time() . '.docx';
-        $tempFile = tempnam(sys_get_temp_dir(), 'word');
-        $template->saveAs($tempFile);
-
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
-
-    } catch (\Exception $e) {
-        return "Error en el servidor: " . $e->getMessage();
-    }
-}
-
-   public function registrarDocu(Request $request)
-{
-    // dd($request);
-    // 1. Datos base
-    $usuario_id_sistema = Auth::user()->id;
-    $emisor_id = $request->emisor;
-    $fecha_actual = $request->fecha_actual;
-// ... dentro de public function registrarDocu(Request $request)
-
-$reglas = [
-    'tipo_documento'   => 'required|not_in:0',
-    'asunto'           => 'required|string',
-    'folio'            => 'required|integer|min:1',
-];
-
-// Validación específica para Mesa de Partes (ID 19)
-if ($request->emisor == 19) {
-    if ($request->tipo_remitente == 'natural') {
-        // Si es persona natural, SOLO validamos el usuario
-        $reglas['usuario'] = 'required|not_in:0';
-    } else {
-        // Si es entidad, SOLO validamos los campos de entidad
-        $reglas['id_entidad_externa'] = 'required|exists:entidades_externas,id';
-        $reglas['numero_documento_externo'] = 'required|string|max:255';
-    }
-}
-
-// Mensajes personalizados
-$mensajes = [
+        // Mensajes personalizados
+        $mensajes = [
             'tipo_documento.required' => 'El campo tipo de documento es obligatorio.',
             'tipo_documento.not_in' => 'Debes seleccionar un tipo de documento',
 
@@ -200,91 +269,215 @@ $mensajes = [
             'dependencia_enviar.not_in' => 'Debes seleccionar una dependencia.',
         ];
 
-$request->validate($reglas, $mensajes);
+        $request->validate($reglas, $mensajes);
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        // 3. Insertar Documento Principal
-        $iddocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
-            'numero_de_exp'            => $request->num_expe,
-            'fecha_ingreso'            => $fecha_actual,
-            'asunto'                   => $request->asunto,
-            'folio'                    => $request->folio,
-            'idtipo_documento'         => $request->tipo_documento,
-            'emisor'                   => $emisor_id,
-            'id_user'                  => $usuario_id_sistema,
-            'iddetalle_tramite'        => $request->para_su,
-            'idusuario'                => ($emisor_id == 24 && $request->tipo_remitente == 'natural') ? $request->usuario : null,
-            'recomendacion'            => $request->Recomendaciones,
-            'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente == 'juridica') ? $request->id_entidad_externa : null,
-'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente == 'juridica') ? $request->numero_documento_externo : null,
-           
-            'anexos_fisicos'   => $request->detalle_anexos_fisicos,
-            'estado_actu'              => 1,
-            'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
-            'est_firma'                 => 1,
-        ]);
+            // 3. Insertar Documento Principal
+            $iddocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
+                'numero_de_exp'            => $request->num_expe,
+                'fecha_ingreso'            => $fecha_actual,
+                'asunto'                   => $request->asunto,
+                'folio'                    => $request->folio,
+                'idtipo_documento'         => $request->tipo_documento,
+                'emisor'                   => $emisor_id,
+                'id_user'                  => $usuario_id_sistema,
+                'iddetalle_tramite'        => $request->para_su,
+                'idusuario'                => ($emisor_id == 24 && $request->tipo_remitente == 'natural') ? $request->usuario : null,
+                'recomendacion'            => $request->Recomendaciones,
+                'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente == 'juridica') ? $request->id_entidad_externa : null,
+                'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente == 'juridica') ? $request->numero_documento_externo : null,
 
-        // 4. Determinar Receptores (Todas o Selección)
-        $receptores = [];
-        if ($request->has('todasDepenSelects')) {
-            $receptores = DB::connection('mysql_documentario')->table('dependencias')
-                            ->where('iddependencias', '!=', 1)
-                            ->where('iddependencias', '!=', $emisor_id)
-                            ->pluck('iddependencias')
-                            ->toArray();
-        } else {
-            $receptores = $request->dependencia_enviar;
-        }
-
-        // 5. Insertar Movimientos y Emitir Eventos
-        foreach ($receptores as $id_receptor) {
-            DB::connection('mysql_documentario')->table('movimiento')->insert([
-                'iddocumentos'            => $iddocumento,
-                'iddependencias_emior'    => $emisor_id,
-                'iddependencias_receptor' => $id_receptor,
-                'fecha_de_envio'          => $fecha_actual,
-                'idestado'                => 1
+                'anexos_fisicos'   => $request->detalle_anexos_fisicos,
+                'estado_actu'              => 1,
+                'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
+                'est_firma'                => $request->est_firma
             ]);
 
-            // Obtener conteos para el evento Real-Time
-            $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+            // 4. Determinar Receptores (Todas o Selección)
+            $receptores = [];
+            if ($request->has('todasDepenSelects')) {
+                $receptores = DB::connection('mysql_documentario')->table('dependencias')
+                    ->where('iddependencias', '!=', 1)
+                    ->where('iddependencias', '!=', $emisor_id)
+                    ->pluck('iddependencias')
+                    ->toArray();
+            } else {
+                $receptores = $request->dependencia_enviar;
+            }
+
+            // 5. Insertar Movimientos y Emitir Eventos
+            foreach ($receptores as $id_receptor) {
+                DB::connection('mysql_documentario')->table('movimiento')->insert([
+                    'iddocumentos'            => $iddocumento,
+                    'iddependencias_emior'    => $emisor_id,
+                    'iddependencias_receptor' => $id_receptor,
+                    'fecha_de_envio'          => $fecha_actual,
+                    'idestado'                => 1
+                ]);
+
+                // Obtener conteos para el evento Real-Time
+                $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
                                         FROM estado
                                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
                                         AND movimiento.iddependencias_receptor = ?
                                         WHERE estado.idestado IN (1,2,3)
                                         GROUP BY estado.idestado;', [$id_receptor]);
 
-            event(new DocumentoRecibido($id_receptor, $cont_estados));
+                event(new DocumentoRecibido($id_receptor, $cont_estados));
+            }
+
+            // 6. Gestión de Archivo PDF (Sin Firma Digital)
+            if ($request->hasFile('archivo_pdf')) {
+                $archivo = $request->file('archivo_pdf');
+                $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+                $archivo->move(public_path('documentos/documentos_director_pdf'), $nombreArchivo);
+
+                DB::connection('mysql_documentario')->table('documenpdf')->insert([
+                    'nombre_del_documento' => $nombreArchivo,
+                    'fecha_subida'         => now(),
+                    'iddocumentos'         => $iddocumento,
+                    'token_pdf'            => Str::uuid(),
+                    'tipo_pdf'             => 1, // 1 para virtual
+                    'usuario_id'           => $usuario_id_sistema
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => '¡Documento registrado y enviado con éxito!']);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error("Error en registro: " . $th->getMessage());
+            return response()->json(['error' => 'Error al registrar: ' . $th->getMessage()], 500);
         }
-
-        // 6. Gestión de Archivo PDF (Sin Firma Digital)
-        if ($request->hasFile('archivo_pdf')) {
-            $archivo = $request->file('archivo_pdf');
-            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-            $archivo->move(public_path('documentos/documentos_director_pdf'), $nombreArchivo);
-
-            DB::connection('mysql_documentario')->table('documenpdf')->insert([
-                'nombre_del_documento' => $nombreArchivo,
-                'fecha_subida'         => now(),
-                'iddocumentos'         => $iddocumento,
-                'token_pdf'            => Str::uuid(),
-                'tipo_pdf'             => 1, // 1 para virtual
-                'usuario_id'           => $usuario_id_sistema
-            ]);
-        }
-
-        DB::commit();
-
-        return response()->json(['success' => '¡Documento registrado y enviado con éxito!']);
-
-    } catch (\Throwable $th) {
-        DB::rollBack();
-        Log::error("Error en registro: " . $th->getMessage());
-        return response()->json(['error' => 'Error al registrar: ' . $th->getMessage()], 500);
     }
-}
+
+    public function registrarDocu_m(Request $request)
+    {
+        // dd($request);
+        // 1. Datos base
+        $usuario_id_sistema = Auth::user()->id;
+        $emisor_id = $request->emisor;
+        $fecha_actual = $request->fecha_actual_m;
+        // ... dentro de public function registrarDocu(Request $request)
+
+        $reglas = [
+            'tipo_documento_m'   => 'required|not_in:0',
+            'asunto_m'           => 'required|string',
+            'folio_m'            => 'required|integer|min:1',
+        ];
+
+        // Validación específica para Mesa de Partes (ID 19)
+        if ($request->emisor == 24) {
+            if ($request->tipo_remitente_m == 'natural') {
+                // Si es persona natural, SOLO validamos el usuario
+                $reglas['usuario_m'] = 'required|not_in:0';
+            } else {
+                // Si es entidad, SOLO validamos los campos de entidad
+                $reglas['id_entidad_m_externa'] = 'required|exists:mysql_documentario.entidades_externas,id';
+                $reglas['numero_documento_externo_m'] = 'required|string|max:255';
+            }
+        }
+
+        // Mensajes personalizados
+        $mensajes = [
+            'tipo_documento_m.required' => 'El campo tipo de documento es obligatorio.',
+            'tipo_documento_m.not_in' => 'Debes seleccionar un tipo de documento',
+
+            'asunto_m.required' => 'El campo asunto es obligatorio.',
+            'folio_m.required' => 'Es obligatorio.',
+            'folio_m.not_in' => 'Debe ser diferente de 0.',
+
+            'dependencia_enviar_m.required' => 'La dependencia de envío es obligatoria.',
+            'dependencia_enviar_m.not_in' => 'Debes seleccionar una dependencia.',
+        ];
+
+        $request->validate($reglas, $mensajes);
+
+        try {
+            DB::beginTransaction();
+
+            // 3. Insertar Documento Principal
+            $iddocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
+                'numero_de_exp'            => $request->num_expe_m,
+                'fecha_ingreso'            => $fecha_actual,
+                'asunto'                   => $request->asunto_m,
+                'folio'                    => $request->folio_m,
+                'idtipo_documento'         => $request->tipo_documento_m,
+                'emisor'                   => $emisor_id,
+                'id_user'                  => $usuario_id_sistema,
+                'iddetalle_tramite'        => $request->para_su_m,
+                'idusuario'                => ($emisor_id == 24 && $request->tipo_remitente_m == 'natural') ? $request->usuario_m : null,
+                'recomendacion'            => $request->Recomendaciones_m,
+                'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->id_entidad_m_externa : null,
+                'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->numero_documento_externo_m : null,
+
+                'anexos_fisicos'           => $request->detalle_anexos_fisicos_m,
+                'estado_actu'              => 1,
+                'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
+                'est_firma'                => $request->est_firma
+            ]);
+
+            // 4. Determinar Receptores (Todas o Selección)
+            $receptores = [];
+            if ($request->has('todasDepenSelects_m')) {
+                $receptores = DB::connection('mysql_documentario')->table('dependencias')
+                    ->where('iddependencias', '!=', 1)
+                    ->where('iddependencias', '!=', $emisor_id)
+                    ->pluck('iddependencias')
+                    ->toArray();
+            } else {
+                $receptores = $request->dependencia_enviar_m;
+            }
+
+            // 5. Insertar Movimientos y Emitir Eventos
+            foreach ($receptores as $id_receptor) {
+                DB::connection('mysql_documentario')->table('movimiento')->insert([
+                    'iddocumentos'            => $iddocumento,
+                    'iddependencias_emior'    => $emisor_id,
+                    'iddependencias_receptor' => $id_receptor,
+                    'fecha_de_envio'          => $fecha_actual,
+                    'idestado'                => 1
+                ]);
+
+                // Obtener conteos para el evento Real-Time
+                $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                                        FROM estado
+                                        LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                                        AND movimiento.iddependencias_receptor = ?
+                                        WHERE estado.idestado IN (1,2,3)
+                                        GROUP BY estado.idestado;', [$id_receptor]);
+
+                event(new DocumentoRecibido($id_receptor, $cont_estados));
+            }
+
+            // 6. Gestión de Archivo PDF (Sin Firma Digital)
+            if ($request->hasFile('archivo_pdf_m')) {
+                $archivo = $request->file('archivo_pdf_m');
+                $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+                $archivo->move(public_path('documentos/documentos_director_pdf'), $nombreArchivo);
+
+                DB::connection('mysql_documentario')->table('documenpdf')->insert([
+                    'nombre_del_documento' => $nombreArchivo,
+                    'fecha_subida'         => now(),
+                    'iddocumentos'         => $iddocumento,
+                    'token_pdf'            => Str::uuid(),
+                    'tipo_pdf'             => 1, // 1 para virtual
+                    'usuario_id'           => $usuario_id_sistema
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => '¡Documento registrado y enviado con éxito!']);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error("Error en registro: " . $th->getMessage());
+            return response()->json(['error' => 'Error al registrar: ' . $th->getMessage()], 500);
+        }
+    }
 
 
     public function showEmitido($id)
@@ -417,8 +610,4 @@ $request->validate($reglas, $mensajes);
             return redirect()->back()->with('error', 'Error al actualizar los datos');
         }
     }
-
-
-    
 }
-
