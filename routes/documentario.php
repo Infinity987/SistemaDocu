@@ -19,10 +19,13 @@ route::post('/admin/registerUser', [RegisterController::class, 'register'])->nam
 
 route::get('/Docu', [mesaPartes::class, 'index'])->name('mesapar.index');
 route::get('/Docu/num_tipo_documento_expe/{idtipo_docu}/{emisor}', [mesaPartes::class, 'num_tipo_documento_expe'])->name('num_tipo_documento_expe'); //trae el ultimo id del ducu, para sumarlo
+route::get('/Docu/num_tipo_documento_expe_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'num_tipo_documento_expe_m'])->name('num_tipo_documento_expe_m'); //trae el ultimo id del ducu, PARA MESA DE PARTES
 route::get('/buscarUsuario', [mesaPartes::class, 'buscarUsuario'])->name('buscarUsuario');
 Route::post('/docu/generar-word', [mesaPartes::class, 'generarWordBorrador'])->name('mesaPartes.word');
 route::post('/Docu/registrarDocu', [mesaPartes::class, 'registrarDocu'])->name('registrarDocu');
+route::post('/Docu/registrarDocu_m', [mesaPartes::class, 'registrarDocu_m'])->name('registrarDocu_m');
 route::get('/Docu/emitidos/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos'])->name('mesapar.emitidos');
+route::get('/Docu/emitidos_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos_m'])->name('mesapar.emitidos_m');
 route::get('/Docu/showEmitido/{id}', [mesaPartes::class, 'showEmitido'])->name('mesapar.showEmitido');
 route::post('/Docu/updateDocuEmi', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
 route::get('/traerDepen', [mesaPartes::class, 'traerDepen'])->name('traerDepen');
@@ -48,13 +51,13 @@ route::post('/reporDepen/chartLine/tasa', [reportes::class, 'mostrarTasaSla'])->
 Route::get('/preview-pdf/{filename}', function ($filename) {
     // Buscamos en el disco temporal de Livewire
     $path = 'livewire-tmp/' . $filename;
-    
+
     if (!Storage::disk('local')->exists($path)) {
         abort(404);
     }
 
     $file = Storage::disk('local')->get($path);
-    
+
     return response($file, 200, [
         'Content-Type' => 'application/pdf',
         'Content-Disposition' => 'inline; filename="'.$filename.'"'

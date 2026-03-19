@@ -27,195 +27,155 @@
 
 @section('content')
     @can('documentario.mesapar.index')
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12 mb-1">
-                    <!-- Button trigger modal -->
-                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalCenter">
-                        <i class="fas fa-sign-in-alt"></i> Crear nuevo registro
-                    </button>
+        {{-- vistas para mesa de partes --}}
+        @if ($id_depen == 24)
+            @include('mesaPartes.partials.menu_mesa_partes')
+        @else
+            <div class="container-fluid">
+                <!-- Button trigger modal -->
+                <div class="row">
+                    <div class="col-12 mb-1">
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalCenter">
+                            <i class="fas fa-sign-in-alt"></i> Crear nuevo registro
+                        </button>
 
-                    <!-- Modal -->
-                    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
-                        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                        <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header" style="background-color: rgb(176, 86, 12);">
-                                    <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
-                                            class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo registro</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <form action="{{ route('documentario.registrarDocu') }}" method="post" id="form_regis_doc">
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+                            aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header" style="background: linear-gradient(135deg, #736001, #e6b884);">
+                                        <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
+                                                class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo registro</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
 
-                                    @csrf
-                                    <div class="modal-body">
-                                        <div class="container-fluid">
-                                            <div class="row">
-                                                <input type="hidden" id="emisor" name="emisor"
-                                                    value ="{{ $id_depen }}">
-                                                <input type="hidden" id="id_usuTrabajador" name="id_usuTrabajador"
-                                                    value ="{{ $id_usuTrabajador }}">
+                                    <form action="{{ route('documentario.registrarDocu') }}" method="post" id="form_regis_doc"
+                                        enctype="multipart/form-data">
+                                        @csrf
+                                        <div class="modal-body">
+                                            <input type="hidden" name="est_firma" value="1">
+                                            <input type="hidden" id="emisor" name="emisor" value="{{ $id_depen }}">
+                                            <input type="hidden" id="id_usuTrabajador" name="id_usuTrabajador"
+                                                value="{{ $id_usuTrabajador }}">
 
-
-                                                <div class="col-sm-4">
-                                                    <div class="form-group">
-                                                        <label for="tipo_documento">Tipo documento: <span
-                                                                style="color: red">*</span> </label>
-                                                        <select id="tipo_documento" class="form-control"
-                                                            placeholder="Ingrese el asunto" name="tipo_documento">
-                                                            <option value="0">Seleccione tipo documento ...</option>
-                                                            @if ($rol->nombre_dependencia == 'Mesa de Partes')
-                                                                <option value="1">Fut</option>
-                                                            @endif
-                                                            <option value="2">Oficios</option>
-                                                            <option value="3">Informe</option>
-                                                            <option value="4">Requerimiento</option>
-                                                            <option value="5">Memorándum</option>
-                                                            <option value="6">Memorándum Multi.</option>
-                                                            <option value="7">Resoluciones</option>
-                                                            <option value="8">Otros</option>
-                                                        </select>
-                                                        <span id="tipo_documento_error" class="text-danger"></span>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-sm-4">
-                                                    <div class="form-group">
-                                                        <label for="num_expe">Fecha actual:</label>
-                                                        <input class="form-control" type="datetime-local" id="fecha_actual"
-                                                            name="fecha_actual" readonly>
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-sm-2" id="">
-                                                    <div class="form-group">
-                                                        <label for="folio">Folio: <span style="color: red">*</span></label>
-                                                        <input class="form-control" type="number" id="folio" name="folio"
-                                                            onkeydown="return bloqueare(event)">
-                                                        <span id="folio_error" class="text-danger"></span>
-                                                    </div>
-                                                </div>
-
-
-
-                                                <div class="col-sm-2" id="num_ex">
-                                                    <div class="form-group">
-                                                        <label for="num_expe">N° expe. local:</label>
-                                                        <input class="form-control" type="text" id="num_expe"
-                                                            name="num_expe" readonly>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-
-                                                @if ($id_depen == 24)
-                                                    <div class="col-sm-12">
+                                            <div class="container-fluid">
+                                                <div class="row">
+                                                    <div class="col-sm-4">
                                                         <div class="form-group">
-                                                            <label>Tipo de Remitente: <span style="color: red">*</span></label>
-                                                            <select id="tipo_remitente" name="tipo_remitente"
-                                                                class="form-control">
-                                                                <option value="natural">Persona Natural</option>
-                                                                <option value="juridica">Entidad Externa (Jurídica)</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-sm-12" id="div_persona_natural">
-                                                        <div class="form-group">
-                                                            <label>Usuario / Persona Natural: <span
-                                                                    style="color: red">*</span></label>
-                                                            <select id="usuario" class="form-control select2"
-                                                                name="usuario" style="width: 100%;"></select>
-                                                            <span id="usuario_error" class="text-danger"></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div id="div_entidad_externa" class="col-sm-12" style="display:none;">
-                                                        <div class="row">
-                                                            <div class="col-sm-6">
-                                                                <div class="form-group">
-                                                                    <label>Entidad remitente:</label>
-                                                                    <select id="entidad" name="id_entidad_externa"
-                                                                        class="form-control select2"></select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-sm-6">
-                                                                <div class="form-group">
-                                                                    <label>N° Oficio/Informe Externo:</label>
-                                                                    <input type="text" name="numero_documento_externo"
-                                                                        class="form-control"
-                                                                        placeholder="Ej: Oficio N.º 123-2026-MPP">
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-sm-12 mb-3">
-                                                                <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
-                                                                    target="_blank" class="btn btn-outline-info btn-sm">
-                                                                    <i class="fas fa-search"></i> Consultar RUC en SUNAT
-                                                                </a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endif
-
-                                                <div class="col-sm-4">
-                                                    <div class="form-group">
-                                                        <label for="dependencia_enviar">Dependencia(s) a enviar: <span
-                                                                style="color: red">*</span></label>
-                                                        <select id="dependencia_enviar" class="form-control select2-hidden"
-                                                            name="dependencia_enviar[]" multiple>
-                                                            {{-- <option value="0">Seleccione dependencia ...</option> --}}
-                                                            {{-- @foreach ($dependencias as $depe)
-                                                                @if ($depe->nombre_dependencia != $rol->nombre_dependencia && $depe->nombre_dependencia != 'Administrador Sistema')
-                                                                    <option value="{{ $depe->iddependencias }}">
-                                                                        {{ $depe->nombre_dependencia }}</option>
+                                                            <label for="tipo_documento">
+                                                                <i class="fas fa-file-contract text-primary"></i> Tipo
+                                                                documento: <span class="text-danger">*</span>
+                                                            </label>
+                                                            <select id="tipo_documento" class="form-control select2 shadow"
+                                                                name="tipo_documento">
+                                                                <option value="0">Seleccione tipo documento ...
+                                                                </option>
+                                                                @if ($rol->nombre_dependencia == 'Mesa de Partes')
+                                                                    <option value="1">Fut</option>
                                                                 @endif
-                                                            @endforeach --}}
-                                                        </select>
-                                                        <span id="dependencia_enviar_error" class="text-danger"></span>
+                                                                <option value="2">Oficios</option>
+                                                                <option value="3">Informe</option>
+                                                                <option value="4">Requerimiento</option>
+                                                                <option value="5">Memorándum</option>
+                                                                <option value="6">Memorándum Multi.</option>
+                                                                <option value="7">Resoluciones</option>
+                                                                <option value="8">Otros</option>
+                                                            </select>
+                                                            <span id="tipo_documento_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-4">
+                                                        <div class="form-group">
+                                                            <label for="fecha_actual">
+                                                                <i class="fas fa-calendar-alt text-info"></i> Fecha actual:
+                                                            </label>
+                                                            <input class="form-control bg-light" type="datetime-local"
+                                                                id="fecha_actual" name="fecha_actual" readonly>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-2">
+                                                        <div class="form-group">
+                                                            <label for="folio">
+                                                                <i class="fas fa-list-ol text-warning"></i> Folio: <span
+                                                                    class="text-danger">*</span>
+                                                            </label>
+                                                            <input class="form-control shadow" type="number" id="folio"
+                                                                name="folio" onkeydown="return bloqueare(event)">
+                                                            <span id="folio_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-2 shadow"
+                                                        style="background: linear-gradient(90deg, #eac096, #ffffff); ">
+                                                        <div class="form-group">
+                                                            <label for="num_expe">
+                                                                <i class="fas fa-fingerprint text-secondary"></i> N° exp.
+                                                                local:
+                                                            </label>
+                                                            <input class="form-control bg-light" type="text"
+                                                                style="background: linear-gradient(135deg, #eac096, #ebe6df); "
+                                                                id="num_expe" name="num_expe" readonly>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="col-sm-2" id="">
-                                                    <div class="form-group">
-                                                        <label for="folio">Todas Depen.:</label>
+                                                <div class="row">
+                                                    <div class="col-sm-9">
+                                                        <div class="form-group">
+                                                            <label for="dependencia_enviar">
+                                                                <i class="fas fa-map-marker-alt text-success"></i>
+                                                                Dependencia(s) a enviar: <span class="text-danger">*</span>
+                                                            </label>
+                                                            <select id="dependencia_enviar"
+                                                                class="form-control select2 shadow"
+                                                                name="dependencia_enviar[]" multiple>
+                                                            </select>
+                                                            <span id="dependencia_enviar_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
 
-                                                        <div class="form-group d-flex justify-content-center">
-                                                            <div
-                                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                <input type="checkbox" class="custom-control-input"
-                                                                    id="customSwitch3" name="todasDepenSelects">
-                                                                <label class="custom-control-label"
-                                                                    for="customSwitch3"></label>
+                                                    <div class="col-sm-3 text-center">
+                                                        <div class="form-group">
+                                                            <label><i class="fas fa-share-all text-muted"></i> ¿A
+                                                                todas?</label>
+                                                            <div class="d-flex justify-content-center pt-1">
+                                                                <div
+                                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                    <input type="checkbox" class="custom-control-input"
+                                                                        id="customSwitch3" name="todasDepenSelects">
+                                                                    <label class="custom-control-label"
+                                                                        for="customSwitch3"></label>
+                                                                </div>
                                                             </div>
                                                         </div>
-
-                                                        <span id="folio_error" class="text-danger"></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-
-
-                                            <div class="row">
-
-                                                <div class="col-sm-12">
-                                                    <div class="form-group">
-                                                        <label>Asunto <span style="color: red">*</span></label>
-                                                        <textarea id="asunto" class="form-control" rows="3" placeholder="Escriba el asunto del documento ..."
-                                                            name="asunto"></textarea>
-                                                        <span id="asunto_error" class="text-danger"></span>
                                                     </div>
                                                 </div>
 
-                                             
+                                                <div class="row">
                                                     <div class="col-sm-12">
                                                         <div class="form-group">
-                                                            <label for="para_su">Para su: <span
-                                                                    style="color: red">*</span></label>
-                                                            <select id="para_su" class="form-control"
-                                                                placeholder="Ingrese el asunto" name="para_su">
+                                                            <label><i class="fas fa-pen-fancy text-primary"></i> Asunto
+                                                                <span class="text-danger">*</span></label>
+                                                            <textarea id="asunto" class="form-control shadow" rows="2" placeholder="Escriba el asunto del documento..."
+                                                                name="asunto"></textarea>
+                                                            <span id="asunto_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-sm-12">
+                                                        <div class="form-group">
+                                                            <label for="para_su">
+                                                                <i class="fas fa-directions" style="color: #6f42c1;"></i>
+                                                                Para su: <span class="text-danger">*</span>
+                                                            </label>
+                                                            <select id="para_su" class="form-control shadow"
+                                                                name="para_su">
                                                                 <option value="0">Seleccione ...</option>
                                                                 @foreach ($detalle_tramite as $detra)
                                                                     <option value="{{ $detra->iddetalle_tramite }}">
@@ -224,150 +184,157 @@
                                                                 @endforeach
                                                             </select>
                                                             <span id="para_su_error" class="text-danger"></span>
-
                                                         </div>
                                                     </div>
-                                               
 
-
-
-                                                <div class="col-sm-12">
-                                                    <div class="form-group">
-                                                        <label>Recomendaciones:</label>
-                                                        <textarea id="recomendaciones" class="form-control" rows="3" placeholder="Escriba el asunto del documento ..."
-                                                            name="Recomendaciones"></textarea>
+                                                    <div class="col-sm-12">
+                                                        <div class="form-group">
+                                                            <label><i class="fas fa-comment-dots text-secondary"></i>
+                                                                Recomendaciones:</label>
+                                                            <textarea id="recomendaciones" class="form-control shadow" rows="2" placeholder="Notas adicionales..."
+                                                                name="Recomendaciones"></textarea>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="row">
-                                                    <div class="col-sm-6">
+                                                <div class="row border-top pt-3 mt-2 bg-light rounded p-2 shadow-sm">
+                                                    <div class="col-sm-6 border-right">
                                                         <div class="form-group">
                                                             <div class="custom-control custom-checkbox">
                                                                 <input class="custom-control-input" type="checkbox"
                                                                     id="check_fisico" name="con_anexos_fisicos">
-                                                                <label for="check_fisico"
-                                                                    class="custom-control-label">¿Contiene anexos
-                                                                    físicos?</label>
+                                                                <label for="check_fisico" class="custom-control-label">
+                                                                    <i class="fas fa-archive text-warning"></i> ¿Contiene
+                                                                    anexos físicos?
+                                                                </label>
                                                             </div>
                                                             <input type="text" id="detalle_fisico"
-                                                                name="detalle_anexos_fisicos" class="form-control mt-2"
-                                                                placeholder="01 CD, Planos..." style="display: none;">
+                                                                name="detalle_anexos_fisicos"
+                                                                class="form-control mt-2 border-warning"
+                                                                placeholder="Ej: 01 CD, Planos..." style="display: none;">
                                                         </div>
                                                     </div>
 
                                                     <div class="col-sm-6">
                                                         <div class="form-group">
-                                                            <label for="archivo_pdf">Subir Documento (PDF):</label>
-                                                            <div class="input-group">
-                                                                <div class="custom-file">
-                                                                    <input type="file" class="custom-file-input"
-                                                                        id="archivo_pdf" name="archivo_pdf"
-                                                                        accept="application/pdf">
-                                                                    <label class="custom-file-label"
-                                                                        for="archivo_pdf">Seleccionar PDF</label>
-                                                                </div>
+                                                            <label for="archivo_pdf">
+                                                                <i class="fas fa-file-pdf text-danger"></i> Subir Documento
+                                                                (PDF):
+                                                            </label>
+                                                            <div class="custom-file">
+                                                                <input type="file" class="custom-file-input"
+                                                                    id="archivo_pdf" name="archivo_pdf"
+                                                                    accept="application/pdf">
+                                                                <label class="custom-file-label" for="archivo_pdf">Seleccionar
+                                                                    PDF...</label>
                                                             </div>
-                                                            <small class="text-muted">Opcional si hay anexos físicos
-                                                                pesados.</small>
                                                             <span id="archivo_pdf_error" class="text-danger"></span>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                <button type="button" onclick="descargarWordBorrador()"
-                                                    class="btn btn-outline-info">
-                                                    <i class="fas fa-file-word"></i> Generar Borrador
-                                                </button>
+                                                    <div class="col-sm-12 mt-2">
+                                                        <button type="button" onclick="descargarWordBorrador()"
+                                                            class="btn btn-outline-info btn-block shadow-sm">
+                                                            <i class="fas fa-file-word"></i> GENERAR BORRADOR AUTOMÁTICO
+                                                            PARA FIRMA
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-danger" data-dismiss="modal"><i
-                                                class="fas fa-window-close"></i> Cerrar</button>
-                                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i>
-                                            Registrar</button>
-                                    </div>
-                                </form>
+
+                                        <div class="modal-footer bg-light">
+                                            <button type="button" class="btn btn-default border" data-dismiss="modal">
+                                                <i class="fas fa-times text-danger"></i> Cerrar
+                                            </button>
+                                            <button type="submit" class="btn btn-success px-4 shadow">
+                                                <i class="fas fa-save"></i> REGISTRAR TRÁMITE
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row justify-content-center pb-2">
-                @if ($id_depen == 24)
-                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                        <button data-tipo="1" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                                class="far fa-file-alt"></i>
-                            Futs</button>
-                    </div>
-                @endif
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="2" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Oficios</button>
-                </div>
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="3" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Informes</button>
-                </div>
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="4" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Requerimientos</button>
-                </div>
-
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="5" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Memorándum</button>
-                </div>
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="6" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Memorándum Multi.</button>
-                </div>
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="7" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Resoluciones</button>
-                </div>
-
-                <div class="col-lg-2 col-sm-6 pb-1 pt-1">
-                    <button data-tipo="8" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
-                            class="far fa-file-alt"></i>
-                        Otros</button>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="card card-danger card-outline">
-                        <div class="card-header" style="background-color: #dddddd">
-                            <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos ddddd</h3>
+                <!-- tipos de documentos -->
+                <div class="row justify-content-center pb-2">
+                    @if ($id_depen == 24)
+                        <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                            <button data-tipo="1" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                    class="far fa-file-alt"></i>
+                                Futs</button>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <table id="datatablesSimple" class="table table-hover">
-                                        <thead>
-                                            <tr style="background-color:#f19e40">
-                                                <th style="text-align: center;">N° Expe.</th>
-                                                <th style="text-align: center;">Contador</th>
-                                                <th style="text-align: center;">Fecha y hora</th>
-                                                <th style="text-align: center;">Asunto</th>
-                                                <th style="text-align: center;">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
+                    @endif
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="2" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Oficios</button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="3" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Informes</button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="4" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Requerimientos</button>
+                    </div>
+
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="5" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Memorándum</button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="6" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Memorándum Multi.</button>
+                    </div>
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="7" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Resoluciones</button>
+                    </div>
+
+                    <div class="col-lg-2 col-sm-6 pb-1 pt-1">
+                        <button data-tipo="8" type="button" class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
+                                class="far fa-file-alt"></i>
+                            Otros</button>
+                    </div>
+                </div>
+
+                <!-- tabla documentos -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card card-danger card-outline">
+                            <div class="card-header" style="background-color: #dddddd">
+                                <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos ddddd</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <table id="datatablesSimple" class="table table-hover">
+                                            <thead>
+                                                <tr style="background-color:#f19e40">
+                                                    <th style="text-align: center;">N° Expe.</th>
+                                                    <th style="text-align: center;">Contador</th>
+                                                    <th style="text-align: center;">Fecha y hora</th>
+                                                    <th style="text-align: center;">Asunto</th>
+                                                    <th style="text-align: center;">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
     @endcan
 @stop
 {{-- @vite(['resources/js/app.js']) --}}
@@ -442,17 +409,6 @@
     <script>
         let dependenciaId = {{ $id_depen }};
 
-
-        // document.addEventListener("DOMContentLoaded", function() {
-
-        //     Echo.channel('test-channel')
-        //         .listen('TestEvent', (e) => {
-
-        //             console.log("Evento recibido");
-
-        //         });
-
-        // });
         document.addEventListener("DOMContentLoaded", function() {
             console.log('llego docu');
 
@@ -510,36 +466,9 @@
             }
         }
 
+
         $(document).ready(function() {
-
-            $(document).ready(function() {
-                // Escuchar el cambio en el tipo de remitente
-                $('#tipo_remitente').on('change', function() {
-                    let valor = $(this).val();
-
-                    if (valor === 'natural') {
-                        // Mostrar usuario, ocultar entidad
-                        $('#div_persona_natural').fadeIn();
-                        $('#div_entidad_externa').hide();
-
-                        // Limpiar los valores del que se oculta para evitar envíos cruzados
-                        $('#entidad').val(null).trigger('change');
-                    } else {
-                        // Mostrar entidad, ocultar usuario
-                        $('#div_entidad_externa').fadeIn();
-                        $('#div_persona_natural').hide();
-
-                        // Limpiar los valores del que se oculta
-                        $('#usuario').val(null).trigger('change');
-                    }
-                });
-
-                // Resetear al cerrar el modal para que siempre inicie en Persona Natural
-                $('#exampleModalCenter').on('hidden.bs.modal', function() {
-                    $('#tipo_remitente').val('natural').trigger('change');
-                });
-            });
-
+            /////////////////////////////////////////////////////////////para DOCUMENTOS DE recepcion
             $('#check_fisico').on('change', function() {
                 if ($(this).is(':checked')) {
                     $('#detalle_fisico').fadeIn().attr('required', true);
@@ -554,28 +483,6 @@
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
             });
 
-            $('#entidad').select2({
-                dropdownParent: $('#exampleModalCenter'),
-                placeholder: 'Buscar entidad...',
-                ajax: {
-                    url: '{{ route('documentario.buscarEntidad') }}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 2
-            });
-
             $('#num_ex').hide();
             $('#exampleModalCenter').on('shown.bs.modal', function() {
 
@@ -583,44 +490,6 @@
                 fecha.setHours(fecha.getHours() - 5);
                 var fecha_hora_actu = fecha.toISOString().slice(0, 19);
                 $('#fecha_actual').val(fecha_hora_actu);
-
-                $('#usuario').select2({
-                    language: {
-                        noResults: function() {
-                            return "No se encontraron resultados";
-                        },
-                        searching: function() {
-                            return "Buscando...";
-                        }
-                    },
-                    placeholder: 'Buscar por DNI O APELLIDOS Y NOMBRES...',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#exampleModalCenter'),
-                    ajax: {
-                        url: '{{ route('documentario.buscarUsuario') }}',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                q: params.term
-                            };
-                        },
-                        processResults: function(data) {
-                            return {
-                                results: data.map(function(user) {
-                                    return {
-                                        id: user.idusuario,
-                                        text: user.text
-                                    }
-                                })
-                            };
-                        },
-                        cache: true
-                    }
-                }).on('select2:open', function(e) {
-                    e.stopPropagation();
-                });
 
                 $('#dependencia_enviar').select2({
                     language: {
@@ -643,7 +512,7 @@
                         dataType: 'json',
                         delay: 250,
                         processResults: function(data) {
-                            console.log(data)
+                            // console.log(data)
                             return {
                                 results: data.map(function(depens) {
                                     return {
@@ -670,14 +539,7 @@
                 });
             });
 
-
-
-            $('#editModal').on('hidden.bs.modal', function() {
-                $('#usuario').select2('destroy');
-                $('#dependencia_enviar').select2('destroy');
-            });
-
-            $('#tipo_documento').change(traer_num_expe);
+            // $('#tipo_documento').change(traer_num_expe);
 
             $('#form_regis_doc').submit(function(event) {
                 event.preventDefault();
@@ -710,6 +572,18 @@
                             $('.text-danger').text('');
                             $('#usuario').val('0').trigger('change');
                             $('#num_ex').hide();
+                            $('#detalle_fisico').fadeOut().removeAttr('required').val(
+                                '');
+                            // 1. Limpiar el valor del input file
+                            $('#archivo_pdf').val('');
+
+                            // 2. Resetear el texto del label (importante en AdminLTE)
+                            $('#archivo_pdf').next('.custom-file-label').html(
+                                'Seleccionar PDF');
+
+                            // 3. Limpiar mensajes de error si los hubiera
+                            $('#archivo_pdf_error').text('');
+                            $('#dependencia_enviar').val(null).trigger('change');
                         });
                         butonEnviardatos.prop('disabled', false);
                     },
@@ -743,6 +617,32 @@
                 });
             });
 
+            // Variable para controlar si ya se cargó la pestaña de la oficina por primera vez
+            let oficinaInicializada = false;
+
+            // Escuchamos el clic en el enlace de la pestaña "De la oficina"
+            $('#pills-roles-tab').on('shown.bs.tab', function(e) {
+
+                if (!oficinaInicializada) {
+                    let $botonFuts = $('.tipo-btn[data-tipo="2"]');
+
+                    $('.tipo-btn')
+                        .removeClass('bg-gradient-primary active')
+                        .addClass('bg-gradient-info');
+
+                    // Ahora activamos el de Futs
+                    $botonFuts
+                        .removeClass('bg-gradient-info')
+                        .addClass('bg-gradient-primary active');
+
+                    // 3. Ejecutamos la carga de la tabla
+                    cargarTabla(2);
+
+                    // 4. Marcamos como inicializada para que no se recargue cada vez que cambie de pestaña
+                    oficinaInicializada = true;
+                }
+            });
+
             $('.tipo-btn').on('click', function() {
                 let tipo = $(this).data('tipo');
                 if (tipoActivo === tipo) return; // si ya está activo, no hace nada
@@ -762,7 +662,7 @@
                 cargarTabla(tipo);
             });
 
-            if (dependenciaId == 19) {
+            if (dependenciaId == 24) {
                 cargarTabla(1);
                 $('.tipo-btn[data-tipo="1"]').click();
             } else {
@@ -771,43 +671,83 @@
             }
         })
 
-        function traer_num_expe() {
-            $('#num_expe').val('');
-            let rutaTipoDocumen =
-                "{{ route('documentario.num_tipo_documento_expe', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
-            let url1 = rutaTipoDocumen.replace(':id', $('#tipo_documento').val());
-            let url = url1.replace(':emi', $('#emisor').val());
-            let formData = $(this).serialize();
+        $('#tipo_documento').on('change', function() {
+            const idTipo = $(this).val();
+            const emisor = $('#emisor').val(); // Asegúrate de tener este ID en tu vista
+
+            if (!idTipo) {
+                $('#num_ex').hide();
+                return;
+            }
+
+            // URL con los parámetros dinámicos
+            let url = "{{ route('documentario.num_tipo_documento_expe', [':id', ':emi']) }}"
+                .replace(':id', idTipo)
+                .replace(':emi', emisor);
+
             $.ajax({
-                type: 'GET',
                 url: url,
-                data: formData,
-                success: function(response) {
-                    let num_expeRe = response['numero_de_exp'];
-                    if (num_expeRe === undefined || num_expeRe === null || num_expeRe === '') {
-                        num_expeRe = 1;
-                        $('#num_expe').val(num_expeRe);
-                        $('#num_ex').show();
-                    } else {
-                        num_expeRe = parseInt(num_expeRe);
-                        if (isNaN(num_expeRe)) {
-                            $('#num_ex').hide();
-                        } else {
-                            num_expeRe += 1;
-                            $('#num_expe').val(num_expeRe);
-                            $('#num_ex').show();
-                        }
-                    }
-                    var fecha = new Date();
-                    fecha.setHours(fecha.getHours() - 5);
-                    var fecha_hora_actu = fecha.toISOString().slice(0, 19);
-                    $('#fecha_actual').val(fecha_hora_actu);
+                type: 'GET',
+                beforeSend: function() {
+                    $('#num_expe').val('Calculando...');
                 },
-                error: function() {
-                    console.log('error al traer datos');
+                success: function(response) {
+                    // Si no hay documentos previos, response será null o vacío
+                    let ultimoNumero = (response && response.numero_de_exp) ? parseInt(response
+                        .numero_de_exp) : 0;
+                    let proximoNumero = ultimoNumero + 1;
+
+                    $('#num_expe').val(proximoNumero);
+                    $('#num_ex').fadeIn();
+
+                    // Opcional: Actualizar fecha automática
+                    var fecha_m = new Date();
+                    fecha_m.setHours(fecha_m.getHours() - 5);
+                    var fecha_hora_actu = fecha_m.toISOString().slice(0, 19);
+                    $('#fecha_actual').val(fecha_hora_actu);
                 }
-            })
-        }
+            });
+        });
+
+
+        // function traer_num_expe() {
+        //     $('#num_expe').val('');
+        //     let rutaTipoDocumen =
+        //         "{{ route('documentario.num_tipo_documento_expe', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
+        //     let url1 = rutaTipoDocumen.replace(':id', $('#tipo_documento').val());
+        //     let url = url1.replace(':emi', $('#emisor').val());
+        //     let formData = $(this).serialize();
+        //     $.ajax({
+        //         type: 'GET',
+        //         url: url,
+        //         data: formData,
+        //         success: function(response) {
+        //             let num_expeRe = response['numero_de_exp'];
+        //             console.log(num_expeRe);
+        //             if (num_expeRe === undefined || num_expeRe === null || num_expeRe === '') {
+        //                 num_expeRe = 1;
+        //                 $('#num_expe').val(num_expeRe);
+        //                 $('#num_ex').show();
+        //             } else {
+        //                 num_expeRe = parseInt(num_expeRe);
+        //                 if (isNaN(num_expeRe)) {
+        //                     $('#num_ex').hide();
+        //                 } else {
+        //                     num_expeRe += 1;
+        //                     $('#num_expe').val(num_expeRe);
+        //                     $('#num_ex').show();
+        //                 }
+        //             }
+        //             var fecha = new Date();
+        //             fecha.setHours(fecha.getHours() - 5);
+        //             var fecha_hora_actu = fecha.toISOString().slice(0, 19);
+        //             $('#fecha_actual').val(fecha_hora_actu);
+        //         },
+        //         error: function() {
+        //             console.log('error al traer datos');
+        //         }
+        //     })
+        // }
 
         function descargarWordBorrador() {
             // 1. Obtener el formulario original
@@ -858,6 +798,7 @@
             let urlruta_doc_emitidosf = urlruta_doc_emitidosEmi.replace(':emi', $('#emisor').val());
 
             $('#datatablesSimple').DataTable({
+                scrollX: true,
                 autoWidth: false,
                 aaSorting: [],
                 language: {
@@ -970,22 +911,6 @@
             });
 
         }
-
-        @if (session('error'))
-            Swal.fire({
-                title: "Error!",
-                text: "{{ session('error') }}",
-                icon: "error"
-            });
-        @endif
-
-        @if (session('success'))
-            Swal.fire({
-                title: "BUEN TRABAJO!",
-                text: "{{ session('success') }}",
-                icon: "success"
-            });
-        @endif
     </script>
 
     <script>
