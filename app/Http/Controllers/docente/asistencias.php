@@ -523,16 +523,6 @@ class asistencias extends Controller
         $fecha_fin = Carbon::parse($fechasAsistencia->fech_fin_asis);
 
         if ($fechaCarbon->between($request->fech_ini, $request->fech_fin)) {
-            // Generar todas las fechas
-            // $fechas = [];
-            // $current = \Carbon\Carbon::parse($request->fech_ini);
-            // $end = \Carbon\Carbon::parse($request->fech_fin);
-
-            // while ($current <= $end) {
-            //     $fechas[] = $current->format('Y-m-d');
-            //     $current->addDay();
-            // }
-
             $fechas = DB::connection('mysql_segunda')
                 ->table('asistencias')
                 ->join('incripcion_curso', 'asistencias.idincripcion_curso', '=', 'incripcion_curso.idincripcion_curso')
@@ -543,10 +533,6 @@ class asistencias extends Controller
                 ->orderBy('asistencias.fecha')
                 ->pluck('asistencias.fecha')
                 ->toArray();
-
-                // dd($fechas);
-
-
 
             $asistencias = DB::connection('mysql_segunda')
                 ->table('asistencias')
@@ -575,36 +561,31 @@ class asistencias extends Controller
             $fech_ini = $request->fech_ini;
             $fech_fin = $request->fech_fin;
 
-            // return view('docente.asistencia.totalAsist', compact(
-            //     'fecha',
-            //     'iddocente_curso',
-            //     'nombre_de_carrera',
-            //     'nombre_curso',
-            //     'idciclos',
-            //     'nombre_ciclo',
-            //     'año',
-            //     'periodo',
-            //     'año_de_inicio',
-            //     'nom_seccion',
-            //     'idcursos',
-            //     'tipodocente_curso',
-
-            //     'listAlumnos',
-            //     'nom_usu',
-            //     'fechas',
-            //     'asistencias',
-
-            //     'fech_ini',
-            //     'fech_fin'
-            // ));
 
             $bloquesDeFechas = collect($fechas)->chunk(30); // cada bloque con 30 fechas
 
-            $encargados = DB::connection('mysql_segunda')->table('encargados')->where('estado', 1)->get();
+            /////////////////////////////////////////////// Para la cabecera dek pdf
+            $query1 = DB::connection('mysql_segunda')->select('SELECT mc.nombre_malla_curricular, c.nombre_curso, ci.nombre_ciclo,
+            sa.año, sa.periodo, up.nombre, s.nom_seccion FROM plan_de_estudio pe
+            INNER JOIN malla_curricular mc ON pe.malla_curricular_idmalla_curricular = mc.idmalla_curricular
+            INNER JOIN cursos c ON pe.idcursos = c.idcursos
+            INNER JOIN ciclos ci ON pe.idciclos = ci.idciclos
+            INNER JOIN docente_curso dc ON dc.idcursos = c.idcursos
+            INNER JOIN semestre_academico sa ON dc.idsemestre_academico = sa.idsemestre_academico
+            INNER JOIN docente d ON dc.id_docente = d.iddocente
+            INNER JOIN userprofile up ON d.id_users = up.id_users
+            INNER JOIN horario h ON h.id_docente_curso = dc.iddocente_curso
+            INNER JOIN seccion s ON h.idseccion = s.idseccion WHERE dc.iddocente_curso = ?', [$iddocente_curso]);
 
+            // $encargados = DB::connection('mysql_segunda')->table('encargados')->where('estado', 1)->get();
 
-            $pdf = Pdf::loadView('pdf.asistencia_horizontal', compact('listAlumnos', 'fechas', 'asistencias', 'bloquesDeFechas', 'nombre_de_carrera','nombre_curso', 'nombre_ciclo', 'año', 'periodo', 'fech_ini', 'fech_fin', 'tipodocente_curso', 'encargados'))
-                ->setPaper('a4', 'landscape'); // 👈 horizontal
+            $encargados = DB::connection('mysql_segunda')->select('SELECT upd.nombre AS direc, e.reso_direc, ups.nombre AS secre, e.logo FROM encargados e
+            INNER JOIN userprofile upd ON e.iduserProfile_direc = upd.iduserProfile
+            INNER JOIN userprofile ups ON e.iduserProfile_secre = ups.iduserProfile
+            WHERE e.estado = 1;');
+
+            $pdf = Pdf::loadView('pdf.asistencia_horizontal', compact('query1', 'listAlumnos', 'fechas', 'asistencias', 'bloquesDeFechas', 'nombre_de_carrera', 'nombre_curso', 'nombre_ciclo', 'año', 'periodo', 'fech_ini', 'fech_fin', 'tipodocente_curso', 'encargados'))
+                ->setPaper('a4', 'landscape');
 
             return $pdf->stream('asistencia_horizontal.pdf');
         } else {

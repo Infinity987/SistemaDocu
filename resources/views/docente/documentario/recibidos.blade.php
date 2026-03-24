@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.bandeja')
+    @can('docente.horario')
         <div class="semaforo-container">
             <div class="semaforo verde">
                 <span id="badgeVerde">{{ $cont_fecha[0]->verde == 0 ? '' : $cont_fecha[0]->verde }}</span>
@@ -45,7 +45,7 @@
 @stop
 
 @section('content')
-    @can('documentario.mesapar.bandeja')
+    @can('docente.horario')
         <div class="container-fluid">
             <div class="row">
                 <input type="hidden" id="emisor" name="emisor" value ="{{ $depen }}">
@@ -64,21 +64,21 @@
                                                             class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
                                                                 class="fas fa-sign-in-alt"></i>
                                                             Recibidos <span id="badgeNotificaciones1"
-                                                                class="badge badge-danger">{{ $cont_est[0]->cont_estado == 0 ? '' : $cont_est[0]->cont_estado }}</span></button>
+                                                                class="badge badge-danger">{{ $cont_est_doce_band[0]->cont_estado == 0 ? '' : $cont_est_doce_band[0]->cont_estado }}</span></button>
                                                     </div>
                                                     <div class="col-lg-2 col-sm-6 pb-1 pt-1">
                                                         <button data-tipo="2" type="button"
                                                             class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
                                                                 class="fas fa-user-clock"></i>
                                                             Pendientes <span id="badgeNotificaciones2"
-                                                                class="badge badge-danger">{{ $cont_est[1]->cont_estado == 0 ? '' : $cont_est[1]->cont_estado }}</span></button>
+                                                                class="badge badge-danger">{{ $cont_est_doce_band[1]->cont_estado == 0 ? '' : $cont_est_doce_band[1]->cont_estado }}</span></button>
                                                     </div>
                                                     <div class="col-lg-2 col-sm-6 pb-1 pt-1">
                                                         <button data-tipo="3" type="button"
                                                             class="btn btn-block bg-gradient-info btn-sm tipo-btn"><i
                                                                 class="fas fa-calendar-check"></i>
                                                             Atendidos <span id="badgeNotificaciones3"
-                                                                class="badge badge-danger">{{ $cont_est[2]->cont_estado == 0 ? '' : $cont_est[2]->cont_estado }}</span></button>
+                                                                class="badge badge-danger">{{ $cont_est_doce_band[2]->cont_estado == 0 ? '' : $cont_est_doce_band[2]->cont_estado }}</span></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -612,7 +612,7 @@
             }
 
             let ruta_doc_emitidos =
-                "{{ route('documentario.bandeja.bandejaEstado', ['idtipo_estado' => ':id', 'emisor' => ':emi']) }}";
+                "{{ route('docente.bandejaList', ['idtipo_estado' => ':id', 'emisor' => ':emi']) }}";
             let urlruta_doc_emitidosEmi = ruta_doc_emitidos.replace(':id', tipo);
             let urlruta_doc_emitidosf = urlruta_doc_emitidosEmi.replace(':emi', $('#emisor').val());
 

@@ -1,35 +1,126 @@
-<table style="width: 160%; border-collapse: collapse; font-size: 10px;">
+<style>
+    * {
+        font-family: sans-serif;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    #color {
+        border: 1px solid #000;
+        padding: 4px;
+        font-size: 10px;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .no-border {
+        border: none;
+    }
+
+    .titulo-principal {
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .negrita {
+        font-weight: bold;
+        text-align: center;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+</style>
+
+<table>
     <tr>
-        <td class="text-center">
+        <td colspan="1" class="text-center"
+            style="border-top:none; border-left:none; border-right:none; border-bottom:1px solid #000; height: 80px;">
             <img src="{{ public_path($encargados[0]->logo) }}" style="width: 80px; display:block;" alt="Logo"
-                height="50px;">
+                height="60px;">
         </td>
-        <td class="text-center titulo-principal">
-            <h2 style="margin: 0; font-size: 25px; color: #471f00; text-decoration: underline;">Reporte de Asistencia
-            </h2><br>
-        </td>
-        {{-- <td class="text-center">
-            <img src="{{ public_path($queryDa[0]->foto_postulante) }}" style="width: 60px; display:block;"
-                alt="." height="60px">
-        </td> --}}
+        <td colspan="9" class="text-center titulo-principal">Registro de asistencia</td>
     </tr>
-</table><br>
+    <tr id="color">
+        <td id="color" colspan="2" rowspan="2" class="negrita">Nombre de la Institución</td>
+        <td id="color" colspan="5" rowspan="2" class="negrita text-center">GAMANIEL BLANCO MURILLO</td>
+        <td id="color" colspan="1" class="negrita">DRE</td>
+        <td id="color" colspan="2" class="text-center" style="font-size: 9px;">PASCO</td>
+    </tr>
+    <tr id="color">
+        <td id="color" colspan="1" class="negrita">UGEL</td>
+        <td id="color" colspan="2" class="text-center" style="font-size: 9px;">DREP-PASCO</td>
+    </tr>
 
-<div style="margin-bottom: 10px;">
-    <p style="margin: 2px 0; font-size: 11px;">
-        <strong style="color: #883302;">Carrera:</strong> {{ $nombre_de_carrera }} &nbsp;&nbsp;&nbsp;&nbsp;
-        <strong style="color: #883302;">Curso:</strong> {{ $nombre_curso }} &nbsp;&nbsp;&nbsp;&nbsp;
-        <strong style="color: #883302;">Ciclo:</strong> {{ $nombre_ciclo }} &nbsp;&nbsp;&nbsp;&nbsp;
-        <strong style="color: #883302;">Año:</strong> {{ $año }} &nbsp;&nbsp;&nbsp;&nbsp;
-        <strong style="color: #883302;">Periodo:</strong> {{ $periodo }} &nbsp;&nbsp;&nbsp;&nbsp;
-        <strong style="color: #883302;">Tipo:</strong> {{ $tipodocente_curso == 1 ? 'REGULAR' : 'SUBSANACION' }}
+    <tr id="color">
+        <td id="color" colspan="1" rowspan="" class="negrita">Código Modular</td>
+        <td id="color" colspan="2" rowspan="" class="negrita">Denominación</td>
+        <td id="color" colspan="1" rowspan="" class="negrita">Gestión</td>
+        <td id="color" colspan="1" rowspan="" class="negrita">D.S. / R.M. de Creación y R.D. de
+            Revalidación</td>
+        <td id="color" colspan="1" rowspan="" class="negrita">Dirección</td>
+        <td id="color" colspan="4" rowspan="" class="text-center" style="font-size: 9px;"> AV. LOS
+            PROCERES N° 872</td>
+    </tr>
+    <tr id="color">
+        <td id="color" class="text-center">0575779</td>
+        <td id="color" colspan="2" class="text-center">EESP</td>
+        <td id="color" class="text-center">Público</td>
+        <td id="color" class="text-center">R.M. N° 0205-1981</td>
+        <td id="color" class="negrita">Provincia</td>
+        <td id="color" class="text-center" style="font-size: 9px;">PASCO</td>
+        <td id="color" class="negrita">Distrito</td>
+        <td id="color" colspan="2" class="text-center" style="font-size: 9px;">YANACANCHA</td>
+    </tr>
+</table>
+<br style="line-height:5px;">
 
-    </p>
-    <p style="margin: 2px 0; font-size: 10px;">
-        <strong style="color: #883302;">Fechas:</strong> {{ $fech_ini }} al
-        {{ $fech_fin }}
-    </p>
-</div>
+<table>
+    <tr id="color">
+        <td style="width: 20%; font-size: 10px;" class="negrita">Programa de estudio / Turno</td>
+        <td style="width: 45%; font-size: 9px; border: 1px solid #000;" class="text-center">
+            {{ $query1[0]->nombre_malla_curricular }}</td>
+        <td style="width: 15%; " id="color" class="negrita">Periodo Académico</td>
+        <td style="width: 15%; " id="color" class="text-center">{{ $query1[0]->año }} -
+            {{ $query1[0]->periodo }}</td>
+    </tr>
+    <tr id="color">
+        <td style="width:20%" id="color" class="negrita">Resolución de Autorización</td>
+        <td style="width:45%; font-size: 9px;" id="color" class="text-center">RD 0875-2001-ED</td>
+        <td style="width:15%" id="color" class="text-center" class="negrita"> Ciclo - Sección</td>
+        <td style="width:15%" id="color" class="text-center"> {{ $query1[0]->nombre_ciclo }} -
+            {{ $query1[0]->nom_seccion }}</td>
+    </tr>
+
+    <tr id="color">
+        <td style="width:20%" id="color" class="negrita">Director (a) General</td>
+        <td style="width:45%; font-size: 9px;" id="color" class="text-center">{{ $encargados[0]->direc }}</td>
+        <td style="width:15%" id="color" class="negrita">R.D. Encargatura</td>
+        <td style="width:15%; font-size: 9px;" id="color" class="text-center">
+            {{ $encargados[0]->reso_direc }}</td>
+    </tr>
+    <tr id="color">
+        <td style="width:20%" id="color" class="negrita">Docente Formador</td>
+        <td style="width:45%" id="color" class="text-center">{{ $query1[0]->nombre }}</td>
+        <td style="width:15%" id="color" rowspan="2" class="negrita">Fecha:</td>
+        {{-- {{ $fechaHora->format('d-m-Y') }} --}}
+        <td style="width:15%" id="color" class="text-center" rowspan="2">
+            {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+        </td>
+    </tr>
+
+    <tr id="color">
+        <td style="width:15%" id="color" class="negrita">Curso / Módulo:</td>
+        <td style="width:15%" id="color" class="text-center">{{ $query1[0]->nombre_curso }}</td>
+    </tr>
+</table>
+<br style="line-height:5px;">
+
 @foreach ($bloquesDeFechas as $fechasChunk)
     <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
         <thead>

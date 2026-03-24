@@ -96,7 +96,8 @@ class mesaPartes extends Controller
             ORDER BY documentos.iddocumentos DESC;
         ", [
             $valorFiltro, // Siempre evaluamos contra el ID 1 (FUT)
-            $emisor, 0
+            $emisor,
+            0
         ]);
 
         if (request()->ajax()) {
@@ -190,6 +191,19 @@ class mesaPartes extends Controller
         return response()->json($depens);
     }
 
+    public function buscarDocentes(Request $request)
+    {
+        $busqueda = $request->get('q');
+        $docentes = DB::table('users')
+            ->join('gamnielb_sia.userprofile', 'users.id', '=', 'gamnielb_sia.userprofile.id_users')
+            ->where('gamnielb_sia.userprofile.nombre', 'like', "%{$busqueda}%")
+            ->select('gamnielb_sia.userprofile.id_users as id', 'gamnielb_sia.userprofile.nombre as text')
+            ->limit(10)
+            ->get();
+
+        return response()->json($docentes);
+    }
+
     public function generarWordBorrador(Request $request)
     {
         // ... validaciones ...
@@ -231,12 +245,6 @@ class mesaPartes extends Controller
 
     public function registrarDocu(Request $request)
     {
-        // dd($request);
-        // 1. Datos base
-        $usuario_id_sistema = Auth::user()->id;
-        $emisor_id = $request->emisor;
-        $fecha_actual = $request->fecha_actual;
-        // ... dentro de public function registrarDocu(Request $request)
 
         $reglas = [
             'tipo_documento'   => 'required|not_in:0',
@@ -271,9 +279,15 @@ class mesaPartes extends Controller
 
         $request->validate($reglas, $mensajes);
 
+        // 1. Datos base
+        $usuario_id_sistema = Auth::user()->id;
+        $emisor_id = $request->emisor;
+        $fecha_actual = $request->fecha_actual;
+
+        // dd($request);
+
         try {
             DB::beginTransaction();
-
             // 3. Insertar Documento Principal
             $iddocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
                 'numero_de_exp'            => $request->num_expe,
@@ -289,44 +303,73 @@ class mesaPartes extends Controller
                 'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente == 'juridica') ? $request->id_entidad_externa : null,
                 'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente == 'juridica') ? $request->numero_documento_externo : null,
 
-                'anexos_fisicos'   => $request->detalle_anexos_fisicos,
+                'anexos_fisicos'           => $request->detalle_anexos_fisicos,
                 'estado_actu'              => 1,
                 'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
                 'est_firma'                => $request->est_firma
             ]);
 
-            // 4. Determinar Receptores (Todas o Selección)
-            $receptores = [];
-            if ($request->has('todasDepenSelects')) {
-                $receptores = DB::connection('mysql_documentario')->table('dependencias')
-                    ->where('iddependencias', '!=', 1)
-                    ->where('iddependencias', '!=', $emisor_id)
-                    ->pluck('iddependencias')
-                    ->toArray();
+            ////////////////////////////// En caso envia a docentes
+            if ($request->has('docentes_especificos')) {
+                $tot_docentes = $request->docentes_especificos;
+                // dd($request);
+                foreach ($tot_docentes as $id_user_docente) {
+                    DB::connection('mysql_documentario')->table('movimiento')->insert([
+                        'iddocumentos'            => $iddocumento,
+                        'iddependencias_emior'    => $emisor_id,
+                        'iddependencias_receptor' => 2, //solo docente id 2
+                        'id_user_receptor'        => $id_user_docente,
+                        'fecha_de_envio'          => $fecha_actual,
+                        'idestado'                => 1
+                    ]);
+
+                    // Obtener conteos para el evento Real-Time
+                    $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                                        FROM estado
+                                        LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                                        AND movimiento.id_user_receptor = ?
+                                        WHERE estado.idestado IN (1,2,3)
+                                        GROUP BY estado.idestado;', [$id_user_docente]);
+
+                    //aqui el evento para docentes.
+                }
             } else {
-                $receptores = $request->dependencia_enviar;
-            }
+                // 4. Determinar Receptores (Todas o Selección)
+                $receptores = [];
+                if ($request->has('todasDepenSelects')) {
+                    $receptores = DB::connection('mysql_documentario')->table('dependencias')
+                        ->where('iddependencias', '!=', 1)
+                        ->where('iddependencias', '!=', $emisor_id)
+                        ->pluck('iddependencias')
+                        ->toArray();
+                } else {
+                    $receptores = $request->dependencia_enviar;
+                }
 
-            // 5. Insertar Movimientos y Emitir Eventos
-            foreach ($receptores as $id_receptor) {
-                DB::connection('mysql_documentario')->table('movimiento')->insert([
-                    'iddocumentos'            => $iddocumento,
-                    'iddependencias_emior'    => $emisor_id,
-                    'iddependencias_receptor' => $id_receptor,
-                    'fecha_de_envio'          => $fecha_actual,
-                    'idestado'                => 1
-                ]);
+                // 5. Insertar Movimientos y Emitir Eventos
+                foreach ($receptores as $id_receptor) {
+                    DB::connection('mysql_documentario')->table('movimiento')->insert([
+                        'iddocumentos'            => $iddocumento,
+                        'iddependencias_emior'    => $emisor_id,
+                        'iddependencias_receptor' => $id_receptor,
+                        'fecha_de_envio'          => $fecha_actual,
+                        'idestado'                => 1
+                    ]);
 
-                // Obtener conteos para el evento Real-Time
-                $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                    // Obtener conteos para el evento Real-Time
+                    $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
                                         FROM estado
                                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
                                         AND movimiento.iddependencias_receptor = ?
                                         WHERE estado.idestado IN (1,2,3)
                                         GROUP BY estado.idestado;', [$id_receptor]);
 
-                event(new DocumentoRecibido($id_receptor, $cont_estados));
+                    event(new DocumentoRecibido($id_receptor, $cont_estados));
+                }
             }
+            ////////////////////////////// fin en caso envia a docentes
+
+            // dd('pause');
 
             // 6. Gestión de Archivo PDF (Sin Firma Digital)
             if ($request->hasFile('archivo_pdf')) {
