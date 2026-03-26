@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Dashboard')
+@section('title', 'Cursos - calificaciones')
 
 @section('content_header')
     @can('docente.calificaciones')

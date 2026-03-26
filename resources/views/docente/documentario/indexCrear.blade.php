@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.index')
+    @can('docente.horario')
         <div class="callout callout-danger">
             <section class="content-header p-0">
                 <div class="container-fluid">
@@ -26,7 +26,7 @@
 @stop
 
 @section('content')
-    @can('documentario.mesapar.index')
+    @can('docente.horario')
         {{-- vistas para mesa de partes --}}
         @if ($id_depen == 24)
             @include('mesaPartes.partials.menu_mesa_partes')
@@ -45,7 +45,7 @@
                             aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                             <div class="modal-dialog modal-lg" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header" style="background: linear-gradient(135deg, #736001, #e6b884);">
+                                    <div class="modal-header" style="background: linear-gradient(135deg, #574002, #ac8c34);">
                                         <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
                                                 class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo registro</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -126,7 +126,7 @@
                                                 </div>
 
                                                 <div class="row">
-                                                    <div class="col-sm-9" id="container_dependencias">
+                                                    <div class="col-sm-9">
                                                         <div class="form-group">
                                                             <label for="dependencia_enviar">
                                                                 <i class="fas fa-map-marker-alt text-success"></i>
@@ -137,34 +137,6 @@
                                                                 name="dependencia_enviar[]" multiple>
                                                             </select>
                                                             <span id="dependencia_enviar_error" class="text-danger"></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-md-12" id="container_docentes" style="display: none;">
-                                                        <div class="form-group">
-                                                            <label class="text-primary"><i class="fas fa-user-graduate"></i>
-                                                                Seleccionar Docente(s)</label>
-                                                            <select id="docentes_select" class="form-control select2"
-                                                                name="docentes_especificos[]" multiple>
-                                                            </select>
-                                                            <small class="text-muted">Nota: Al enviar a docentes, no se pueden
-                                                                añadir otras dependencias.</small>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-sm-3 text-center">
-                                                        <div class="form-group">
-                                                            <label><i class="fas fa-share-all text-muted"></i> ¿A
-                                                                todas?</label>
-                                                            <div class="d-flex justify-content-center pt-1">
-                                                                <div
-                                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                    <input type="checkbox" class="custom-control-input"
-                                                                        id="customSwitch3" name="todasDepenSelects">
-                                                                    <label class="custom-control-label"
-                                                                        for="customSwitch3"></label>
-                                                                </div>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -496,8 +468,8 @@
             });
 
             $('#num_ex').hide();
-            $('#exampleModalCenter').on('shown.bs.modal', function() {
 
+            $('#exampleModalCenter').on('shown.bs.modal', function() {
                 var fecha = new Date();
                 fecha.setHours(fecha.getHours() - 5);
                 var fecha_hora_actu = fecha.toISOString().slice(0, 19);
@@ -550,8 +522,6 @@
                     }
                 });
             });
-
-            // $('#tipo_documento').change(traer_num_expe);
 
             $('#form_regis_doc').submit(function(event) {
                 event.preventDefault();
@@ -629,32 +599,6 @@
                 });
             });
 
-            // Variable para controlar si ya se cargó la pestaña de la oficina por primera vez
-            let oficinaInicializada = false;
-
-            // Escuchamos el clic en el enlace de la pestaña "De la oficina"
-            $('#pills-roles-tab').on('shown.bs.tab', function(e) {
-
-                if (!oficinaInicializada) {
-                    let $botonFuts = $('.tipo-btn[data-tipo="2"]');
-
-                    $('.tipo-btn')
-                        .removeClass('bg-gradient-primary active')
-                        .addClass('bg-gradient-info');
-
-                    // Ahora activamos el de Futs
-                    $botonFuts
-                        .removeClass('bg-gradient-info')
-                        .addClass('bg-gradient-primary active');
-
-                    // 3. Ejecutamos la carga de la tabla
-                    cargarTabla(2);
-
-                    // 4. Marcamos como inicializada para que no se recargue cada vez que cambie de pestaña
-                    oficinaInicializada = true;
-                }
-            });
-
             $('.tipo-btn').on('click', function() {
                 let tipo = $(this).data('tipo');
                 if (tipoActivo === tipo) return; // si ya está activo, no hace nada
@@ -681,41 +625,7 @@
                 cargarTabla(2);
                 $('.tipo-btn[data-tipo="2"]').click();
             }
-
-            $('#dependencia_enviar').on('change', function() {
-                let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
-                let esDocente = data.some(item => item.text.trim() === 'Docente');
-
-                if (esDocente) {
-                    // 1. Buscamos el ID exacto que tiene la opción "Docente"
-                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
-                    let idDocenteArea = objetoDocente.id;
-
-                    if ($('#input_docente_shadow').length === 0) {
-                        $('#form_regis_doc').append(
-                            `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
-                        );
-                    }
-
-                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
-                    $(this).val([idDocenteArea]).trigger('change.select2');
-
-                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
-                    $(this).prop('disabled', true);
-
-                    // 4. Mostramos el buscador de la tabla userprofile
-                    $('#container_docentes').fadeIn();
-                    inicializarBusquedaDocentes();
-
-                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
-                    if (!$('#btn-reset').length) {
-                        $(this).closest('.form-group').append(
-                            '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
-                        );
-                    }
-                }
-            });
-        });
+        })
 
         $('#tipo_documento').on('change', function() {
             const idTipo = $(this).val();
@@ -799,7 +709,7 @@
             }
 
             let ruta_doc_emitidos =
-                "{{ route('documentario.mesapar.emitidos', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
+                "{{ route('docente.doce.emitidos', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
             let urlruta_doc_emitidosEmi = ruta_doc_emitidos.replace(':id', tipo);
             let urlruta_doc_emitidosf = urlruta_doc_emitidosEmi.replace(':emi', $('#emisor').val());
 
@@ -892,16 +802,16 @@
                         width: "40%",
                         createdCell: function(td, cellData) {
                             $(td).html(`
-                <div style="
-                    max-width: 500px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    display: block;
-                " title="${cellData}">
-                    ${cellData}
-                </div>
-                `);
+                                <div style="
+                                    max-width: 500px;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    display: block;
+                                " title="${cellData}">
+                                    ${cellData}
+                                </div>
+                                `);
                             $(td).css('background-color', '#f19e402f');
                         }
                     },
@@ -915,35 +825,7 @@
                 ],
                 responsive: true
             });
-
         }
-
-        // 2. Función para inicializar el segundo Select2 (Docentes)
-        function inicializarBusquedaDocentes() {
-            $('#docentes_select').select2({
-                placeholder: "Busque y seleccione uno o varios docentes",
-                ajax: {
-                    url: '{{ route('documentario.buscarDocentes') }}',
-                    dataType: 'json',
-                    delay: 250,
-                    processResults: function(data) {
-                        return {
-                            results: data
-                        };
-                    }
-                },
-                dropdownParent: $('#exampleModalCenter')
-            });
-        }
-
-        // Botón para desbloquear y volver a elegir dependencias normales
-        $(document).on('click', '#btn-reset', function() {
-            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
-            $('#container_docentes').hide();
-            $('#docentes_select').val(null).trigger('change');
-            $('#input_docente_shadow').remove();
-            $(this).remove();
-        });
     </script>
 
     <script>

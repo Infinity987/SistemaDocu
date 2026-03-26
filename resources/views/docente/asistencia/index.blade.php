@@ -95,7 +95,7 @@
                         'año_de_inicio' => $año_de_inicio,
                         'nom_seccion' => $nom_seccion,
                         'tipodocente_curso' => $tipodocente_curso,
-                        'idturno' => $idturno
+                        'idturno' => $idturno,
                     ];
                 @endphp
 
@@ -633,6 +633,16 @@
             $('#countJ').text(countJ);
         }
 
+        function manejarEntrada(input, valor) {
+            if (['1', '2', '3', '4'].includes(valor)) {
+                const num = parseInt(valor);
+                aplicarColorYLetra(input, num);
+                actualizarContador(); // ✅ actualiza el resumen
+            } else {
+                input.val('');
+            }
+        }
+
         $(document).ready(function() {
             $('#tablaAsistencia').DataTable({
                 paging: false, // Desactiva paginación si quieres ver todos los alumnos
@@ -679,21 +689,19 @@
 
             actualizarContador();
 
-            // Detecta número y transforma
+            // Escritorio: captura la tecla antes de escribir
             $('.asistencia-input').on('keydown', function(e) {
                 const input = $(this);
-
-                // Solo si es número del 1 al 4
                 if (['1', '2', '3', '4'].includes(e.key)) {
                     e.preventDefault(); // evita que se escriba el número
-                    const num = parseInt(e.key);
-                    aplicarColorYLetra(input, num);
-
-                    actualizarContador(); // ✅ actualiza el resumen
-                } else {
-                    // Si no es válido, limpia
-                    setTimeout(() => input.val(''), 10);
+                    manejarEntrada(input, e.key);
                 }
+            });
+
+            // Móvil: captura el valor real escrito
+            $('.asistencia-input').on('input', function() {
+                const input = $(this);
+                manejarEntrada(input, input.val());
             });
 
             // actualizarContador();

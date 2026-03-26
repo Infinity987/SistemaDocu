@@ -343,7 +343,7 @@ return [
             'active' => ['admin/encargados*'],
             'can' => 'rol-admin'
         ],
-                [
+        [
             'header' => 'PROCESO MATRICULA',
             'can' => 'rol-admin',
         ],
@@ -566,6 +566,21 @@ return [
             'route' => 'docente.calificaciones',
             'icon' => 'fas fa-pen-fancy',
             'active' => ['docente/verAlumnos*'],
+            'can' => 'rol-docente',
+        ],
+        ['header' => 'SECCION DOCUMENTARIO', 'can' => 'rol-docente'],
+        [
+            'text' => 'Crear',
+            'route' => 'docente.creardocu',
+            'icon' => 'fas fa-clipboard',
+            'active' => ['docente/Docu-docente*'],
+            'can' => 'rol-docente',
+        ],
+        [
+            'text' => 'Bandeja',
+            'route' => 'docente.bandejaDoce',
+            'icon' => 'fas fa-inbox',
+            'active' => ['docente/Bandeja-docente*'],
             'can' => 'rol-docente',
         ],
         // FIN ROL DOCENTE

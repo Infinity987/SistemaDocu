@@ -1,18 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\documentario;
+namespace App\Http\Controllers\docente;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\DB;
-use PhpParser\Node\Stmt\TryCatch;
-use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
-use App\Events\noEditarDocumento;
 
-class bandeja extends Controller
+class bandejaDocu extends Controller
 {
     public function index()
     {
@@ -23,24 +20,25 @@ class bandeja extends Controller
         $dependencias = DB::connection('mysql_documentario')->select('SELECT * FROM dependencias');
         $detalledocumento = DB::connection('mysql_documentario')->select('SELECT * FROM detalle_tramite');
 
-        $id_usuTrabajador = $usuario->id;
+        $id_usuTrabajador =  Auth::user()->id;
         $cont_fecha = DB::connection('mysql_documentario')->select('SELECT SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 0 THEN 1 ELSE 0 END) AS verde,
-                                                  SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo,
-                                                  SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo FROM movimiento
-                                                  WHERE iddependencias_receptor = ? AND idestado= 1', [$depen]);
+                        SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo,
+                        SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo FROM movimiento
+                        WHERE id_user_receptor = ? AND idestado= 1', [$id_usuTrabajador]);
 
-        $cont_est = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+        $cont_est_doce_band = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
                             FROM estado
                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-                            AND movimiento.iddependencias_receptor = ?
+                            AND movimiento.id_user_receptor = ?
                             WHERE estado.idestado IN (1,2,3)
-                            GROUP BY estado.idestado;', [$depen]);
-        return view('mesaPartes.recibidos', compact('depen', 'usuario', 'rol', 'cont_est', 'id_depen', 'dependencias', 'detalledocumento', 'cont_fecha'));
+                            GROUP BY estado.idestado;', [$id_usuTrabajador]);
+        // dd($cont_est);
+        return view('docente.documentario.recibidos', compact('depen', 'usuario', 'rol', 'cont_est_doce_band', 'id_depen', 'dependencias', 'detalledocumento', 'cont_fecha'));
     }
 
-    public function bandejaEstado($idtipo_estado, $emisor)
+    public function bandejaList($idtipo_estado, $emisor)
     {
-        $usuario = Auth::user();
+        $id_users = Auth::user()->id;
         $depen = session('dependencia_id');
         $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $depen)->first();
 
@@ -58,9 +56,9 @@ class bandeja extends Controller
                 LEFT JOIN dependencias ON movimiento.iddependencias_emior = dependencias.iddependencias
                 LEFT JOIN detalle_tramite ON documentos.iddetalle_tramite = detalle_tramite.iddetalle_tramite
                 INNER JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
-                WHERE iddependencias_receptor = ? AND idestado = ?
+                WHERE id_user_receptor = ? AND idestado = ?
                 ORDER BY movimiento.fecha_de_envio DESC
-            ', [$emisor, $idtipo_estado]);
+            ', [$id_users, $idtipo_estado]);
         } else {
             $query = DB::connection('mysql_documentario')->select('
                 SELECT
@@ -86,23 +84,23 @@ class bandeja extends Controller
                 LEFT JOIN dependencias ON movimiento.iddependencias_emior = dependencias.iddependencias
                 LEFT JOIN detalle_tramite ON documentos.iddetalle_tramite = detalle_tramite.iddetalle_tramite
                 INNER JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
-                WHERE iddependencias_receptor = ? AND idestado = ?
+                WHERE id_user_receptor = ? AND idestado = ?
                 ORDER BY movimiento.fecha_de_recepcion DESC
-            ', [$emisor, $idtipo_estado]);
+            ', [$id_users, $idtipo_estado]);
         }
 
 
         if (request()->ajax()) {
-            return datatables::of($query)->addColumn('btn', 'mesaPartes.butons_bandeja')->rawColumns(['btn'])->toJson();
+            return datatables::of($query)->addColumn('btn', 'docente.documentario.butons_bandeja')->rawColumns(['btn'])->toJson();
         }
     }
 
-    public function bandejaEstado_upda($idtipo_estado, $iddocument, $iddependencias_receptor)
+    public function bandejaRecepcionar($idtipo_estado, $iddocument, $movimient)
     {
         $fechaHoraActual = Carbon::now();
         try {
             DB::beginTransaction();
-            $query = DB::connection('mysql_documentario')->update('UPDATE movimiento SET idestado = ?, fecha_de_recepcion = ? WHERE iddocumentos = ? AND iddependencias_receptor = ?', [$idtipo_estado, $fechaHoraActual, $iddocument, $iddependencias_receptor]);
+            $query = DB::connection('mysql_documentario')->update('UPDATE movimiento SET idestado = ?, fecha_de_recepcion = ? WHERE iddocumentos = ? AND idmovimiento = ?', [$idtipo_estado, $fechaHoraActual, $iddocument, $movimient]);
             $query2 = DB::connection('mysql_documentario')->update('UPDATE documentos SET estado_actu = ? WHERE iddocumentos = ?', [$idtipo_estado, $iddocument]);
             DB::commit();
 
@@ -111,7 +109,8 @@ class bandeja extends Controller
                 ->where('iddocumentos', $iddocument)
                 ->value('emisor');
 
-            event(new noEditarDocumento($dependencia_id));
+            // aqui el evento falta
+            // event(new noEditarDocumento($dependencia_id));
             return redirect()->back()->with('success', 'Documento recibido');
         } catch (\Throwable $th) {
             DB::rollBack();

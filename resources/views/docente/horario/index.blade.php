@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Dashboard')
+@section('title', 'Horario')
 
 @section('content_header')
     @can('docente.horario')
