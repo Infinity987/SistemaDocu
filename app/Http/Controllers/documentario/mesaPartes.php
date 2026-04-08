@@ -47,11 +47,35 @@ class mesaPartes extends Controller
 
     public function emitidos($idtipo_docu, $emisor)
     {
-        $query_emitidos = DB::connection('mysql_documentario')->select('SELECT documentos.iddocumentos, documentos.numero_de_exp, documentos.fecha_ingreso, documentos.asunto, documentos.folio, movi_est.id_estado FROM documentos
-        INNER JOIN (SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado
-            FROM `movimiento` GROUP BY movi_iddocu ) AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
-            WHERE idtipo_documento = ? AND emisor = ? AND est_firma = ?
-            GROUP BY documentos.iddocumentos, documentos.numero_de_exp, documentos.fecha_ingreso, documentos.asunto, documentos.folio, movi_est.id_estado ORDER BY documentos.iddocumentos DESC;', [
+        $query_emitidos = DB::connection('mysql_documentario')->select('SELECT
+            MAX(documentos.iddocumentos) AS iddocumentos,
+            MAX(documentos.numero_de_exp) AS numero_de_exp,
+            MAX(documentos.fecha_ingreso) AS fecha_ingreso,
+            MAX(documentos.asunto) AS asunto,
+            MAX(userprofilew.nombre) AS nombre,
+            MAX(dependencias.nombre_dependencia) AS nombre_dependencia,
+            MAX(documentos.folio) AS folio,
+            MAX(movi_est.id_estado) AS id_estado,
+            MAX(movi_est.id_user_receptor) AS id_user_receptor
+            FROM documentos
+            INNER JOIN (SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado, movimiento.iddependencias_receptor AS iddependencias_receptor,
+                movimiento.id_user_receptor as id_user_receptor
+                FROM `movimiento` GROUP BY movi_iddocu, iddependencias_receptor, id_user_receptor)
+                AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
+            left JOIN gamnielb_sia.userprofile as userprofilew ON movi_est.id_user_receptor = userprofilew.id_users
+            left join dependencias ON movi_est.iddependencias_receptor = dependencias.iddependencias
+                WHERE idtipo_documento = ? AND emisor = ? AND est_firma = ?
+                GROUP BY
+                documentos.iddocumentos
+                -- documentos.numero_de_exp,
+                -- documentos.fecha_ingreso,
+                -- documentos.asunto,
+                -- userprofilew.nombre,
+                -- dependencias.nombre_dependencia,
+                -- documentos.folio,
+                -- movi_est.id_estado,
+                -- movi_est.id_user_receptor
+                ORDER BY documentos.iddocumentos DESC;', [
             $idtipo_docu,
             $emisor,
             1
@@ -332,6 +356,7 @@ class mesaPartes extends Controller
                                         GROUP BY estado.idestado;', [$id_user_docente]);
 
                     //aqui el evento para docentes.
+                    event(new DocumentoRecibido($id_user_docente, $cont_estados, 'personal'));
                 }
             } else {
                 // 4. Determinar Receptores (Todas o Selección)
@@ -364,7 +389,7 @@ class mesaPartes extends Controller
                                         WHERE estado.idestado IN (1,2,3)
                                         GROUP BY estado.idestado;', [$id_receptor]);
 
-                    event(new DocumentoRecibido($id_receptor, $cont_estados));
+                    event(new DocumentoRecibido($id_receptor, $cont_estados, 'dependencia'));
                 }
             }
             ////////////////////////////// fin en caso envia a docentes
@@ -493,7 +518,7 @@ class mesaPartes extends Controller
                                         WHERE estado.idestado IN (1,2,3)
                                         GROUP BY estado.idestado;', [$id_receptor]);
 
-                event(new DocumentoRecibido($id_receptor, $cont_estados));
+                event(new DocumentoRecibido($id_receptor, $cont_estados, 'dependencia'));
             }
 
             // 6. Gestión de Archivo PDF (Sin Firma Digital)

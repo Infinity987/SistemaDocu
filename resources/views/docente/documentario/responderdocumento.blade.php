@@ -10,7 +10,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-sm-6">
-                        <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-inbox"></i> - Formulario de respuesta</h1>
+                        <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-inbox"></i> - Formulario de respuesta DOCENTE</h1>
                         </h1>
                     </div>
                     <div class="col-sm-6">
@@ -26,7 +26,7 @@
 @stop
 
 @section('content')
-    @livewire('responder-documento', [
+    @livewire('responder-documento-docen', [
         'documento' => $documento,
         'dependencias' => $dependencias,
         'detalledocumento' => $detalledocumento,

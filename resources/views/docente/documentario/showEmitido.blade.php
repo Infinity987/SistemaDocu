@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.showEmitido')
+    @can('docente.horario')
         <div class="callout callout-danger">
             <section class="content-header p-0">
                 <div class="container-fluid">
@@ -30,7 +30,7 @@
 @stop
 
 @section('content')
-    @can('documentario.mesapar.showEmitido')
+    @can('docente.horario')
         <section class="content">
             <div class="container-fluid">
                 <div class="card collapsed-card card-{{ $estadoMayor->idestado >= 2 ? 'success' : 'danger' }}">
@@ -335,11 +335,6 @@
 @stop
 
 @section('js')
-    <script>
-        window.dependenciaId = {{ $id_depen }}; // Esto se usa dentro de app.js
-    </script>
-    {{-- @vite('resources/js/app.js') --}}
-
     {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -350,16 +345,16 @@
     @livewireScripts
 
     <script>
-        let dependenciaId = {{ $id_depen }};
-
+        const userId = "{{ auth()->id() }}";
         document.addEventListener("DOMContentLoaded", function() {
             const audio = new Audio('{{ asset('sound/alert.mp3') }}');
-            Echo.private('dependencia.' + dependenciaId)
+
+            Echo.private('App.Models.User.' + userId)
                 .listen('.noEditarDocumento', (e) => {
-                    audio.play().catch(err => console.log("Audio en espera de interacción ..."));
+                    audio.play().catch(err => console.log("Audio en espera de interacción"));
                     Swal.fire({
                         title: "ALERTA!",
-                        text: "Este documento ya fue recepcionado, no se puede editar ....",
+                        text: "Este documento ya fue recepcionado, no se puede editar ...",
                         icon: "error"
                     }).then(() => {
                         window.location.href = window.location.href;

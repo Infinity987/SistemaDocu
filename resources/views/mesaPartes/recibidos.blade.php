@@ -345,48 +345,48 @@
 
     <script>
         let dependenciaId = {{ $depen }};
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.DocumentoRecibido', (e) => {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                            var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
-                            audio.play();
-                        },
-                        didClose: () => {
-                            $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-                                .cont_estados[0].cont_estado);
-                            $('#badgeNotificaciones1').text(e.cont_estados[0].cont_estado == 0 ?
-                                '' : e.cont_estados[0]
-                                .cont_estado);
-                            $('#badgeNotificaciones2').text(e.cont_estados[1].cont_estado == 0 ?
-                                '' : e.cont_estados[1]
-                                .cont_estado);
-                            $('#badgeNotificaciones3').text(e.cont_estados[2].cont_estado == 0 ?
-                                '' : e.cont_estados[2]
-                                .cont_estado);
-                            // $('#badgeVerde').text(e.cont_fechas[0].verde);
-                            // $('#badgeAmarillo').text(e.cont_fechas[0].amarillo);
-                            // $('#badgeRojo').text(e.cont_fechas[0].rojo);
-                            console.log('recargar datatable ahora peroj jjjjj');
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.DocumentoRecibido', (e) => {
+        //             const Toast = Swal.mixin({
+        //                 toast: true,
+        //                 position: "top-end",
+        //                 showConfirmButton: false,
+        //                 timer: 3000,
+        //                 timerProgressBar: true,
+        //                 didOpen: (toast) => {
+        //                     toast.onmouseenter = Swal.stopTimer;
+        //                     toast.onmouseleave = Swal.resumeTimer;
+        //                     var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
+        //                     audio.play();
+        //                 },
+        //                 didClose: () => {
+        //                     $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
+        //                         .cont_estados[0].cont_estado);
+        //                     $('#badgeNotificaciones1').text(e.cont_estados[0].cont_estado == 0 ?
+        //                         '' : e.cont_estados[0]
+        //                         .cont_estado);
+        //                     $('#badgeNotificaciones2').text(e.cont_estados[1].cont_estado == 0 ?
+        //                         '' : e.cont_estados[1]
+        //                         .cont_estado);
+        //                     $('#badgeNotificaciones3').text(e.cont_estados[2].cont_estado == 0 ?
+        //                         '' : e.cont_estados[2]
+        //                         .cont_estado);
+        //                     // $('#badgeVerde').text(e.cont_fechas[0].verde);
+        //                     // $('#badgeAmarillo').text(e.cont_fechas[0].amarillo);
+        //                     // $('#badgeRojo').text(e.cont_fechas[0].rojo);
+        //                     console.log('recargar datatable ahora peroj jjjjj');
 
-                            $('#datatablesS').DataTable().ajax.reload();
-                        }
-                    });
+        //                     $('#datatablesS').DataTable().ajax.reload();
+        //                 }
+        //             });
 
-                    Toast.fire({
-                        icon: "success",
-                        title: "Nuevo documento recibido"
-                    });
-                });
-        });
+        //             Toast.fire({
+        //                 icon: "success",
+        //                 title: "Nuevo documento recibido"
+        //             });
+        //         });
+        // });
 
         document.addEventListener("DOMContentLoaded", function() {
             Echo.private('dependencia.' + dependenciaId)

@@ -20,38 +20,44 @@ class enviardocumentos extends Controller
 {
     public function solucionar($id)
     {
+        // dd($id);
         $usuario = Auth::user();
         $depen = session('dependencia_id');
-        $rol = DB::table('dependencias')->where('iddependencias', $depen)->first();
-        $dependencias = DB::select('SELECT * FROM dependencias');
-        $detalledocumento = DB::select('SELECT * FROM detalle_tramite');
+        $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $depen)->first();
+        $dependencias = DB::connection('mysql_documentario')->select('SELECT * FROM dependencias');
+        $detalledocumento = DB::connection('mysql_documentario')->select('SELECT * FROM detalle_tramite');
 
         $id_usuTrabajador = $usuario->id;
-        $cont_est = DB::select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+        $cont_est = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
                             FROM estado
                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
                             AND movimiento.iddependencias_receptor = ?
                             WHERE estado.idestado IN (1,2,3)
                             GROUP BY estado.idestado;', [$depen]);
-        $cont_fecha = DB::select('SELECT SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 0 THEN 1 ELSE 0 END) AS verde,
-                                                  SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo,
-                                                  SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo FROM movimiento
-                                                  WHERE iddependencias_receptor = ? AND idestado= 1', [$depen]);
+        $cont_fecha = DB::connection('mysql_documentario')->select('SELECT SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 0 THEN 1 ELSE 0 END) AS verde,
+            SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo,
+            SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo FROM movimiento
+            WHERE iddependencias_receptor = ? AND idestado= 1', [$depen]);
 
         $nombreArchivo = null;
         $rutaPDF = null;
         try {
-            $actualizarestado = DB::update("
-            UPDATE `movimiento`
-            SET `idestado` = 3
-            WHERE `iddocumentos` = ?
-        ", [$id]);
+            $actualizarestado = DB::connection('mysql_documentario')->update("
+                UPDATE `movimiento`
+                SET `idestado` = 3,
+                `fecha_finalizacion`= now()
+                WHERE `idmovimiento` = ?
+            ", [$id]);
 
             // Redirige a la vista deseada si todo va bien
-            return view('mesaPartes.recibidos', compact('depen', 'usuario', 'rol', 'cont_est', 'cont_fecha', 'dependencias', 'detalledocumento'))->with('success', 'Documento respondido correctamente');
+            return redirect()->back()->with('success', 'Documento atentido, finalizado');
+
+            // return view('mesaPartes.recibidos', compact('depen', 'usuario', 'rol', 'cont_est', 'cont_fecha', 'dependencias', 'detalledocumento'))->with('success', 'Documento respondido correctamente');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return view('mesaPartes.recibidos')->with('error', 'Error al actualizar el documento');
+            // return view('mesaPartes.recibidos')->with('error', 'Error al actualizar el documento');
+            return redirect()->back()->with('error', 'Error al recibir documento');
+
         }
     }
 
@@ -270,34 +276,42 @@ class enviardocumentos extends Controller
 
 
     public function responderDocumento($iddocument)
-{
-    $usuario = Auth::user();
-    $depen = session('dependencia_id');
-    $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $depen)->first();
-    $dependencias = DB::connection('mysql_documentario')->select('SELECT * FROM dependencias');
-    $detalledocumento = DB::connection('mysql_documentario')->select('SELECT * FROM detalle_tramite');
+    {
+        $usuario = Auth::user();
+        $depen = session('dependencia_id');
+        $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $depen)->first();
+        $dependencias = DB::connection('mysql_documentario')->select('SELECT * FROM dependencias');
+        $detalledocumento = DB::connection('mysql_documentario')->select('SELECT * FROM detalle_tramite');
 
-    // Traer el documento específico
-    $documento = DB::connection('mysql_documentario')->table('documentos')->where('iddocumentos', $iddocument)->first();
+        // Traer el documento específico
+        $documento = DB::connection('mysql_documentario')->table('documentos')->where('iddocumentos', $iddocument)->first();
 
-    // Conteos (igual que en index/solucionar)
-    $cont_est = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+        // Conteos (igual que en index/solucionar)
+        $cont_est = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
                             FROM estado
                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
                             AND movimiento.iddependencias_receptor = ?
                             WHERE estado.idestado IN (1,2,3)
                             GROUP BY estado.idestado;', [$depen]);
 
-    $cont_fecha = DB::connection('mysql_documentario')->select('SELECT SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 0 THEN 1 ELSE 0 END) AS verde,
-                                     SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo, 
-                                     SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo 
+        $cont_fecha = DB::connection('mysql_documentario')->select('SELECT SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 0 THEN 1 ELSE 0 END) AS verde,
+                                     SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo,
+                                     SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo
                               FROM movimiento
                               WHERE iddependencias_receptor = ? AND idestado= 1', [$depen]);
 
-    $id_depen = session('dependencia_id');
+        $id_depen = session('dependencia_id');
 
-return view('mesaPartes.responderdocumento', compact(
-    'usuario','depen','id_depen','rol','dependencias','detalledocumento','documento','cont_est','cont_fecha'
-));
-}
+        return view('mesaPartes.responderdocumento', compact(
+            'usuario',
+            'depen',
+            'id_depen',
+            'rol',
+            'dependencias',
+            'detalledocumento',
+            'documento',
+            'cont_est',
+            'cont_fecha'
+        ));
+    }
 }

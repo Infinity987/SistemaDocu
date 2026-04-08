@@ -323,7 +323,7 @@
                     <div class="col-12">
                         <div class="card card-danger card-outline">
                             <div class="card-header" style="background-color: #dddddd">
-                                <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos ddddd</h3>
+                                <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos -></h3>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -335,6 +335,8 @@
                                                     <th style="text-align: center;">Contador</th>
                                                     <th style="text-align: center;">Fecha y hora</th>
                                                     <th style="text-align: center;">Asunto</th>
+                                                    <th style="text-align: center;">Dependencia</th>
+                                                    <th style="text-align: center;">Persona</th>
                                                     <th style="text-align: center;">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -421,43 +423,42 @@
     <script>
         let dependenciaId = {{ $id_depen }};
 
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log('llego docu');
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     const notificationSound = new Audio('{{ asset('sound/noti.mp3') }}');
 
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.DocumentoRecibido', (e) => {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                            var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
-                            audio.play();
-                        },
-                        didClose: () => {
-                            $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-                                .cont_estados[0]
-                                .cont_estado);
-                        }
-                    });
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.DocumentoRecibido', (e) => {
+        //             notificationSound.play().catch(err => console.log("Audio bloqueado temporalmente"));
+        //             const Toast = Swal.mixin({
+        //                 toast: true,
+        //                 position: "top-end",
+        //                 showConfirmButton: false,
+        //                 timer: 3000,
+        //                 timerProgressBar: true,
+        //                 didOpen: (toast) => {
+        //                     toast.onmouseenter = Swal.stopTimer;
+        //                     toast.onmouseleave = Swal.resumeTimer;
+        //                 },
+        //                 didClose: () => {
+        //                     $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
+        //                         .cont_estados[0]
+        //                         .cont_estado);
+        //                 }
+        //             });
 
-                    Toast.fire({
-                        icon: "success",
-                        title: "Nuevo documento recibido"
-                    });
-                });
-        });
+        //             Toast.fire({
+        //                 icon: "success",
+        //                 title: "Nuevo documento recibido"
+        //             });
+        //         });
+        // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.noEditarDocumento', (e) => {
-                    $('#datatablesSimple').DataTable().ajax.reload();
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.noEditarDocumento', (e) => {
+        //             $('#datatablesSimple').DataTable().ajax.reload();
+        //         });
+        // });
 
         document.addEventListener("DOMContentLoaded", function() {
             Echo.private('dependencia.' + dependenciaId)
@@ -627,6 +628,13 @@
                         butonEnviardatos.prop('disabled', false);
                     }
                 });
+
+                //para quitar el boton de QUITAR A OTRA DEPENDENCIA
+                $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+                $('#container_docentes').hide();
+                $('#docentes_select').val(null).trigger('change');
+                $('#input_docente_shadow').remove();
+                $('#btn-reset').remove();
             });
 
             // Variable para controlar si ya se cargó la pestaña de la oficina por primera vez
@@ -858,6 +866,24 @@
                         }
                     },
                     {
+                        data: "nombre_dependencia",
+                        name: 'nombre_dependencia',
+                        render: function(data, type, row) {
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                        }
+                    },
+                    {
+                        data: "nombre",
+                        name: 'nombre',
+                        render: function(data, type, row) {
+                            if (data != null) {
+                                return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                            } else {
+                                return '<p> <i class="fa-solid fa-calendar-days"></i> ---- </p>';
+                            }
+                        }
+                    },
+                    {
                         data: "btn"
                     }
                 ],
@@ -892,21 +918,57 @@
                         width: "40%",
                         createdCell: function(td, cellData) {
                             $(td).html(`
-                <div style="
-                    max-width: 500px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    display: block;
-                " title="${cellData}">
-                    ${cellData}
-                </div>
-                `);
+                            <div style="
+                                max-width: 500px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: block;
+                            " title="${cellData}">
+                                ${cellData}
+                            </div>
+                            `);
                             $(td).css('background-color', '#f19e402f');
                         }
                     },
                     {
                         targets: 4,
+                        width: "40%",
+                        createdCell: function(td, cellData) {
+                            $(td).html(`
+                            <div style="
+                                max-width: 500px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: block;
+                            " title="${cellData}">
+                                ${cellData}
+                            </div>
+                            `);
+                            $(td).css('background-color', '#f19e402f');
+                        }
+                    },
+                    {
+                        targets: 5,
+                        width: "40%",
+                        createdCell: function(td, cellData) {
+                            $(td).html(`
+                            <div style="
+                                max-width: 500px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: block;
+                            " title="${cellData}">
+                                ${cellData}
+                            </div>
+                            `);
+                            $(td).css('background-color', '#f19e402f');
+                        }
+                    },
+                    {
+                        targets: 6,
                         width: "8%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");

@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
+use App\Events\noEditarDocumento;
+
 
 class bandejaDocu extends Controller
 {
@@ -95,7 +97,7 @@ class bandejaDocu extends Controller
         }
     }
 
-    public function bandejaRecepcionar($idtipo_estado, $iddocument, $movimient)
+    public function bandejaRecepcionar($idtipo_estado, $iddocument, $movimient, $iddependencias_emior)
     {
         $fechaHoraActual = Carbon::now();
         try {
@@ -104,18 +106,63 @@ class bandejaDocu extends Controller
             $query2 = DB::connection('mysql_documentario')->update('UPDATE documentos SET estado_actu = ? WHERE iddocumentos = ?', [$idtipo_estado, $iddocument]);
             DB::commit();
 
-            $dependencia_id = DB::connection('mysql_documentario')->table('documentos')
-                ->select('emisor')
-                ->where('iddocumentos', $iddocument)
-                ->value('emisor');
+            //para ver si es personal o dependencia
+            if ($iddependencias_emior == 2 || $iddependencias_emior == 4 || $iddependencias_emior == 5) {
+                $tipo = 'personal';
+                $usu = DB::connection('mysql_documentario')->table('documentos')
+                    ->where('iddocumentos', $iddocument)
+                    ->value('id_user');
+                $iddependencias_emior = $usu;
+            } else {
+                $tipo = 'dependencia';
+            }
 
-            // aqui el evento falta
-            // event(new noEditarDocumento($dependencia_id));
+            event(new noEditarDocumento($iddependencias_emior, $tipo));
             return redirect()->back()->with('success', 'Documento recibido');
         } catch (\Throwable $th) {
             DB::rollBack();
 
             return redirect()->back()->with('error', 'Error al recibir documento');
         }
+    }
+
+    public function responderDocumentoDoce($iddocument)
+    {
+        $usuario = Auth::user();
+        $depen = session('dependencia_id');
+        $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $depen)->first();
+        $dependencias = DB::connection('mysql_documentario')->select('SELECT * FROM dependencias');
+        $detalledocumento = DB::connection('mysql_documentario')->select('SELECT * FROM detalle_tramite');
+
+        // Traer el documento específico
+        $documento = DB::connection('mysql_documentario')->table('documentos')->where('iddocumentos', $iddocument)->first();
+
+        // Conteos (igual que en index/solucionar)
+        $cont_est = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                            FROM estado
+                            LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                            AND movimiento.iddependencias_receptor = ?
+                            WHERE estado.idestado IN (1,2,3)
+                            GROUP BY estado.idestado;', [$depen]);
+
+        $cont_fecha = DB::connection('mysql_documentario')->select('SELECT SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 0 THEN 1 ELSE 0 END) AS verde,
+                    SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) = 1 THEN 1 ELSE 0 END) AS amarillo,
+                    SUM(CASE WHEN DATEDIFF(NOW(), fecha_de_envio) > 1 THEN 1 ELSE 0 END) AS rojo
+            FROM movimiento
+            WHERE iddependencias_receptor = ? AND idestado= 1', [$depen]);
+
+        $id_depen = session('dependencia_id');
+
+        return view('docente.documentario.responderdocumento', compact(
+            'usuario',
+            'depen',
+            'id_depen',
+            'rol',
+            'dependencias',
+            'detalledocumento',
+            'documento',
+            'cont_est',
+            'cont_fecha'
+        ));
     }
 }

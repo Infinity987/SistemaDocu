@@ -41,7 +41,7 @@ Route::post('/enviardocumentos/generar-pdf', [enviardocumentos::class, 'generarP
 
 route::get('/bandeja', [bandeja::class, 'index'])->name('mesapar.bandeja');
 route::get('/bandeja/{idtipo_estado}/{emisor}', [bandeja::class, 'bandejaEstado'])->name('bandeja.bandejaEstado');
-route::get('/bandeja/recibir/{idtipo_estado}/{iddocument}/{iddependencias_receptor}', [bandeja::class, 'bandejaEstado_upda'])->name('bandeja.recibir');
+route::get('/bandeja/recibir/{idtipo_estado}/{iddocument}/{movimient}/{iddependencias_emior}', [bandeja::class, 'bandejaEstado_upda'])->name('bandeja.recibir');
 
 route::get('/searchDocu', [searchDocu::class, 'index'])->name('searchDocu.index');
 route::get('/searchDocu/search', [searchDocu::class, 'search'])->name('searchDocu.numex');

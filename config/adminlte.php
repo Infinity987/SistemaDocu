@@ -583,6 +583,13 @@ return [
             'active' => ['docente/Bandeja-docente*'],
             'can' => 'rol-docente',
         ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['docente/searchDocu*'],
+            'can' => 'rol-docente'
+        ],
         // FIN ROL DOCENTE
 
         // INICIO TRAMITE DOCUMENTARIO

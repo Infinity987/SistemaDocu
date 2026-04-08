@@ -701,6 +701,8 @@
                                                 <th style="text-align: center;">Contador</th>
                                                 <th style="text-align: center;">Fecha y hora</th>
                                                 <th style="text-align: center;">Asunto</th>
+                                                <th style="text-align: center;">Dependencia</th>
+                                                <th style="text-align: center;">Persona</th>
                                                 <th style="text-align: center;">Acciones</th>
                                             </tr>
                                         </thead>

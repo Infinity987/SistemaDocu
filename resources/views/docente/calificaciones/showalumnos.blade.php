@@ -81,6 +81,7 @@
                         <i class="fas fa-file-pdf"></i> Repo._Notas
                     </a>
                 </div>
+                {{-- @dump($iddocente_curso) --}}
                 <div class="col-xs-12 col-sm-2 col-md-1">
                     <a href="{{ route('docente.asistencia.index', $datos) }}" class="btn btn-warning btn-block shadow">
                         <i class="fas fa-user-check"></i> Asistencia

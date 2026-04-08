@@ -28,6 +28,7 @@ Auth::routes();
 Route::middleware(['auth'])->group(function () {
     Route::get('/seleccionar-rol', [RoleSelectionController::class, 'index'])->name('selector.roles');
     Route::post('/seleccionar-rol', [RoleSelectionController::class, 'store'])->name('set.active.role');
+    // Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 });
 
 // Route::get('/home', function(){

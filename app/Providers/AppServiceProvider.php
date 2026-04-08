@@ -54,16 +54,34 @@ class AppServiceProvider extends ServiceProvider
                 ->where('iddependencias', $id_depen)
                 ->first();
 
-            $cont_est = DB::connection('mysql_documentario')->select(
-                'SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos),0) as cont_estado
-             FROM estado
-             LEFT JOIN movimiento
-                ON movimiento.idestado = estado.idestado
-                AND movimiento.iddependencias_receptor = ?
-             WHERE estado.idestado IN (1,2,3)
-             GROUP BY estado.idestado',
-                [$id_depen]
-            );
+            $activeRole = session('active_role_name');
+            $userId = auth()->id();
+            $alertas = 0;
+
+            if (in_array($activeRole, ['docente', 'alumno', 'egresado', 'postulante'])) {
+                $cont_est = DB::connection('mysql_documentario')->select(
+                    'SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos),0) as cont_estado
+                        FROM estado
+                        LEFT JOIN movimiento
+                            ON movimiento.idestado = estado.idestado
+                            AND movimiento.iddependencias_receptor = ?
+                            AND id_user_receptor = ?
+                        WHERE estado.idestado IN (1,2,3)
+                        GROUP BY estado.idestado',
+                    [$id_depen,$userId]
+                );
+            } else {
+                $cont_est = DB::connection('mysql_documentario')->select(
+                    'SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos),0) as cont_estado
+                        FROM estado
+                        LEFT JOIN movimiento
+                            ON movimiento.idestado = estado.idestado
+                            AND movimiento.iddependencias_receptor = ?
+                        WHERE estado.idestado IN (1,2,3)
+                        GROUP BY estado.idestado',
+                    [$id_depen]
+                );
+            }
 
             $view->with(compact(
                 'nom_usu',

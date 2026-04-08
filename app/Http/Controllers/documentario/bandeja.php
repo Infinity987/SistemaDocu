@@ -97,22 +97,32 @@ class bandeja extends Controller
         }
     }
 
-    public function bandejaEstado_upda($idtipo_estado, $iddocument, $iddependencias_receptor)
+    public function bandejaEstado_upda($idtipo_estado, $iddocument, $movimient, $iddependencias_emior)
     {
         $fechaHoraActual = Carbon::now();
         try {
             DB::beginTransaction();
-            $query = DB::connection('mysql_documentario')->update('UPDATE movimiento SET idestado = ?, fecha_de_recepcion = ? WHERE iddocumentos = ? AND iddependencias_receptor = ?', [$idtipo_estado, $fechaHoraActual, $iddocument, $iddependencias_receptor]);
+            $query = DB::connection('mysql_documentario')->update('UPDATE movimiento SET idestado = ?, fecha_de_recepcion = ? WHERE iddocumentos = ? AND idmovimiento = ?', [$idtipo_estado, $fechaHoraActual, $iddocument, $movimient]);
             $query2 = DB::connection('mysql_documentario')->update('UPDATE documentos SET estado_actu = ? WHERE iddocumentos = ?', [$idtipo_estado, $iddocument]);
             DB::commit();
+            // dd($dependencia_id.' - cjiwncwecni');
 
-            $dependencia_id = DB::connection('mysql_documentario')->table('documentos')
-                ->select('emisor')
-                ->where('iddocumentos', $iddocument)
-                ->value('emisor');
+            //para ver si es personal o dependencia
+            if ($iddependencias_emior == 2 || $iddependencias_emior == 4 || $iddependencias_emior == 5) {
+                $tipo = 'personal';
+                $usu = DB::connection('mysql_documentario')->table('documentos')
+                    ->where('iddocumentos', $iddocument)
+                    ->value('id_user');
+                $iddependencias_emior = $usu;
+                // dd($usu);
+            } else {
+                $tipo = 'dependencia';
+            }
 
-            event(new noEditarDocumento($dependencia_id));
-            return redirect()->back()->with('success', 'Documento recibido');
+            // dd($tipo.' '.$iddependencias_emior);
+
+            event(new noEditarDocumento($iddependencias_emior, $tipo));
+            return redirect()->back()->with('success', 'Documento recibido...-');
         } catch (\Throwable $th) {
             DB::rollBack();
 
