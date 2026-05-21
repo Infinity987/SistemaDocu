@@ -94,7 +94,7 @@
                 $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
                     .cont_estados[0].cont_estado);
                 $('#noti-count').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-                    .cont_estados[0].cont_estado+' notificaciones ..');
+                    .cont_estados[0].cont_estado + ' notificaciones ..');
                 $('#badgeNotificaciones1').text(e.cont_estados[0].cont_estado == 0 ?
                     '' : e.cont_estados[0]
                     .cont_estado);
@@ -130,6 +130,12 @@
                     }
                 });
 
+            Echo.private('App.Models.User.' + userId)
+                .listen('.editarDocumento', (e) => {
+                    console.log('Notificación de oficina recibida ------- d');
+                    procesarNotificacion(e);
+                });
+
             // --- CANAL DE DEPENDENCIA (Oficinas) ---
             // Solo escuchamos si el rol activo es de oficina
             if (depenId && !['docente', 'alumno', 'egresado', 'postulante'].includes(activeRole)) {
@@ -147,7 +153,11 @@
                             // El 'false' es para que no se resetee la paginación al recargar
                         }
                     });
-
+                Echo.private('dependencia.' + depenId)
+                    .listen('.editarDocumento', (e) => {
+                        console.log('Notificación de oficina recibida -------');
+                        procesarNotificacion(e);
+                    });
             }
         });
     </script>

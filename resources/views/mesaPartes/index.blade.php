@@ -10,7 +10,7 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-boxes"></i>
-                                - CREAR DOCUMENTO {{ session('active_role_name') }}</h1>
+                                - CREAR DOCUMENTO {{ session('dependencia_id') }} {{ Auth::user()->id }}</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -152,21 +152,23 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-3 text-center">
-                                                        <div class="form-group">
-                                                            <label><i class="fas fa-share-all text-muted"></i> ¿A
-                                                                todas?</label>
-                                                            <div class="d-flex justify-content-center pt-1">
-                                                                <div
-                                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                    <input type="checkbox" class="custom-control-input"
-                                                                        id="customSwitch3" name="todasDepenSelects">
-                                                                    <label class="custom-control-label"
-                                                                        for="customSwitch3"></label>
+                                                    @if (session('active_role_name') == 'Dirección')
+                                                        <div class="col-sm-3 text-center">
+                                                            <div class="form-group">
+                                                                <label><i class="fas fa-share-all text-muted"></i> ¿A
+                                                                    todas?</label>
+                                                                <div class="d-flex justify-content-center pt-1">
+                                                                    <div
+                                                                        class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                        <input type="checkbox" class="custom-control-input"
+                                                                            id="customSwitch3" name="todasDepenSelects">
+                                                                        <label class="custom-control-label"
+                                                                            for="customSwitch3"></label>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    @endif
                                                 </div>
 
                                                 <div class="row">
@@ -323,7 +325,7 @@
                     <div class="col-12">
                         <div class="card card-danger card-outline">
                             <div class="card-header" style="background-color: #dddddd">
-                                <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos -></h3>
+                                <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <STROng>Tabla documentos -></STROng></h3>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -869,7 +871,7 @@
                         data: "nombre_dependencia",
                         name: 'nombre_dependencia',
                         render: function(data, type, row) {
-                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> - ' + data + '</p>';
                         }
                     },
                     {
@@ -917,17 +919,6 @@
                         targets: 3,
                         width: "40%",
                         createdCell: function(td, cellData) {
-                            $(td).html(`
-                            <div style="
-                                max-width: 500px;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                display: block;
-                            " title="${cellData}">
-                                ${cellData}
-                            </div>
-                            `);
                             $(td).css('background-color', '#f19e402f');
                         }
                     },
@@ -935,17 +926,6 @@
                         targets: 4,
                         width: "40%",
                         createdCell: function(td, cellData) {
-                            $(td).html(`
-                            <div style="
-                                max-width: 500px;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                display: block;
-                            " title="${cellData}">
-                                ${cellData}
-                            </div>
-                            `);
                             $(td).css('background-color', '#f19e402f');
                         }
                     },
@@ -953,17 +933,6 @@
                         targets: 5,
                         width: "40%",
                         createdCell: function(td, cellData) {
-                            $(td).html(`
-                            <div style="
-                                max-width: 500px;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                display: block;
-                            " title="${cellData}">
-                                ${cellData}
-                            </div>
-                            `);
                             $(td).css('background-color', '#f19e402f');
                         }
                     },

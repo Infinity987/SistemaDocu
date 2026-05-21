@@ -3,7 +3,7 @@
 <nav class="main-header navbar
     {{ config('adminlte.classes_topnav_nav', 'navbar-expand') }}
     {{ config('adminlte.classes_topnav', 'navbar-white navbar-light') }}"
-    style="background: linear-gradient(45deg, #ffffff, #dfbf9a);">
+    style="background: linear-gradient(45deg, #ffffff, #dbb37f);">
 
     {{-- Navbar left links --}}
     <ul class="navbar-nav">
@@ -12,12 +12,22 @@
 
         {{-- Configured left links --}}
         @each('adminlte::partials.navbar.menu-item', $adminlte->menu('navbar-left'), 'item')
-        {{ session('active_role_name') }}
+        {{-- {{ session('active_role_name') }} --}}
         {{-- Custom left links --}}
         @yield('content_top_nav_left')
         <li class="nav-item dropdown">
             <a class="nav-link" data-toggle="dropdown" href="#">
-                {{-- {{ mb_strtoupper($rol->nombre_dependencia) ?? 'Sin oficina asignada' }} --}}
+                @if (session('dependencia_id') == 3)
+                    <span class="d-inline-block d-md-inline text-truncate" style="max-width: 100%; max-width: 100px;">
+                        <i class="fas fa-user-plus"></i> - {{ mb_strtoupper(session('active_role_name')) ?? '-|-' }}
+                    </span>
+                @endif
+
+                @if (session('dependencia_id') != 4)
+                    <span class="d-inline-block d-md-inline text-truncate" style="max-width: 100%; max-width: 100px;">
+                        <i class="fas fa-building"></i> - {{ mb_strtoupper(session('active_role_name')) ?? '-|-' }}
+                    </span>
+                @endif
             </a>
         </li>
     </ul>
@@ -39,7 +49,8 @@
                         notificaciones</span>
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-divider"></div>
-                    <a href="{{ route('documentario.mesapar.bandeja') }}" class="dropdown-item dropdown-footer">Ver todas</a>
+                    <a href="{{ route('documentario.mesapar.bandeja') }}" class="dropdown-item dropdown-footer">Ver
+                        todas</a>
                 </div>
             </li>
         @endcan

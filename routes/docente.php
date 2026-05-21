@@ -46,6 +46,7 @@ route::get('/reporte/notas/{iddocente_curso}/{idturno}',[calificacionesControlle
 //tramite documentario docente
 route::get('/Docu-docente/creardocu',[crearDocu::class, 'creardocu'])->name('creardocu');
 route::get('/Docu-docente/showEmitido/{id}', [crearDocu::class, 'showEmitido'])->name('showEmitidoDoce');
+route::post('/Docu-docente/updateDocuEmi/{iddocumentos}', [crearDocu::class, 'updateDocuEmi'])->name('updateDocuEmi');
 route::get('/Docu-docente/emitidos/{idtipo_docu}/{emisor}', [crearDocu::class, 'emitidos'])->name('doce.emitidos');
 route::get('/Bandeja-docente/bandeja-docente', [bandejaDocu::class, 'index'])->name('bandejaDoce');
 route::get('/Bandeja-docente/{idtipo_estado}/{emisor}', [bandejaDocu::class, 'bandejaList'])->name('bandejaList');

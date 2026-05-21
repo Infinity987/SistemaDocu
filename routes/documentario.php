@@ -27,7 +27,7 @@ route::post('/Docu/registrarDocu_m', [mesaPartes::class, 'registrarDocu_m'])->na
 route::get('/Docu/emitidos/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos'])->name('mesapar.emitidos');
 route::get('/Docu/emitidos_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos_m'])->name('mesapar.emitidos_m');
 route::get('/Docu/showEmitido/{id}', [mesaPartes::class, 'showEmitido'])->name('mesapar.showEmitido');
-route::post('/Docu/updateDocuEmi', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
+route::post('/Docu/updateDocuEmi/{iddocumentos}', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
 route::get('/traerDepen', [mesaPartes::class, 'traerDepen'])->name('traerDepen');
 route::get('/buscarDocentes', [mesaPartes::class, 'buscarDocentes'])->name('buscarDocentes');
 Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware('auth')->name('buscarEntidad');

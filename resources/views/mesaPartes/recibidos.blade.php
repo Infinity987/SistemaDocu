@@ -388,23 +388,23 @@
         //         });
         // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.editarDocumento', (e) => {
-                    $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
-                        .cont_estado);
-                    $('#badgeNotificaciones1').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
-                        .cont_estado);
-                    $('#badgeNotificaciones2').text(e.cont_estados[1].cont_estado == 0 ? '' : e.cont_estados[1]
-                        .cont_estado);
-                    $('#badgeNotificaciones3').text(e.cont_estados[2].cont_estado == 0 ? '' : e.cont_estados[2]
-                        .cont_estado);
-                    $('#badgeVerde').text(e.cont_fechas[0].verde);
-                    $('#badgeAmarillo').text(e.cont_fechas[0].amarillo);
-                    $('#badgeRojo').text(e.cont_fechas[0].rojo);
-                    $('#datatablesS').DataTable().ajax.reload();
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.editarDocumento', (e) => {
+        //             $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
+        //                 .cont_estado);
+        //             $('#badgeNotificaciones1').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
+        //                 .cont_estado);
+        //             $('#badgeNotificaciones2').text(e.cont_estados[1].cont_estado == 0 ? '' : e.cont_estados[1]
+        //                 .cont_estado);
+        //             $('#badgeNotificaciones3').text(e.cont_estados[2].cont_estado == 0 ? '' : e.cont_estados[2]
+        //                 .cont_estado);
+        //             $('#badgeVerde').text(e.cont_fechas[0].verde);
+        //             $('#badgeAmarillo').text(e.cont_fechas[0].amarillo);
+        //             $('#badgeRojo').text(e.cont_fechas[0].rojo);
+        //             $('#datatablesS').DataTable().ajax.reload();
+        //         });
+        // });
 
         document.addEventListener('DOMContentLoaded', function() {
             const entregaOpciones = document.getElementById('entregaOpciones');

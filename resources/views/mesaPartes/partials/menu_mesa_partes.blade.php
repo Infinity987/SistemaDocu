@@ -38,6 +38,42 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
         }
     </style>
+
+    <style>
+        /* Estilo para las celdas de ID y Expediente */
+        .id-column {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            width: 50px;
+        }
+
+        /* Badge personalizado para el expediente */
+        .badge-exp {
+            background-color: #f19e40;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Evitar que el texto largo rompa la tabla */
+        .text-truncate-custom {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Quitar bordes internos innecesarios */
+        #datatablesSimple thead th {
+            border-bottom: 2px solid #dee2e6;
+            border-top: 0;
+        }
+
+        #datatablesSimple tbody td {
+            vertical-align: middle;
+        }
+    </style>
 @endpush
 
 <div class="container-fluid">
@@ -60,6 +96,7 @@
             border: 1px solid #ced4da;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             overflow: hidden;">
+
         <!-- crear docu RECEPCIONAR -->
         <div class="tab-pane fade show active" id="pills-general" role="tabpanel">
 
@@ -69,7 +106,7 @@
                     <!-- Button trigger modal -->
                     <button type="button" class="btn btn-success shadow-lg" data-toggle="modal"
                         data-target="#exampleModalCenter_m">
-                        <i class="fas fa-sign-in-alt"></i> Crear nuevo registro
+                        <i class="fas fa-sign-in-alt"></i> Registrar nuevo registro
                     </button>
 
                     <!-- Modal -->
@@ -247,6 +284,21 @@
                                                             class="text-danger small"></span>
                                                     </div>
                                                 </div>
+
+                                                <div class="col-md-12" id="container_docentes_m"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-primary"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Docente(s)</label>
+                                                        <select id="docentes_select_m" class="form-control select2"
+                                                            name="docentes_especificos_m[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a docentes, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="row">
@@ -381,7 +433,8 @@
                 <div class="col-12">
                     <div class="card card-danger card-outline">
                         <div class="card-header" style="background-color: #eeeeee">
-                            <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos recepcionados</h3>
+                            <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <strong>Tabla
+                                    documentos recepcionados</strong></h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -391,9 +444,11 @@
                                         <thead>
                                             <tr style="background-color:#f19e40">
                                                 <th style="width: 5%; text-align: center;">N° Expe.</th>
-                                                <th style="width: 5%; text-align: center;">Contador</th>
+                                                <th style="width: 5%; text-align: center;">Cont.</th>
                                                 <th style="width: 10%; text-align: center;">Fecha y hora</th>
+                                                <th style="width: 5%; text-align: center;">Tipo</th>
                                                 <th style="width: 40%; text-align: center;">Asunto</th>
+                                                <th style="width: 10%; text-align: center;">Dependencia</th>
                                                 <th style="width: 8%; text-align: center;">Acciones</th>
                                             </tr>
                                         </thead>
@@ -455,9 +510,9 @@
                                                             class="form-control select2 shadow" name="tipo_documento">
                                                             <option value="0">Seleccione tipo documento ...
                                                             </option>
-                                                            @if ($rol->nombre_dependencia == 'Mesa de Partes')
+                                                            {{-- @if ($rol->nombre_dependencia == 'Mesa de Partes')
                                                                 <option value="1">Fut</option>
-                                                            @endif
+                                                            @endif --}}
                                                             <option value="2">Oficios</option>
                                                             <option value="3">Informe</option>
                                                             <option value="4">Requerimiento</option>
@@ -523,7 +578,22 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="col-sm-3 text-center">
+                                                <div class="col-md-12" id="container_docentes"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-primary"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Docente(s)</label>
+                                                        <select id="docentes_select" class="form-control select2"
+                                                            name="docentes_especificos[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a docentes, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                {{-- <div class="col-sm-3 text-center">
                                                     <div class="form-group">
                                                         <label><i class="fas fa-share-all text-muted"></i> ¿A
                                                             todas?</label>
@@ -537,7 +607,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </div> --}}
                                             </div>
 
                                             <div class="row">
@@ -687,27 +757,29 @@
             <!-- tabla documentos -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-danger card-outline">
-                        <div class="card-header" style="background-color: #dddddd">
-                            <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos ddddd</h3>
+                    <div class="card card-danger card-outline shadow">
+                        <div class="card-header border-0" style="background-color: #dddddd">
+                            <h3 class="card-title">
+                                <i class="fas fa-folder-open mr-2 text-danger"></i>
+                                <strong>Listado de Documentos Emitidos</strong>
+                            </h3>
+
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <table id="datatablesSimple" class="table table-hover">
-                                        <thead>
-                                            <tr style="background-color:#f19e40">
-                                                <th style="text-align: center;">N° Expe.</th>
-                                                <th style="text-align: center;">Contador</th>
-                                                <th style="text-align: center;">Fecha y hora</th>
-                                                <th style="text-align: center;">Asunto</th>
-                                                <th style="text-align: center;">Dependencia</th>
-                                                <th style="text-align: center;">Persona</th>
-                                                <th style="text-align: center;">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                </div>
+                        <div class="card-body p-3">
+                            <div class="table-responsive">
+                                <table id="datatablesSimple" class="table table-sm table-hover w-100 border-0">
+                                    <thead class="bg-gray-light">
+                                        <tr style="background-color:#f19e40">
+                                            <th class="text-center py-2">N° Expediente</th>
+                                            <th class="text-center py-2">Cont.</th>
+                                            <th class="py-2">Fecha y Hora</th>
+                                            <th class="py-2">Asunto</th>
+                                            <th class="py-2">Dependencia</th>
+                                            <th class="py-2">Persona</th>
+                                            <th class="text-center py-2">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -892,6 +964,74 @@
                     }
                 });
             });
+
+            $('#dependencia_enviar').on('change', function() {
+                let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
+                let esDocente = data.some(item => item.text.trim() === 'Docente');
+
+                if (esDocente) {
+                    // 1. Buscamos el ID exacto que tiene la opción "Docente"
+                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+                    let idDocenteArea = objetoDocente.id;
+
+                    if ($('#input_docente_shadow').length === 0) {
+                        $('#form_regis_doc').append(
+                            `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idDocenteArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_docentes').fadeIn();
+                    inicializarBusquedaDocentes();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                }
+            });
+
+            $('#dependencia_enviar_m').on('change', function() {
+                let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
+                let esDocente = data.some(item => item.text.trim() === 'Docente');
+
+                if (esDocente) {
+                    // 1. Buscamos el ID exacto que tiene la opción "Docente"
+                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+                    let idDocenteArea = objetoDocente.id;
+
+                    if ($('#input_docente_shadow_m').length === 0) {
+                        $('#form_regis_doc_m').append(
+                            `<input type="hidden" id="input_docente_shadow_m" name="dependencia_enviar_m[]" value="${idDocenteArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idDocenteArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_docentes_m').fadeIn();
+                    inicializarBusquedaDocentes_m();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset_m').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                }
+            });
         });
 
         // $('#tipo_documento_m').change(traer_num_expe_m);
@@ -989,6 +1129,20 @@
                     butonEnviardatos_m.prop('disabled', false);
                 }
             });
+
+            //para quitar el boton de QUITAR A OTRA DEPENDENCIA
+            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+            $('#container_docentes').hide();
+            $('#docentes_select').val(null).trigger('change');
+            $('#input_docente_shadow').remove();
+            $('#btn-reset').remove();
+
+            //para quitar el boton de QUITAR A OTRA DEPENDENCIA
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_docentes_m').hide();
+            $('#docentes_select_m').val(null).trigger('change');
+            $('#input_docente_shadow_m').remove();
+            $('#btn-reset_m').remove();
         });
 
         $('#tipo_documento_m').on('change', function() {
@@ -1115,8 +1269,8 @@
                         name: 'numero_de_exp',
                         searchable: true,
                         render: function(data, type, row) {
-                            return '<div class=" bg-success-subtle text-dark-emphasis"><p class="fw-semibold text-dark">' +
-                                data + ' - ' + row.nombre_documento + '</p></div>';
+                            return '<div class=""><p class="fw-semibold text-dark" style="text-align: center;">' +
+                                '' + data + '</p></div>';
                         }
                     },
                     {
@@ -1128,8 +1282,24 @@
                         }
                     },
                     {
+                        data: "nombre_documento",
+                        name: 'nombre_documento',
+                        searchable: true,
+                        render: function(data, type, row) {
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                        }
+                    },
+                    {
                         data: "asunto",
                         name: 'asunto',
+                        searchable: true,
+                        render: function(data, type, row) {
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                        }
+                    },
+                    {
+                        data: "nombre_dependencia",
+                        name: 'nombre_dependencia',
                         searchable: true,
                         render: function(data, type, row) {
                             return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
@@ -1168,6 +1338,13 @@
                     },
                     {
                         targets: 3,
+                        width: "10%",
+                        createdCell: function(td) {
+                            $(td).css('background-color', "#f19e402f");
+                        }
+                    },
+                    {
+                        targets: 4,
                         width: "40%",
                         createdCell: function(td, cellData) {
                             $(td).html(`
@@ -1185,7 +1362,25 @@
                         }
                     },
                     {
-                        targets: 4,
+                        targets: 5,
+                        width: "10%",
+                        createdCell: function(td, cellData) {
+                            $(td).html(`
+                            <div style="
+                                max-width: 500px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: block;
+                            " title="${cellData}">
+                                ${cellData}
+                            </div>
+                            `);
+                            $(td).css('background-color', '#f19e402f');
+                        }
+                    },
+                    {
+                        targets: 6,
                         width: "8%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
@@ -1195,5 +1390,41 @@
                 responsive: true
             });
         }
+
+        // 2. Función para inicializar el segundo Select2 (Docentes)
+        function inicializarBusquedaDocentes_m() {
+            $('#docentes_select_m').select2({
+                placeholder: "Busque y seleccione uno o varios docentes",
+                ajax: {
+                    url: '{{ route('documentario.buscarDocentes') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter_m')
+            });
+        }
+
+        // Botón para desbloquear y volver a elegir dependencias normales
+        $(document).on('click', '#btn-reset', function() {
+            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+            $('#container_docentes').hide();
+            $('#docentes_select').val(null).trigger('change');
+            $('#input_docente_shadow').remove();
+            $(this).remove();
+        });
+
+        // Botón para desbloquear y volver a elegir dependencias normales
+        $(document).on('click', '#btn-reset_m', function() {
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_docentes_m').hide();
+            $('#docentes_select_m').val(null).trigger('change');
+            $('#input_docente_shadow_m').remove();
+            $(this).remove();
+        });
     </script>
 @endpush
