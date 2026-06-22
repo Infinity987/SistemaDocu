@@ -59,6 +59,9 @@ class AuthServiceProvider extends ServiceProvider
                 'Y/O Cargos',
                 'PPD',
                 'Mesa de partes',
+                'Asistente J. Unidad de Investigación',
+                'Asistente Jefatura de unidad Administrativa',
+                'Logística',
             ];
 
             return in_array(session('active_role_name'), $rolesDoc);

@@ -21,7 +21,7 @@
 @section('auth_header', __('adminlte::adminlte.login_message'))
 
 @section('auth_body')
-    <form action="{{ $login_url }}" method="post">
+    <form action="{{ $login_url }}" method="post" id="loginForm">
         @csrf
         {{-- dni field --}}
         @if ($errors->has('message'))
@@ -49,21 +49,21 @@
 
         {{-- Email field --}}
         {{-- <div class="input-group mb-3">
-      <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-        value="{{ old('email') }}" placeholder="{{ __('adminlte::adminlte.email') }}" autofocus>
+            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                value="{{ old('email') }}" placeholder="{{ __('adminlte::adminlte.email') }}" autofocus>
 
-      <div class="input-group-append">
-        <div class="input-group-text">
-          <span class="fas fa-envelope {{ config('adminlte.classes_auth_icon', '') }}"></span>
-        </div>
-      </div>
+            <div class="input-group-append">
+                <div class="input-group-text">
+                <span class="fas fa-envelope {{ config('adminlte.classes_auth_icon', '') }}"></span>
+                </div>
+            </div>
 
-      @error('email')
-        <span class="invalid-feedback" role="alert">
-          <strong>{{ $message }}</strong>
-        </span>
-      @enderror
-    </div> --}}
+            @error('email')
+                <span class="invalid-feedback" role="alert">
+                <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+            </div> --}}
 
         {{-- Password field --}}
         <div class="input-group mb-3">
@@ -83,17 +83,26 @@
             @enderror
         </div>
 
+        {{-- Campo oculto donde JavaScript guardará el token de Google --}}
+        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+
+        @error('g-recaptcha-response')
+            <div class="text-danger mb-3 text-center" style="font-size: 14px;">
+                <strong>{{ $message }}</strong>
+            </div>
+        @enderror
+
         {{-- Login field --}}
         <div class="row justify-content-center">
             {{-- <div class="col-7">
-        <div class="icheck-primary" title="{{ __('adminlte::adminlte.remember_me_hint') }}">
-          <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+            <div class="icheck-primary" title="{{ __('adminlte::adminlte.remember_me_hint') }}">
+            <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
 
-          <label for="remember">
-            {{ __('adminlte::adminlte.remember_me') }}
-          </label>
-        </div>
-      </div> --}}
+            <label for="remember">
+                {{ __('adminlte::adminlte.remember_me') }}
+            </label>
+            </div>
+        </div> --}}
 
             <div class="col-5">
                 <button type=submit class="btn btn-block {{ config('adminlte.classes_auth_btn', 'btn-flat btn-primary') }}">
@@ -134,6 +143,23 @@
         @endif
     @endif
 @stop
+
+@section('js')
+    <script src="https://www.google.com/recaptcha/api.js?render={{ env('RECAPTCHA_SITE_KEY') }}"></script>
+
+    <script>
+        $('#loginForm').submit(function(e) {
+            e.preventDefault();
+
+            grecaptcha.ready(function() {
+                grecaptcha.execute("{{ env('RECAPTCHA_SITE_KEY') }}", {action: 'login'}).then(function(token) {
+                    $('#g-recaptcha-response').val(token);
+                    $('#loginForm').off('submit').submit();
+                });
+            });
+        });
+    </script>
+@endsection
 
 <script>
     document.getElementById('dniForm').addEventListener('submit', function(event) {

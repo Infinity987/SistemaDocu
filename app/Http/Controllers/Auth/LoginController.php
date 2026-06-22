@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use App\Rules\RecaptchaV3;
 
 class LoginController extends Controller
 {
@@ -27,12 +28,12 @@ class LoginController extends Controller
         return 'dni';
     }
 
-    // 🔹 Validación personalizada del login
     protected function validateLogin(Request $request)
     {
         $request->validate([
             'dni' => 'required|string|size:8|exists:users,dni',
             'password' => 'required|string',
+            'g-recaptcha-response' => ['required', new RecaptchaV3],
         ], [
             'dni.required' => 'El DNI es obligatorio.',
             'dni.string' => 'El DNI debe ser una cadena de texto.',
@@ -73,12 +74,23 @@ class LoginController extends Controller
                 'Jefatura de unidad Académica',
                 'Jefatura de unidad Administrativa',
                 'Secretaria Académica',
-                'Mesa de partes',
-                'Biblioteca',
-                'PPD',
-                'Y/O Cargos',
+                'Coordin. Prog. Estudios Educ. Inicial',
+                'Coordin. Prog. Estudios Primaria Epib',
+                'Coordin. Prog. Estudios Educ. Física',
+                'Coordin. Prog. Educac. Secundaria',
+                'J. Area Acad. Educ. Básica Regular',
+                'Jefe de Unidad de Formación Contínua',
+                'J. Unidad de bienestar y empleabilidad',
                 'J. Unidad de Investigación',
                 'J. Area de Calidad',
+                'Coord. del área de Práctica Profesional e investigación',
+                'Biblioteca',
+                'Y/O Cargos',
+                'PPD',
+                'Mesa de partes',
+                'Asistente J. Unidad de Investigación',
+                'Asistente Jefatura de unidad Administrativa',
+                'Logística',
                 // ... puedes seguir agregando los nombres exactos aquí
                 => redirect()->route('documentario.mesapar.index'),
 
