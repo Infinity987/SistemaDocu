@@ -611,6 +611,13 @@ return [
             'active' => ['admin/searchDocu*'],
             'can' => 'rol-documentario'
         ],
+         [
+            'text' => 'PAGOS',
+            'route' => 'documentario.pagos.index',
+            'icon' => 'fas fa-search',
+            'active' => ['admin/pagos*'],
+            'can' => 'rol-documentario'
+        ],
 
         [
             'header' => 'REPORTES',

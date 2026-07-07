@@ -204,44 +204,146 @@ class mesaPartes extends Controller
         return response()->json($docentes);
     }
 
-    public function generarWordBorrador(Request $request)
-    {
-        // ... validaciones ...
+ public function generarWordBorrador(Request $request)
+{
+    try {
+        $templatePath = storage_path('app/templates/responder.docx');
 
-        try {
-            // CORRECCIÓN AQUÍ: Cambiamos 'borrador_crear.docx' por 'responder.docx'
-            $templatePath = storage_path('app/templates/responder.docx');
+        if (!file_exists($templatePath)) {
+            return "Error: No se encuentra la plantilla en: " . $templatePath;
+        }
 
-            if (!file_exists($templatePath)) {
-                return "Error: No se encuentra la plantilla en: " . $templatePath;
-            }
+        $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
 
-            $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
 
-            // Importante: Asegúrate de que los nombres de las variables
-            // coincidan con los de tu archivo responder.docx
-            $tipoDocNombre = DB::connection('mysql_documentario')->table('tipo_documento')
-                ->where('idtipo_documento', $request->tipo_documento)
-                ->value('nombre_documento');
+           // --- 1. DATOS DE CONFIGURACIÓN (LOGO Y AÑO) ---
+        $configuracion = DB::connection('mysql_segunda')
+            ->table('encargados')
+            ->where('estado', 1)
+            ->first();
 
-            // Usa los nombres que espera tu plantilla responder.docx
-            $template->setValue('asunto', $request->asunto);
-            $template->setValue('folio', $request->folio);
-            $template->setValue('tipo_doc', $tipoDocNombre ?? 'Documento'); // o como se llame en el Word
-            $template->setValue('fecha', now()->format('d/m/Y'));
+        if ($configuracion) {
+    // Esta es la variable que pediste: el nombre oficial del año
+    // En el Word usa: ${texto_anio_oficial}
+    $template->setValue('texto_anio_oficial', $configuracion->nombre_año);
+    
+    // El resto de tus datos de configuración se mantienen igual
+    $template->setValue('nombre_anio', $configuracion->reso_direc); 
+    
+    $rutaLogo = public_path($configuracion->logo);
+    if (file_exists($rutaLogo)) {
+        $template->setImageValue('logo', [
+            'path' => $rutaLogo, 
+            'width' => 90, 
+            'height' => 90, 
+            'ratio' => true
+        ]);
+    }
+}
 
-            // Como es un registro nuevo, la referencia suele ir vacía
-            $template->setValue('referencia', '');
+        // 1. DATOS DEL EMISOR (Quien redacta: el usuario logueado)
+        $id_depen_emisor = session('dependencia_id');
+        $dependenciaEmisor = DB::connection('mysql_documentario')
+            ->table('dependencias')
+            ->where('iddependencias', $id_depen_emisor)
+            ->first();
 
-            $fileName = 'Borrador_' . time() . '.docx';
-            $tempFile = tempnam(sys_get_temp_dir(), 'word');
-            $template->saveAs($tempFile);
+        // Datos personales del usuario (Conexión mysql_segunda)
+        $perfilUsuario = DB::connection('mysql_segunda')
+            ->table('userprofile')
+            ->where('id_users', Auth::id())
+            ->first();
 
-            return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            return "Error en el servidor: " . $e->getMessage();
+        // ... (código anterior de emisor igual) ...
+
+// 2. DATOS DEL DESTINATARIO (Lógica de Roles y Perfiles)
+$id_depen_receptor = is_array($request->dependencia_enviar) ? $request->dependencia_enviar[0] : null;
+
+$nombreDestinatario = "___________________________";
+$cargoDestinatario = "___________________________";
+
+if ($id_depen_receptor) {
+    // A. Buscamos el ID del usuario que tiene el rol de esa dependencia
+    // Nota: model_id suele ser el ID del usuario en la tabla users
+    $rolAsignado = DB::connection('mysql')
+        ->table('model_has_roles')
+        ->where('role_id', $id_depen_receptor)
+        ->first();
+
+    if ($rolAsignado) {
+        // B. Buscamos el nombre en la otra base de datos usando el model_id
+        $perfilDestinatario = DB::connection('mysql_segunda')
+            ->table('userprofile')
+            ->where('id_users', $rolAsignado->model_id)
+            ->first();
+        
+        if ($perfilDestinatario) {
+            $nombreDestinatario = $perfilDestinatario->nombre;
         }
     }
+
+    // C. El cargo sigue siendo el nombre de la dependencia
+    $depReceptora = DB::connection('mysql_documentario')
+        ->table('dependencias')
+        ->where('iddependencias', $id_depen_receptor)
+        ->first();
+    
+    $cargoDestinatario = $depReceptora->nombre_dependencia ?? "DEPENDENCIA";
+}
+
+// --- CONTINUAR CON EL SETVALUE ---
+$template->setValue('destinatario_nombre', strtoupper($nombreDestinatario));
+$template->setValue('destinatario_cargo', strtoupper($cargoDestinatario));
+// ...
+
+        // 3. LÓGICA DEL CORRELATIVO (Para el título: INFORME N° XXX-2026...)
+        $tipoDocId = $request->tipo_documento;
+        $tipoDocNombre = DB::connection('mysql_documentario')
+            ->table('tipo_documento')
+            ->where('idtipo_documento', $tipoDocId)
+            ->value('nombre_documento');
+
+        // Calculamos el siguiente número (puedes reusar tu lógica de est_firma aquí)
+        $ultimoNro = DB::connection('mysql_documentario')->table('documentos')
+            ->where('emisor', $id_depen_emisor)
+            ->where('idtipo_documento', $tipoDocId)
+            ->max('numero_de_exp');
+            
+        $nroCorrelativo = $ultimoNro ? (int)$ultimoNro + 1 : 1;
+        // Formateamos a 3 o 4 dígitos (ej: 004)
+        $nroFormateado = str_pad($nroCorrelativo, 3, "0", STR_PAD_LEFT);
+
+        // --- ASIGNACIÓN DE VALORES A LA PLANTILLA WORD ---
+        
+        // Encabezado / Título
+        $template->setValue('tipo_doc', strtoupper($tipoDocNombre ?? 'Documento'));
+        $template->setValue('nro_doc', $nroFormateado);
+        $template->setValue('anio', date('Y'));
+        $template->setValue('siglas', $dependenciaEmisor->siglas ?? 'S/N');
+
+        // Bloque de datos (SEÑOR / DE / ASUNTO)
+        $template->setValue('destinatario_nombre', $nombreDestinatario);
+        $template->setValue('destinatario_cargo', $cargoDestinatario);
+        
+        $template->setValue('usuario_nombre', $perfilUsuario->nombre ?? Auth::user()->name);
+        $template->setValue('dependencia', $dependenciaEmisor->nombre_dependencia ?? 'Sin Dependencia');
+        
+        $template->setValue('asunto', $request->asunto);
+        $template->setValue('folio', $request->folio);
+        $template->setValue('fecha', now()->translatedFormat('d \d\e F \d\e\l Y')); // Ejemplo: 26 de marzo del 2026
+        $template->setValue('referencia', ''); 
+
+        // Generación del archivo temporal
+        $fileName = 'Borrador_' . ($tipoDocNombre ?? 'Doc') . '_' . time() . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'word');
+        $template->saveAs($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+
+    } catch (\Exception $e) {
+        return "Error en el servidor: " . $e->getMessage();
+    }
+}
 
     public function registrarDocu(Request $request)
     {

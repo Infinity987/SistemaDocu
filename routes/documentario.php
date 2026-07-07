@@ -12,6 +12,7 @@ use App\Http\Controllers\documentario\bandeja;
 use App\Http\Controllers\documentario\searchDocu;
 use App\Http\Controllers\documentario\reportes;
 use App\Http\Controllers\documentario\enviardocumentos;
+use App\Http\Controllers\documentario\pagos;
 
 
 Route::resource('users', UserController::class)->names('admin.users');
@@ -65,5 +66,7 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
         'Content-Disposition' => 'inline; filename="'.$filename.'"'
     ]);
 })->name('pdf.preview')->middleware('auth');
+// pagos ver
+route::get('/pagos', [pagos::class, 'index'])->name('pagos.index');
 
 
