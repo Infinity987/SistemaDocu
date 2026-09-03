@@ -17,13 +17,13 @@
         @yield('content_top_nav_left')
         <li class="nav-item dropdown">
             <a class="nav-link" data-toggle="dropdown" href="#">
-                @if (session('dependencia_id') == 3)
+                @if (session('dependencia_id') == 3) {{-- POSTULANRE --}}
                     <span class="d-inline-block d-md-inline text-truncate" style="max-width: 100%; max-width: 100px;">
                         <i class="fas fa-user-plus"></i> - {{ mb_strtoupper(session('active_role_name')) ?? '-|-' }}
                     </span>
                 @endif
 
-                @if (session('dependencia_id') != 4)
+                @if (session('dependencia_id') != 4) {{-- DISTINTO A ALUMNO --}}
                     <span class="d-inline-block d-md-inline text-truncate" style="max-width: 100%; max-width: 100px;">
                         <i class="fas fa-building"></i> - {{ mb_strtoupper(session('active_role_name')) ?? '-|-' }}
                     </span>
@@ -46,7 +46,7 @@
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <span class="dropdown-item dropdown-header"
                         id="noti-count">{{ $cont_est[0]->cont_estado == 0 ? '0' : $cont_est[0]->cont_estado }}
-                        notificaciones</span>
+                        notificaciones-</span>
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-divider"></div>
                     <a href="{{ route('documentario.mesapar.bandeja') }}" class="dropdown-item dropdown-footer">Ver
@@ -68,10 +68,28 @@
                         notificaciones</span>
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-divider"></div>
-                    <a href="{{ route('docente.bandejaDoce') }}" class="dropdown-item dropdown-footer">Ver todas Do</a>
+                    <a href="{{ route('docente.bandejaDoce') }}" class="dropdown-item dropdown-footer">Ver todas no.</a>
                 </div>
             </li>
         @endcan
+
+        {{-- @can('rol-egresado')
+            <li class="nav-item dropdown">
+                <a class="nav-link" data-toggle="dropdown" href="#">
+                    <i class="far fa-bell"></i>
+                    <span id="badge-alerts"
+                        class="badge badge-danger navbar-badge">{{ $cont_est[0]->cont_estado == 0 ? '' : $cont_est[0]->cont_estado }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <span class="dropdown-item dropdown-header"
+                        id="noti-count">{{ $cont_est[0]->cont_estado == 0 ? '0' : $cont_est[0]->cont_estado }}
+                        notificaciones</span>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('docente.bandejaDoce') }}" class="dropdown-item dropdown-footer">Ver todas no.</a>
+                </div>
+            </li>
+        @endcan --}}
         {{-- @if (session('dependencia_id') != 1)
             <li class="nav-item dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#">

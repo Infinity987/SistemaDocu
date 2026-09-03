@@ -41,6 +41,8 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('rol-documentario', function ($user) {
 
             $rolesDoc = [
+                'alumno',
+                'egresado',
                 'Dirección',
                 'Jefatura de unidad Académica',
                 'Jefatura de unidad Administrativa',

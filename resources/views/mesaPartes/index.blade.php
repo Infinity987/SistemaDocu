@@ -3,14 +3,14 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.index')
+    @canany(['documentario.mesapar.index', 'alumno.matricula.index'])
         <div class="callout callout-danger">
             <section class="content-header p-0">
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-6">
                             <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-boxes"></i>
-                                - CREAR DOCUMENTO {{ session('dependencia_id') }} {{ Auth::user()->id }}</h1>
+                                - CREAR DOCUMENTO -- {{ session('dependencia_id') }} {{ Auth::user()->id }}</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -22,11 +22,11 @@
                 </div><!-- /.container-fluid -->
             </section>
         </div>
-    @endcan
+    @endcanany
 @stop
 
 @section('content')
-    @can('documentario.mesapar.index')
+    @canany(['documentario.mesapar.index', 'alumno.matricula.index'])
         {{-- vistas para mesa de partes --}}
         @if ($id_depen == 24)
             @include('mesaPartes.partials.menu_mesa_partes')
@@ -125,7 +125,8 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="row">
+                                                <div class="row mt-3 mb-3"
+                                                    style="background-image: linear-gradient(to right, rgb(236, 217, 185), rgba(255, 255, 255, 0.1));">
                                                     <div class="col-sm-9" id="container_dependencias">
                                                         <div class="form-group">
                                                             <label for="dependencia_enviar">
@@ -136,13 +137,15 @@
                                                                 class="form-control select2 shadow"
                                                                 name="dependencia_enviar[]" multiple>
                                                             </select>
+                                                            {{-- <select id="dependencia_enviar" name="dependencia">
+                                                            </select> --}}
                                                             <span id="dependencia_enviar_error" class="text-danger"></span>
                                                         </div>
                                                     </div>
 
                                                     <div class="col-md-12" id="container_docentes" style="display: none;">
                                                         <div class="form-group">
-                                                            <label class="text-primary"><i class="fas fa-user-graduate"></i>
+                                                            <label class="text-info"><i class="fas fa-users"></i>
                                                                 Seleccionar Docente(s)</label>
                                                             <select id="docentes_select" class="form-control select2"
                                                                 name="docentes_especificos[]" multiple>
@@ -151,6 +154,24 @@
                                                                 añadir otras dependencias.</small>
                                                         </div>
                                                     </div>
+
+                                                    <div class="col-md-12" id="container_egresados" style="display: none;">
+                                                        <div class="form-group">
+                                                            <label class="text-success"><i class="fas fa-user-graduate"></i>
+                                                                Seleccionar Egresado(s)</label>
+                                                            <select id="egresados_select" class="form-control select2"
+                                                                name="egresados[]" multiple>
+                                                            </select>
+                                                            <small class="text-muted">Nota: Al enviar a egresados, no se pueden
+                                                                añadir otras dependencias.</small>
+                                                        </div>
+                                                    </div>
+                                                    {{-- <div id="container_usuarios" style="display:none;">
+                                                        <label>Destinatarios</label>
+
+                                                        <select id="usuarios_select" name="docentes_especificos[]" multiple>
+                                                        </select>
+                                                    </div> --}}
 
                                                     @if (session('active_role_name') == 'Dirección')
                                                         <div class="col-sm-3 text-center">
@@ -325,7 +346,8 @@
                     <div class="col-12">
                         <div class="card card-danger card-outline">
                             <div class="card-header" style="background-color: #dddddd">
-                                <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <STROng>Tabla documentos -></STROng></h3>
+                                <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <STROng>Tabla
+                                        documentos -></STROng></h3>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -351,7 +373,7 @@
                 </div>
             </div>
         @endif
-    @endcan
+    @endcanany
 @stop
 {{-- @vite(['resources/js/app.js']) --}}
 
@@ -694,11 +716,14 @@
 
             $('#dependencia_enviar').on('change', function() {
                 let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
-                let esDocente = data.some(item => item.text.trim() === 'Docente');
+
+                let esDocente = data.some(item => item.id.trim() === "2");
+                let esEgresado = data.some(item => item.id.trim() === "5");
+
 
                 if (esDocente) {
                     // 1. Buscamos el ID exacto que tiene la opción "Docente"
-                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+                    let objetoDocente = data.find(item => item.id.trim() === "2");
                     let idDocenteArea = objetoDocente.id;
 
                     if ($('#input_docente_shadow').length === 0) {
@@ -724,8 +749,71 @@
                         );
                     }
                 }
+                if (esEgresado) {
+                    // 1. Buscamos el ID exacto que tiene la opción "egresado"
+                    let objetoEgresado = data.find(item => item.id.trim() === "5");
+                    let idEgresadoArea = objetoEgresado.id;
+
+                    if ($('#input_egresado_shadow').length === 0) {
+                        $('#form_regis_doc').append(
+                            `<input type="hidden" id="input_egresado_shadow" name="dependencia_enviar[]" value="${idEgresadoArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idEgresadoArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_egresados').fadeIn();
+                    inicializarBusquedaEgresados();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset-egresados" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                }
             });
+            // $('#dependencia_enviar').on('change', function() {
+
+            //     let dependencia = $(this).val();
+
+            //     if (!dependencia) {
+            //         $('#container_usuarios').hide();
+            //         return;
+            //     }
+
+            //     $('#container_usuarios').show();
+
+            //     cargarUsuarios(dependencia);
+
+            // });
         });
+
+        // function cargarUsuarios(idDependencia) {
+
+        //     // $('#usuarios_select').empty();
+
+        //     $('#usuarios_select').select2({
+        //         placeholder: "Busque y seleccione uno o varios docentes",
+        //         ajax: {
+        //             url: '{{ route('documentario.buscarDocentes') }}',
+        //             dataType: 'json',
+        //             delay: 250,
+        //             processResults: function(data) {
+        //                 return {
+        //                     results: data
+        //                 };
+        //             }
+        //         },
+        //         dropdownParent: $('#exampleModalCenter')
+        //     });
+
+        // }
 
         $('#tipo_documento').on('change', function() {
             const idTipo = $(this).val();
@@ -967,12 +1055,37 @@
             });
         }
 
+        function inicializarBusquedaEgresados() {
+            $('#egresados_select').select2({
+                placeholder: "Busque por N° DNI O APELLIDOS/NOMBRES y seleccione uno o varios egresados",
+                ajax: {
+                    url: '{{ route('documentario.buscarEgresados') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter')
+            });
+        }
+
         // Botón para desbloquear y volver a elegir dependencias normales
         $(document).on('click', '#btn-reset', function() {
             $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
             $('#container_docentes').hide();
             $('#docentes_select').val(null).trigger('change');
             $('#input_docente_shadow').remove();
+            $(this).remove();
+        });
+
+        $(document).on('click', '#btn-reset-egresados', function() {
+            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+            $('#container_egresados').hide();
+            $('#egresados_select').val(null).trigger('change');
+            $('#input_egresado_shadow').remove();
             $(this).remove();
         });
     </script>

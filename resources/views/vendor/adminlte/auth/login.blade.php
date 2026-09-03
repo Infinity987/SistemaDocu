@@ -144,22 +144,22 @@
     @endif
 @stop
 
-@section('js')
-    <script src="https://www.google.com/recaptcha/api.js?render={{ env('RECAPTCHA_SITE_KEY') }}"></script>
+{{-- @section('js')
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 
     <script>
         $('#loginForm').submit(function(e) {
             e.preventDefault();
 
             grecaptcha.ready(function() {
-                grecaptcha.execute("{{ env('RECAPTCHA_SITE_KEY') }}", {action: 'login'}).then(function(token) {
+                grecaptcha.execute("{{ config('services.recaptcha.site_key') }}", {action: 'login'}).then(function(token) {
                     $('#g-recaptcha-response').val(token);
                     $('#loginForm').off('submit').submit();
                 });
             });
         });
     </script>
-@endsection
+@endsection --}}
 
 <script>
     document.getElementById('dniForm').addEventListener('submit', function(event) {

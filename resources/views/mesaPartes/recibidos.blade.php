@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.bandeja')
+    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index'])
         <div class="semaforo-container">
             <div class="semaforo verde">
                 <span id="badgeVerde">{{ $cont_fecha[0]->verde == 0 ? '' : $cont_fecha[0]->verde }}</span>
@@ -29,7 +29,7 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-6">
-                            <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-inbox"></i> - BANDEJA DOCUMENTARIA</h1>
+                            <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-inbox"></i> -- BANDEJA DOCUMENTARIA</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -41,11 +41,11 @@
                 </div><!-- /.container-fluid -->
             </section>
         </div>
-    @endcan
+    @endcanany
 @stop
 
 @section('content')
-    @can('documentario.mesapar.bandeja')
+    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index'])
         <div class="container-fluid">
             <div class="row">
                 <input type="hidden" id="emisor" name="emisor" value ="{{ $depen }}">
@@ -88,17 +88,26 @@
                                 <div class="card-body" style="overflow-x: auto;">
                                     <table id="datatablesS" class="table table-hover">
                                         <thead>
-                                            <tr style="background-color:#f19e40">
-                                                <th style="text-align: center;">Oficina</th>
-                                                <th style="text-align: center;">N° Expe.</th>
-                                                <th style="text-align: center;">Fecha envio</th>
-                                                <th style="text-align: center;">Fecha recep.</th>
-
-                                                <th style="text-align: center;">Asunto</th>
-                                                <th style="text-align: center;">Persona</th>
-                                                <th style="text-align: center;">Motivo</th>
-                                                <th style="text-align: center;">PDF</th>
-                                                <th style="text-align: center;">Acciones</th>
+                                            <tr style="background-color:#f19e40; text-transform: uppercase;">
+                                                <th class="text-center align-middle"><i class="fas fa-building"></i><br>OFICINA
+                                                </th>
+                                                <th class="text-center align-middle"><i class="fas fa-folder-open"></i><br>N°
+                                                    EXPE.</th>
+                                                <th class="text-center align-middle"><i class="fas fa-paper-plane"></i><br>FECHA
+                                                    ENVÍO</th>
+                                                <th class="text-center align-middle"><i class="fas fa-inbox"></i><br>FECHA
+                                                    RECEP.</th>
+                                                <th class="text-center align-middle"><i class="fas fa-file-alt"></i><br>ASUNTO
+                                                </th>
+                                                <th class="text-center align-middle"><i class="fas fa-id-card"></i><br>N° DNI
+                                                </th>
+                                                <th class="text-center align-middle"><i class="fas fa-user"></i><br>PERSONA</th>
+                                                <th class="text-center align-middle"><i
+                                                        class="fas fa-comment-alt"></i><br>MOTIVO</th>
+                                                <th class="text-center align-middle"><i
+                                                        class="fas fa-file-pdf"></i><br>PDF</th>
+                                                <th class="text-center align-middle"><i class="fas fa-cogs"></i><br>ACCIONES
+                                                </th>
                                             </tr>
                                         </thead>
                                     </table>
@@ -109,7 +118,7 @@
                 </div>
             </div>
         </div>
-    @endcan
+    @endcanany
 
     <!-- Modal -->
     <div class="modal fade" id="formModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
@@ -647,6 +656,10 @@
                             let icono, colorTexto, fontStyle;
 
                             if (emisor === 'Docente') {
+                                icono = "fas fa-chalkboard-teacher";
+                                colorTexto = "#0b511b";
+                                fontStyle = "font-weight-bold";
+                            } else if (emisor === 'Egresado') {
                                 icono = "fas fa-user-graduate";
                                 colorTexto = "#0b511b";
                                 fontStyle = "font-weight-bold";
@@ -682,6 +695,10 @@
                     {
                         data: "asunt",
                         className: "text-left",
+                    },
+                    {
+                        data: "dni",
+                        className: "text-center",
                     },
                     {
                         data: "nombre_doce",
@@ -748,27 +765,34 @@
                     },
                     {
                         targets: 4,
-                        width: "35%",
+                        width: "30%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
                         }
                     },
                     {
                         targets: 5,
-                        width: "25%",
-                        createdCell: function(td) {
-                            $(td).css('background-color', "#f19e402f");
-                        }
-                    },
-                    {
-                        targets: 6,
                         width: "5%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
                         }
                     },
                     {
-                        targets: 7, // si PDF es la 7ª columna (índice base 0)
+                        targets: 6,
+                        width: "25%",
+                        createdCell: function(td) {
+                            $(td).css('background-color', "#f19e402f");
+                        }
+                    },
+                    {
+                        targets: 7,
+                        width: "5%",
+                        createdCell: function(td) {
+                            $(td).css('background-color', "#f19e402f");
+                        }
+                    },
+                    {
+                        targets: 8, // si PDF es la 7ª columna (índice base 0)
                         width: "5%",
                         className: "text-center",
                         createdCell: function(td) {
@@ -776,7 +800,7 @@
                         }
                     },
                     {
-                        targets: 8,
+                        targets: 9,
                         width: "5%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");

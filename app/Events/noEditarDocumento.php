@@ -23,10 +23,10 @@ class noEditarDocumento implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        \Log::info('docu recibi.' . $this->dependencia_id);
+        \Log::info('docu recibi -- ' . $this->dependencia_id);
         if ($this->tipo === 'personal') {
             // Se envía al canal privado del usuario (Docente/Alumno)
-            \Log::info('docu recibi para docenteeeeeeeeeeeee' . $this->dependencia_id);
+            \Log::info('docu recibi para docenteeeeeeeeeeeee --- ' . $this->dependencia_id);
             return new PrivateChannel('App.Models.User.' . $this->dependencia_id);
         }
         \Log::info('No se puede editar documento por fue recibido por la dependencia.' . $this->dependencia_id);
@@ -41,7 +41,7 @@ class noEditarDocumento implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'message' => 'No se puede editar documento por fue recibido por la dependencia',
+            'message' => 'No se puede editar documento por que fue recepcionado por la dependencia',
             'dependencia_id' => $this->dependencia_id,
         ];
     }

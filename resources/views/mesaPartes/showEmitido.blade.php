@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.showEmitido')
+    @canany(['documentario.mesapar.showEmitido', 'alumno.matricula.index'])
         <div class="callout callout-danger">
             <section class="content-header p-0">
                 <div class="container-fluid">
@@ -26,11 +26,11 @@
                 </div><!-- /.container-fluid -->
             </section>
         </div>
-    @endcan
+    @endcanany
 @stop
 
 @section('content')
-    @can('documentario.mesapar.showEmitido')
+    @canany(['documentario.mesapar.showEmitido', 'alumno.matricula.index'])
         <section class="content">
             <div class="container-fluid">
                 {{-- ver si las oficinas respondieron --}}
@@ -66,7 +66,7 @@
                         </ul>
                     </div>
                 </div>
-gggggggggggggggggggggggggg
+                gggggggggggggggggggggggggg
                 {{-- todo el formulario de editar --}}
                 <div class="card card-{{ $estadoMayor->idestado >= 2 ? 'warning' : 'info' }}">
                     <div class="card-header">
@@ -460,7 +460,7 @@ gggggggggggggggggggggggggg
                 </div>
             </div><!-- /.container-fluid -->
         </section>
-    @endcan
+    @endcanany
 @stop
 
 @section('css')
@@ -531,22 +531,22 @@ gggggggggggggggggggggggggg
     @livewireScripts
 
     <script>
-        let dependenciaId = {{ $id_depen }};
+        // let dependenciaId = {{ $id_depen }};
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const audio = new Audio('{{ asset('sound/alert.mp3') }}');
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.noEditarDocumento', (e) => {
-                    audio.play().catch(err => console.log("Audio en espera de interacción ..."));
-                    Swal.fire({
-                        title: "ALERTA!",
-                        text: "Este documento ya fue recepcionado, no se puede editar ....",
-                        icon: "error"
-                    }).then(() => {
-                        window.location.href = window.location.href;
-                    });
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     const audio = new Audio('{{ asset('sound/alert.mp3') }}');
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.noEditarDocumento', (e) => {
+        //             audio.play().catch(err => console.log("Audio en espera de interacción ..."));
+        //             Swal.fire({
+        //                 title: "ALERTA!",
+        //                 text: "Este documento ya fue recepcionado, no se puede editar ....",
+        //                 icon: "error"
+        //             }).then(() => {
+        //                 window.location.href = window.location.href;
+        //             });
+        //         });
+        // });
 
         // document.addEventListener("DOMContentLoaded", function() {
         //     Echo.private('dependencia.' + dependenciaId)

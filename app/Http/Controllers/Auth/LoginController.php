@@ -33,7 +33,7 @@ class LoginController extends Controller
         $request->validate([
             'dni' => 'required|string|size:8|exists:users,dni',
             'password' => 'required|string',
-            'g-recaptcha-response' => ['required', new RecaptchaV3],
+            // 'g-recaptcha-response' => ['required', new RecaptchaV3],
         ], [
             'dni.required' => 'El DNI es obligatorio.',
             'dni.string' => 'El DNI debe ser una cadena de texto.',
@@ -67,7 +67,7 @@ class LoginController extends Controller
                 'docente'    => redirect('/docente/horario'),
                 'alumno'     => redirect('/alumno/matriReali'),
                 'postulante' => redirect()->route('postulante.index'),
-                'egresado'   => redirect('/egresado/index'),
+                'egresado'   => redirect('/alumno/matriPorCurri'),
                 'admision'   => redirect('admin/procesos'),
 
                 'Dirección',

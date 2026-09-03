@@ -273,6 +273,28 @@ class mesaPartes extends Controller
         return response()->json($docentes);
     }
 
+    public function buscarEgresados(Request $request)
+    {
+        $busqueda = $request->get('q');
+        $egresado = DB::table('users')
+            ->join('postulante', 'users.dni', '=', 'postulante.idpostulante')
+            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+            ->where(function ($query) use ($busqueda) {
+                $query->where(DB::raw("CONCAT(postulante.apellidos_pater_postulante, ' ', postulante.apellidos_mater_postulante, ' ', postulante.nombres_postulante)"), 'like', "%{$busqueda}%")
+                    ->orWhere('users.dni', 'like', "%{$busqueda}%");
+            })
+            ->where('model_has_roles.role_id', '=', 5)
+            ->select(
+                'users.id as id',
+                DB::raw("CONCAT(users.dni, ' --- ',postulante.apellidos_pater_postulante, ' ', postulante.apellidos_mater_postulante, ' ', postulante.nombres_postulante) as text")
+            )
+            ->limit(10)
+            ->get();
+
+
+        return response()->json($egresado);
+    }
+
     public function generarWordBorrador(Request $request)
     {
         // ... validaciones ...
@@ -314,6 +336,7 @@ class mesaPartes extends Controller
 
     public function registrarDocu(Request $request)
     {
+        // dd($request);
         $reglas = [
             'tipo_documento'   => 'required|not_in:0',
             'asunto'           => 'required|string',
@@ -401,6 +424,30 @@ class mesaPartes extends Controller
 
                     //aqui el evento para docentes.
                     event(new DocumentoRecibido($id_user_docente, $cont_estados, 'personal'));
+                }
+            } if ($request->has('egresados')) {
+                $tot_egresados = $request->egresados;
+                // dd($request);
+                foreach ($tot_egresados as $id_user_egresado) {
+                    DB::connection('mysql_documentario')->table('movimiento')->insert([
+                        'iddocumentos'            => $iddocumento,
+                        'iddependencias_emior'    => $emisor_id,
+                        'iddependencias_receptor' => 5, //solo egresado id 5
+                        'id_user_receptor'        => $id_user_egresado,
+                        'fecha_de_envio'          => $fecha_actual,
+                        'idestado'                => 1
+                    ]);
+
+                    // Obtener conteos para el evento Real-Time
+                    $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                                        FROM estado
+                                        LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                                        AND movimiento.id_user_receptor = ?
+                                        WHERE estado.idestado IN (1,2,3)
+                                        GROUP BY estado.idestado;', [$id_user_egresado]);
+
+                    //aqui el evento para docentes.
+                    event(new DocumentoRecibido($id_user_egresado, $cont_estados, 'personal'));
                 }
             } else {
                 // 4. Determinar Receptores (Todas o Selección)

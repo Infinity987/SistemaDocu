@@ -92,6 +92,17 @@ class UserController extends Controller
                         'estado' => 1
                     ]);
                 }
+
+                $buscar_existe_doce = DB::connection('mysql_segunda')->table('docente')->where('id_users', '=', $user->id)->exists();
+
+                if (!$buscar_existe_doce) {
+                    DB::connection('mysql_segunda')->table('docente')->insert([
+                        'especialidad' => 'docente',
+                        'estado' => 1,
+                        'id_users' => $user->id
+                    ]);
+                }
+                // dd($buscar_existe_doce);
             } else {
                 if (!empty($agregados)) {
                     foreach ($agregados as $agrega_depen) {
@@ -106,11 +117,13 @@ class UserController extends Controller
                 foreach ($faltantes as $quitd) {
                     $update_cero = DB::connection('mysql_documentario')->update('UPDATE dependencia_user SET updated_at = ?, estado = ? WHERE user_id = ? AND dependencia_id = ? AND estado = ?', [now(), 0, $user->id, $quitd, 1]);
                 }
+                // dd('aquiddddd_ddd');
+
             }
         }
         // dump("----------------------------------");
         // dd('pause');
 
-        return redirect()->route('admin.users.edit', $user)->with('info', 'Se asignó los roles');
+        return redirect()->route('admin.users.edit', $user)->with('info', 'Se asignó los roles ...');
     }
 }

@@ -65,10 +65,13 @@
             const userId = "{{ auth()->id() }}";
             const depenId = "{{ session('dependencia_id') }}";
             const activeRole = "{{ session('active_role_name') }}";
+            console.log(depenId);
+
 
             if (!userId || typeof Echo === 'undefined') return;
 
             const notificationSound = new Audio('{{ asset('sound/noti.mp3') }}');
+            const notificationSoundNoEdit = new Audio('{{ asset('sound/alert.mp3') }}');
 
             const procesarNotificacion = (e) => {
                 // 1. Sonido
@@ -114,6 +117,24 @@
                 }
             };
 
+            const procesarNotificacionNoEditar = (e) => {
+                notificationSoundNoEdit.play().catch(err => console.log("Audio en espera de interacción"));
+
+                Swal.fire({
+                    icon: "error",
+                    title: "ALERTA!",
+                    text: e.message || "Este documento ya fue recepcionado, no se puede editar ....",
+                    confirmButtonText: "Aceptar",
+                    customClass: {
+                        popup: 'swal-large'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = window.location.href;
+                    }
+                });
+            };
+
             // --- CANAL PERSONAL (Docente, Alumno, etc) ---
             Echo.private('App.Models.User.' + userId)
                 .listen('.DocumentoRecibido', (e) => {
@@ -123,10 +144,13 @@
 
             Echo.private('App.Models.User.' + userId)
                 .listen('.noEditarDocumento', (e) => {
+
                     if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
                         console.log('Recargando DataTable...');
                         $('#datatablesSimple').DataTable().ajax.reload(null, false);
                         // El 'false' es para que no se resetee la paginación al recargar
+                    } else {
+                        procesarNotificacionNoEditar(e);
                     }
                 });
 
@@ -147,10 +171,13 @@
 
                 Echo.private('dependencia.' + depenId)
                     .listen('.noEditarDocumento', (e) => {
+
                         if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
                             console.log('Recargando DataTable...');
                             $('#datatablesSimple').DataTable().ajax.reload(null, false);
                             // El 'false' es para que no se resetee la paginación al recargar
+                        } else {
+                            procesarNotificacionNoEditar(e);
                         }
                     });
                 Echo.private('dependencia.' + depenId)

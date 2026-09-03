@@ -14,13 +14,15 @@
         <span class="d-inline-block d-md-inline text-truncate" style="max-width: 100%; max-width: 120px;"
             title="">
             @if (session('dependencia_id') == 4)
-                <i class="fas fa-user-graduate"></i> -
-                {{ !empty($nom_carre) ? mb_strtoupper($nom_carre, 'UTF-8') : '' }}
+                {{-- alumno --}}
+                <i class="fas fa-user-graduate"></i> -$$$$
+                {{ !empty($nom_carre) ? mb_strtoupper($nom_carre, 'UTF-8') : 'NOSALE' }}
             @endif
 
             @if (session('dependencia_id') == 5)
-                <i class="fas fa-graduation-cap"></i> -
-                {{ !empty($nom_carre) ? mb_strtoupper($nom_carre, 'UTF-8') : '' }}
+                {{-- egresado --}}
+                <i class="fas fa-graduation-cap"></i> -///
+                {{ !empty($nom_carre) ? mb_strtoupper($nom_carre, 'UTF-8') : 'NOSALE-egreado' }}
             @endif
         </span>
     </div>
