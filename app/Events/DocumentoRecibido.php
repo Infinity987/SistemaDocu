@@ -17,6 +17,12 @@ class DocumentoRecibido implements ShouldBroadcast
 
     public function __construct($dependencia_id, $cont_estados, $tipo)
     {
+
+
+
+
+
+
         $this->dependencia_id = $dependencia_id;
         $this->cont_estados = $cont_estados;
         $this->tipo = $tipo;
