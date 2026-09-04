@@ -382,7 +382,7 @@ public function derivarDirector($id)
         DB::connection('mysql_documentario')->commit();
         
         $tipoMsj = ($docOriginal->idtipo_documento == $idTipoFUT) ? "FUT" : "General";
-        event(new DocumentoRecibido($idDirector, $cont_estados));
+        event(new DocumentoRecibido($idDirector, $cont_estados,'dependencia'));
         return back()->with('success', "Derivado con éxito. Nuevo Exp. $tipoMsj: $nuevoExpediente");
 
     } catch (\Exception $e) {

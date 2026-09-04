@@ -322,15 +322,15 @@ class mesaPartes extends Controller
     $template->setValue('nombre_anio', $configuracion->reso_direc); 
     
     $rutaLogo = public_path($configuracion->logo);
-    if (file_exists($rutaLogo)) {
+            if (file_exists($rutaLogo)) {
         $template->setImageValue('logo', [
             'path' => $rutaLogo, 
             'width' => 90, 
             'height' => 90, 
             'ratio' => true
-        ]);
-    }
-}
+             ]);
+            }
+                        }
 
         // 1. DATOS DEL EMISOR (Quien redacta: el usuario logueado)
         $id_depen_emisor = session('dependencia_id');
@@ -383,8 +383,8 @@ if ($id_depen_receptor) {
 }
 
 // --- CONTINUAR CON EL SETVALUE ---
-$template->setValue('destinatario_nombre', strtoupper($nombreDestinatario));
-$template->setValue('destinatario_cargo', strtoupper($cargoDestinatario));
+        $template->setValue('destinatario_nombre', strtoupper($nombreDestinatario));
+        $template->setValue('destinatario_cargo', strtoupper($cargoDestinatario));
 // ...
 
         // 3. LÓGICA DEL CORRELATIVO (Para el título: INFORME N° XXX-2026...)
@@ -431,10 +431,13 @@ $template->setValue('destinatario_cargo', strtoupper($cargoDestinatario));
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
 
+     try {     
     } catch (\Exception $e) {
         return "Error en el servidor: " . $e->getMessage();
+    } 
     }
-}
+
+
 
     public function registrarDocu(Request $request)
     {
