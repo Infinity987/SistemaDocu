@@ -127,6 +127,7 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'documentario.reporDepen.index'])->syncRoles([$role7]);
 
         Permission::create(['name' => 'documentario.pagos.index'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
+        Permission::create(['name' => 'documentario.resoluciones.index'])->syncRoles([$role8]);
 
     }
 }

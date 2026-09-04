@@ -618,7 +618,13 @@ return [
             'active' => ['admin/pagos*'],
             'can' => 'rol-documentario'
         ],
-
+[
+            'text' => 'RESOLUCIONES',
+            'route' => 'documentario.resoluciones.index',
+            'icon' => 'fas fa-search',
+            'active' => ['admin/resoluciones*'],
+            'can' => 'rol-documentario'
+        ],
         [
             'header' => 'REPORTES',
             'can' => 'rol-documentario'
