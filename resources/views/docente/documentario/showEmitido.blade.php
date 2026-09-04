@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @canany(['documentario.mesapar.showEmitido', 'alumno.matricula.index'])
+    @can('docente.horario')
         <div class="callout callout-danger">
             <section class="content-header p-0">
                 <div class="container-fluid">
@@ -17,7 +17,7 @@
                         </div>
                         <div class="col-sm-6">
                             <ol class="breadcrumb float-sm-right">
-                                <li class="breadcrumb-item"><a href="{{ route('documentario.mesapar.index') }}"
+                                <li class="breadcrumb-item"><a href="{{ route('docente.creardocu') }}"
                                         style="color: #4a3911; text-decoration: none;" class="mause">inicio</a></li>
                                 <li class="breadcrumb-item active">Editar envio</li>
                             </ol>
@@ -26,11 +26,11 @@
                 </div><!-- /.container-fluid -->
             </section>
         </div>
-    @endcanany
+    @endcan
 @stop
 
 @section('content')
-    @canany(['documentario.mesapar.showEmitido', 'alumno.matricula.index'])
+    @can('docente.horario')
         <section class="content">
             <div class="container-fluid">
                 {{-- ver si las oficinas respondieron --}}
@@ -66,7 +66,7 @@
                         </ul>
                     </div>
                 </div>
-                gggggggggggggggggggggggggg
+
                 {{-- todo el formulario de editar --}}
                 <div class="card card-{{ $estadoMayor->idestado >= 2 ? 'warning' : 'info' }}">
                     <div class="card-header">
@@ -85,7 +85,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <form
-                                    action="{{ route('documentario.mesapar.updateDocuEmi', ['iddocumentos' => $queryDoc->iddocumentos]) }}"
+                                    action="{{ route('docente.updateDocuEmi', ['iddocumentos' => $queryDoc->iddocumentos]) }}"
                                     method="post" enctype="multipart/form-data">
                                     @csrf
                                     <div class="modal-body">
@@ -460,7 +460,7 @@
                 </div>
             </div><!-- /.container-fluid -->
         </section>
-    @endcanany
+    @endcan
 @stop
 
 @section('css')
@@ -531,22 +531,22 @@
     @livewireScripts
 
     <script>
-        // let dependenciaId = {{ $id_depen }};
+        let dependenciaId = {{ $id_depen }};
 
-        // document.addEventListener("DOMContentLoaded", function() {
-        //     const audio = new Audio('{{ asset('sound/alert.mp3') }}');
-        //     Echo.private('dependencia.' + dependenciaId)
-        //         .listen('.noEditarDocumento', (e) => {
-        //             audio.play().catch(err => console.log("Audio en espera de interacción ..."));
-        //             Swal.fire({
-        //                 title: "ALERTA!",
-        //                 text: "Este documento ya fue recepcionado, no se puede editar ....",
-        //                 icon: "error"
-        //             }).then(() => {
-        //                 window.location.href = window.location.href;
-        //             });
-        //         });
-        // });
+        document.addEventListener("DOMContentLoaded", function() {
+            const audio = new Audio('{{ asset('sound/alert.mp3') }}');
+            Echo.private('dependencia.' + dependenciaId)
+                .listen('.noEditarDocumento', (e) => {
+                    audio.play().catch(err => console.log("Audio en espera de interacción ..."));
+                    Swal.fire({
+                        title: "ALERTA!",
+                        text: "Este documento ya fue recepcionado, no se puede editar ....",
+                        icon: "error"
+                    }).then(() => {
+                        window.location.href = window.location.href;
+                    });
+                });
+        });
 
         // document.addEventListener("DOMContentLoaded", function() {
         //     Echo.private('dependencia.' + dependenciaId)

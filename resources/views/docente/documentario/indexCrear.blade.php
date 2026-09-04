@@ -10,7 +10,7 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-boxes"></i>
-                                - CREAR DOCUMENTO {{ session('active_role_name') }}</h1>
+                                - CREAR DOCUMENTO DOCE {{ session('active_role_name') }}</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -137,6 +137,18 @@
                                                                 name="dependencia_enviar[]" multiple>
                                                             </select>
                                                             <span id="dependencia_enviar_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-12" id="container_docentes" style="display: none;">
+                                                        <div class="form-group">
+                                                            <label class="text-primary"><i class="fas fa-user-graduate"></i>
+                                                                Seleccionar Docente(s)</label>
+                                                            <select id="docentes_select" class="form-control select2"
+                                                                name="docentes_especificos[]" multiple>
+                                                            </select>
+                                                            <small class="text-muted">Nota: Al enviar a docentes, no se pueden
+                                                                añadir otras dependencias.</small>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -295,7 +307,8 @@
                     <div class="col-12">
                         <div class="card card-danger card-outline">
                             <div class="card-header" style="background-color: #dddddd">
-                                <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos ddddd</h3>
+                                <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <strong>Tabla
+                                        documentos ddddd</strong></h3>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -307,6 +320,7 @@
                                                     <th style="text-align: center;">Contador</th>
                                                     <th style="text-align: center;">Fecha y hora</th>
                                                     <th style="text-align: center;">Asunto</th>
+                                                    <th style="text-align: center;">Dependencia</th>
                                                     <th style="text-align: center;">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -378,10 +392,10 @@
 @stop
 
 @section('js')
-    <script>
+    {{-- <script>
         window.dependenciaId = {{ $id_depen }}; // Esto se usa dentro de app.js
-    </script>
-    @vite('resources/js/app.js')
+    </script> --}}
+    {{-- @vite('resources/js/app.js') --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
@@ -393,43 +407,12 @@
     <script>
         let dependenciaId = {{ $id_depen }};
 
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log('llego docu');
-
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.DocumentoRecibido', (e) => {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                            var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
-                            audio.play();
-                        },
-                        didClose: () => {
-                            $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-                                .cont_estados[0]
-                                .cont_estado);
-                        }
-                    });
-
-                    Toast.fire({
-                        icon: "success",
-                        title: "Nuevo documento recibido"
-                    });
-                });
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.noEditarDocumento', (e) => {
-                    $('#datatablesSimple').DataTable().ajax.reload();
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.noEditarDocumento', (e) => {
+        //             $('#datatablesSimple').DataTable().ajax.reload();
+        //         });
+        // });
 
         document.addEventListener("DOMContentLoaded", function() {
             Echo.private('dependencia.' + dependenciaId)
@@ -438,6 +421,40 @@
                         .cont_estado);
                 });
         });
+
+        // para docente
+        // let userId = "{{ auth()->id() }}";
+
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     const notificationSound = new Audio('{{ asset('sound/noti.mp3') }}');
+
+        //     Echo.private('App.Models.User.' + userId)
+        //         .listen('.DocumentoRecibido', (e) => {
+        //             notificationSound.play().catch(err => console.log("Audio bloqueado temporalmente"));
+
+        //             const Toast = Swal.mixin({
+        //                 toast: true,
+        //                 position: "top-end",
+        //                 showConfirmButton: false,
+        //                 timer: 3000,
+        //                 timerProgressBar: true,
+        //                 didOpen: (toast) => {
+        //                     toast.onmouseenter = Swal.stopTimer;
+        //                     toast.onmouseleave = Swal.resumeTimer;
+        //                 }
+        //             });
+
+        //             Toast.fire({
+        //                 icon: "success",
+        //                 title: "Nuevo documento recibido ...",
+        //                 didClose: () => {
+        //                     // Actualización del badge
+        //                     let contador = e.cont_estados[0].cont_estado;
+        //                     $('#badge-alerts').text(contador == 0 ? '' : contador);
+        //                 }
+        //             });
+        //         });
+        // });
     </script>
 
     <script>
@@ -597,6 +614,13 @@
                         butonEnviardatos.prop('disabled', false);
                     }
                 });
+
+                //para quitar el boton de QUITAR A OTRA DEPENDENCIA
+                $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+                $('#container_docentes').hide();
+                $('#docentes_select').val(null).trigger('change');
+                $('#input_docente_shadow').remove();
+                $('#btn-reset').remove();
             });
 
             $('.tipo-btn').on('click', function() {
@@ -625,6 +649,41 @@
                 cargarTabla(2);
                 $('.tipo-btn[data-tipo="2"]').click();
             }
+
+            $('#dependencia_enviar').on('change', function() {
+
+                let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
+                let esDocente = data.some(item => item.text.trim() === 'Docente');
+
+                if (esDocente) {
+                    // 1. Buscamos el ID exacto que tiene la opción "Docente"
+                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+                    let idDocenteArea = objetoDocente.id;
+
+                    if ($('#input_docente_shadow').length === 0) {
+                        $('#form_regis_doc').append(
+                            `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idDocenteArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_docentes').fadeIn();
+                    inicializarBusquedaDocentes();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                }
+            });
         })
 
         $('#tipo_documento').on('change', function() {
@@ -664,6 +723,24 @@
                 }
             });
         });
+
+        // 2. Función para inicializar el segundo Select2 (Docentes)
+        function inicializarBusquedaDocentes() {
+            $('#docentes_select').select2({
+                placeholder: "Busque y seleccione uno o varios docentes",
+                ajax: {
+                    url: '{{ route('documentario.buscarDocentes') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter')
+            });
+        }
 
         function descargarWordBorrador() {
             // 1. Obtener el formulario original
@@ -768,6 +845,13 @@
                         }
                     },
                     {
+                        data: "nombre_dependencia",
+                        name: 'nombre_dependencia',
+                        render: function(data, type, row) {
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                        }
+                    },
+                    {
                         data: "btn"
                     }
                 ],
@@ -817,6 +901,24 @@
                     },
                     {
                         targets: 4,
+                        width: "40%",
+                        createdCell: function(td, cellData) {
+                            $(td).html(`
+                                <div style="
+                                    max-width: 500px;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    display: block;
+                                " title="${cellData}">
+                                    ${cellData}
+                                </div>
+                                `);
+                            $(td).css('background-color', '#f19e402f');
+                        }
+                    },
+                    {
+                        targets: 5,
                         width: "8%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
@@ -826,6 +928,15 @@
                 responsive: true
             });
         }
+
+        // Botón para desbloquear y volver a elegir dependencias normales
+        $(document).on('click', '#btn-reset', function() {
+            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+            $('#container_docentes').hide();
+            $('#docentes_select').val(null).trigger('change');
+            $('#input_docente_shadow').remove();
+            $(this).remove();
+        });
     </script>
 
     <script>

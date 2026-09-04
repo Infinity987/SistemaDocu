@@ -710,6 +710,99 @@ class RegisterUserss extends Component
                 DB::rollBack();
                 $this->dispatch('mensaje', ['msm' => 'Usuario TIPO MESA DE PARTES no registrado']);
             }
+        } elseif ($this->rol == 25) {
+            try {
+                DB::connection('mysql_segunda')->beginTransaction();
+                $usu = User::create([
+                    'dni' => $this->dni,
+                    'password' => Hash::make($this->password),
+                ])->assignRole('Asistente J. Unidad de Investigación');
+
+                $save_userProfile = DB::connection('mysql_segunda')->table('userprofile')->insert([
+                    'nombre' => mb_strtoupper($this->name, 'UTF-8'),
+                    'num_celualr' => $this->ncelular,
+                    'correo' => $this->email,
+                    'id_users' => $usu->id,
+                ]);
+
+                DB::connection('mysql_documentario')->table('dependencia_user')->insert([
+                    'user_id' => $usu->id,
+                    'dependencia_id' => 25,
+                    'created_at' => $fechayhora,
+                    'estado' => 1,
+                    'tipo_usuario' => $this->tipo_usuario,
+                    'token' => Str::uuid()
+                ]);
+
+                DB::connection('mysql_segunda')->commit();
+                $this->reset(['dni', 'password', 'password_confirmation', 'rol', 'name', 'ncelular', 'email', 'tipo_usuario']);
+                $this->dispatch('mensaje', ['msm' => 'Usuario TIPO Asistente J. Unidad de Investigación registrado con éxito.']);
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                $this->dispatch('mensaje', ['msm' => 'Usuario TIPO Asistente J. Unidad de Investigación no registrado']);
+            }
+        } elseif ($this->rol == 26) {
+            try {
+                DB::connection('mysql_segunda')->beginTransaction();
+                $usu = User::create([
+                    'dni' => $this->dni,
+                    'password' => Hash::make($this->password),
+                ])->assignRole('Asistente Jefatura de unidad Administrativa');
+
+                $save_userProfile = DB::connection('mysql_segunda')->table('userprofile')->insert([
+                    'nombre' => mb_strtoupper($this->name, 'UTF-8'),
+                    'num_celualr' => $this->ncelular,
+                    'correo' => $this->email,
+                    'id_users' => $usu->id,
+                ]);
+
+                DB::connection('mysql_documentario')->table('dependencia_user')->insert([
+                    'user_id' => $usu->id,
+                    'dependencia_id' => 26,
+                    'created_at' => $fechayhora,
+                    'estado' => 1,
+                    'tipo_usuario' => $this->tipo_usuario,
+                    'token' => Str::uuid()
+                ]);
+
+                DB::connection('mysql_segunda')->commit();
+                $this->reset(['dni', 'password', 'password_confirmation', 'rol', 'name', 'ncelular', 'email', 'tipo_usuario']);
+                $this->dispatch('mensaje', ['msm' => 'Usuario TIPO Asistente Jefatura de unidad Administrativa registrado con éxito.']);
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                $this->dispatch('mensaje', ['msm' => 'Usuario TIPO Asistente Jefatura de unidad Administrativa no registrado']);
+            }
+        } elseif ($this->rol == 27) {
+            try {
+                DB::connection('mysql_segunda')->beginTransaction();
+                $usu = User::create([
+                    'dni' => $this->dni,
+                    'password' => Hash::make($this->password),
+                ])->assignRole('Logística');
+
+                $save_userProfile = DB::connection('mysql_segunda')->table('userprofile')->insert([
+                    'nombre' => mb_strtoupper($this->name, 'UTF-8'),
+                    'num_celualr' => $this->ncelular,
+                    'correo' => $this->email,
+                    'id_users' => $usu->id,
+                ]);
+
+                DB::connection('mysql_documentario')->table('dependencia_user')->insert([
+                    'user_id' => $usu->id,
+                    'dependencia_id' => 27,
+                    'created_at' => $fechayhora,
+                    'estado' => 1,
+                    'tipo_usuario' => $this->tipo_usuario,
+                    'token' => Str::uuid()
+                ]);
+
+                DB::connection('mysql_segunda')->commit();
+                $this->reset(['dni', 'password', 'password_confirmation', 'rol', 'name', 'ncelular', 'email', 'tipo_usuario']);
+                $this->dispatch('mensaje', ['msm' => 'Usuario TIPO Logística registrado con éxito.']);
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                $this->dispatch('mensaje', ['msm' => 'Usuario TIPO Logística no registrado']);
+            }
         } else {
             $this->dispatch('mensaje', ['msm' => 'Error al agregar usuario ...']);
         }

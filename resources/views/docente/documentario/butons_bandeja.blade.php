@@ -1,7 +1,7 @@
 @if ($estado === 1)
     <div class="d-grid gap-2 d-md-flex justify-content-md-center" aria-label="Basic mixed styles example">
         <form
-            action="{{ route('docente.bandejaRecepcionar', ['idtipo_estado' => 2, 'iddocument' => $iddocument, 'movimient' => $movimient]) }}"
+            action="{{ route('docente.bandejaRecepcionar', ['idtipo_estado' => 2, 'iddocument' => $iddocument, 'movimient' => $movimient, 'iddependencias_emior' => $iddependencias_emior]) }}"
             method="get">
             <button type="submit" class="btn btn-block bg-gradient-success btn-sm" data-toggle="modal"
                 data-target="#editardocu">
@@ -18,12 +18,12 @@
             </button>
             <ul class="dropdown-menu">
                 <li>
-                    <form action="{{ route('documentario.enviardocumentos.solucionar', $iddocument) }}" method="get">
+                    <form action="{{ route('documentario.enviardocumentos.solucionar', $movimient) }}" method="get">
                         <button class="dropdown-item" type="submit"><i class="fas fa-tools"></i> Dar solución</button>
                     </form>
                 </li>
                 <li>
-                    <form action="{{ route('documentario.enviardocumentos.responderDocumento', $iddocument) }}"
+                    <form action="{{ route('docente.responderDocumento-docente', $iddocument) }}"
                         method="get">
                         <button class="dropdown-item" type="submit">
                             <i class="fas fa-reply"></i> Responder documento

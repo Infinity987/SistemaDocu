@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Expr\AssignOp\Concat;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,11 +43,9 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            $nom_usu = DB::connection('mysql_segunda')
-                ->table('userprofile')
-                ->where('id_users', Auth::user()->id)
-                ->value('nombre');
-
+            $activeRole = session('active_role_name');
+            $userId = auth()->id();
+            $dni = auth()->user()->dni;
             $id_depen = session('dependencia_id');
 
             $rol = DB::connection('mysql_documentario')
@@ -54,16 +53,42 @@ class AppServiceProvider extends ServiceProvider
                 ->where('iddependencias', $id_depen)
                 ->first();
 
-            $cont_est = DB::connection('mysql_documentario')->select(
-                'SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos),0) as cont_estado
-             FROM estado
-             LEFT JOIN movimiento
-                ON movimiento.idestado = estado.idestado
-                AND movimiento.iddependencias_receptor = ?
-             WHERE estado.idestado IN (1,2,3)
-             GROUP BY estado.idestado',
-                [$id_depen]
-            );
+            if (in_array($activeRole, ['alumno', 'egresado', 'postulante'])) {
+                $nom_usu = DB::table('postulante')
+                    ->where('idpostulante', $dni)
+                    ->selectRaw("CONCAT(apellidos_pater_postulante, ' ', apellidos_mater_postulante, ' ',nombres_postulante) AS nombre")
+                    ->value('nombre');
+            } else {
+                $nom_usu = DB::connection('mysql_segunda')
+                    ->table('userprofile')
+                    ->where('id_users', Auth::user()->id)
+                    ->value('nombre');
+            }
+
+            if (in_array($activeRole, ['docente', 'alumno', 'egresado', 'postulante'])) {
+                $cont_est = DB::connection('mysql_documentario')->select(
+                    'SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos),0) as cont_estado
+                        FROM estado
+                        LEFT JOIN movimiento
+                            ON movimiento.idestado = estado.idestado
+                            AND movimiento.iddependencias_receptor = ?
+                            AND id_user_receptor = ?
+                        WHERE estado.idestado IN (1,2,3)
+                        GROUP BY estado.idestado',
+                    [$id_depen, $userId]
+                );
+            } else {
+                $cont_est = DB::connection('mysql_documentario')->select(
+                    'SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos),0) as cont_estado
+                        FROM estado
+                        LEFT JOIN movimiento
+                            ON movimiento.idestado = estado.idestado
+                            AND movimiento.iddependencias_receptor = ?
+                        WHERE estado.idestado IN (1,2,3)
+                        GROUP BY estado.idestado',
+                    [$id_depen]
+                );
+            }
 
             $view->with(compact(
                 'nom_usu',

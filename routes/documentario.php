@@ -29,9 +29,10 @@ route::post('/Docu/registrarDocu_m', [mesaPartes::class, 'registrarDocu_m'])->na
 route::get('/Docu/emitidos/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos'])->name('mesapar.emitidos');
 route::get('/Docu/emitidos_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos_m'])->name('mesapar.emitidos_m');
 route::get('/Docu/showEmitido/{id}', [mesaPartes::class, 'showEmitido'])->name('mesapar.showEmitido');
-route::post('/Docu/updateDocuEmi', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
+route::post('/Docu/updateDocuEmi/{iddocumentos}', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
 route::get('/traerDepen', [mesaPartes::class, 'traerDepen'])->name('traerDepen');
 route::get('/buscarDocentes', [mesaPartes::class, 'buscarDocentes'])->name('buscarDocentes');
+route::get('/buscarEgresados', [mesaPartes::class, 'buscarEgresados'])->name('buscarEgresados');
 Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware('auth')->name('buscarEntidad');
 route::post('/enviardocumentos/responder', [enviardocumentos::class, 'responder'])->name('enviardocumentos.responder');
 route::post('/enviardocumentos/responderoficinas', [enviardocumentos::class, 'responderoficinas'])->name('enviardocumentos.responderoficinas');
@@ -44,7 +45,7 @@ Route::post('/enviardocumentos/generar-pdf', [enviardocumentos::class, 'generarP
 
 route::get('/bandeja', [bandeja::class, 'index'])->name('mesapar.bandeja');
 route::get('/bandeja/{idtipo_estado}/{emisor}', [bandeja::class, 'bandejaEstado'])->name('bandeja.bandejaEstado');
-route::get('/bandeja/recibir/{idtipo_estado}/{iddocument}/{iddependencias_receptor}', [bandeja::class, 'bandejaEstado_upda'])->name('bandeja.recibir');
+route::get('/bandeja/recibir/{idtipo_estado}/{iddocument}/{movimient}/{iddependencias_emior}', [bandeja::class, 'bandejaEstado_upda'])->name('bandeja.recibir');
 
 route::get('/searchDocu', [searchDocu::class, 'index'])->name('searchDocu.index');
 route::get('/searchDocu/search', [searchDocu::class, 'search'])->name('searchDocu.numex');

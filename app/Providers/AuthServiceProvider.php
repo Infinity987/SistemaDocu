@@ -30,24 +30,6 @@ class AuthServiceProvider extends ServiceProvider
             'alumno',
             'egresado',
             'admision',
-            // 'Dirección',
-            // 'Jefatura de unidad Académica',
-            // 'Jefatura de unidad Administrativa',
-            // 'Secretaria Académica',
-            // 'Coordin. Prog. Estudios Educ. Inicial',
-            // 'Coordin. Prog. Estudios Primaria Epib',
-            // 'Coordin. Prog. Estudios Educ. Física',
-            // 'Coordin. Prog. Educac. Secundaria',
-            // 'J. Area Acad. Educ. Básica Regular',
-            // 'Jefe de Unidad de Formación Contínua',
-            // 'J. Unidad de bienestar y empleabilidad',
-            // 'J. Unidad de Investigación',
-            // 'J. Area de Calidad',
-            // 'Coord. del área de Práctica Profesional e investigación',
-            // 'Biblioteca',
-            // 'Y/O Cargos',
-            // 'PPD',
-            // 'Mesa de partes',
         ];
 
         foreach ($roles as $rol) {
@@ -59,6 +41,8 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('rol-documentario', function ($user) {
 
             $rolesDoc = [
+                'alumno',
+                'egresado',
                 'Dirección',
                 'Jefatura de unidad Académica',
                 'Jefatura de unidad Administrativa',
@@ -77,6 +61,9 @@ class AuthServiceProvider extends ServiceProvider
                 'Y/O Cargos',
                 'PPD',
                 'Mesa de partes',
+                'Asistente J. Unidad de Investigación',
+                'Asistente Jefatura de unidad Administrativa',
+                'Logística',
             ];
 
             return in_array(session('active_role_name'), $rolesDoc);

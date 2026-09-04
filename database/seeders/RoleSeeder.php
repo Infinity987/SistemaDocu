@@ -42,6 +42,12 @@ class RoleSeeder extends Seeder
         $role24 = Role::create(['name' => 'Mesa de partes']);
 
 
+        $role25 = Role::create(['name' => 'Asistente J. Unidad de Investigación']);
+        $role26 = Role::create(['name' => 'Asistente Jefatura de unidad Administrativa']);
+        $role27 = Role::create(['name' => 'Logística']);
+
+
+
         //ADMIN
         Permission::create(['name' => 'admin.home'])->syncRoles([$role1]);
 
@@ -112,17 +118,17 @@ class RoleSeeder extends Seeder
         // Permission::create(['name' => 'admin.users.update'])->syncRoles([$role1]);
 
         Permission::create(['name' => 'documentario.admin.registerUser'])->syncRoles([$role1]);
-        Permission::create(['name' => 'documentario.mesapar.index'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.num_tipo_documento_expe'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.buscarUsuario'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.registrarDocu'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.mesapar.emitidos'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.mesapar.showEmitido'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.mesapar.updateDocuEmi'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
+        Permission::create(['name' => 'documentario.mesapar.index'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.num_tipo_documento_expe'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.buscarUsuario'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.registrarDocu'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.mesapar.emitidos'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.mesapar.showEmitido'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.mesapar.updateDocuEmi'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
 
-        Permission::create(['name' => 'documentario.mesapar.bandeja'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.bandeja.bandejaEstado'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
-        Permission::create(['name' => 'documentario.bandeja.recibir'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24]);
+        Permission::create(['name' => 'documentario.mesapar.bandeja'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.bandeja.bandejaEstado'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
+        Permission::create(['name' => 'documentario.bandeja.recibir'])->syncRoles([$role7, $role8, $role9, $role10, $role11, $role12, $role13, $role14, $role15, $role16, $role17,$role18, $role19, $role20, $role21, $role22, $role23, $role24, $role25, $role26, $role27]);
 
         Permission::create(['name' => 'documentario.reporDepen.index'])->syncRoles([$role7]);
 

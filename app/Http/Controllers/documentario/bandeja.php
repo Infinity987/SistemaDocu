@@ -44,27 +44,27 @@ class bandeja extends Controller
         $depen = session('dependencia_id');
         $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $depen)->first();
 
+        // $primera_query = 'SELECT
+        //             movimiento.idmovimiento AS movimient,movimiento.iddocumentos AS iddocument,iddependencias_emior,dependencias.nombre_dependencia AS nom_emiso,
+        //             iddependencias_receptor,fecha_de_envio,fecha_de_recepcion,documentos.numero_de_exp AS num_exp,documentos.asunto AS asunt,
+        //             documentos.folio AS foli,documentos.idtipo_documento AS tipo_docu,documentos.iddetalle_tramite AS deta_trami,
+        //             detalle_tramite.nombre_detalle_tramite AS nom_deta_trami,documentos.recomendacion AS recomend,
+        //             movimiento.idestado AS estado,documenpdf.nombre_del_documento AS nombrepdf, up.nombre AS nombre_doce
+        //         FROM movimiento
+        //         INNER JOIN documentos ON movimiento.iddocumentos = documentos.iddocumentos
+        //         LEFT JOIN documenpdf ON documentos.iddocumentos = documenpdf.iddocumentos
+        //         LEFT JOIN dependencias ON movimiento.iddependencias_emior = dependencias.iddependencias
+        //         LEFT JOIN detalle_tramite ON documentos.iddetalle_tramite = detalle_tramite.iddetalle_tramite
+        //         left JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
+        //         WHERE iddependencias_receptor = ? AND idestado = ?
+        //         ORDER BY movimiento.fecha_de_envio DESC';
+
         if ($idtipo_estado == 1) {
             $query = DB::connection('mysql_documentario')->select('
                 SELECT
-                    movimiento.idmovimiento AS movimient,movimiento.iddocumentos AS iddocument,iddependencias_emior,dependencias.nombre_dependencia AS nom_emiso,
-                    iddependencias_receptor,fecha_de_envio,fecha_de_recepcion,documentos.numero_de_exp AS num_exp,documentos.asunto AS asunt,
-                    documentos.folio AS foli,documentos.idtipo_documento AS tipo_docu,documentos.iddetalle_tramite AS deta_trami,
-                    detalle_tramite.nombre_detalle_tramite AS nom_deta_trami,documentos.recomendacion AS recomend,
-                    movimiento.idestado AS estado,documenpdf.nombre_del_documento AS nombrepdf, up.nombre AS nombre_doce
-                FROM movimiento
-                INNER JOIN documentos ON movimiento.iddocumentos = documentos.iddocumentos
-                LEFT JOIN documenpdf ON documentos.iddocumentos = documenpdf.iddocumentos
-                LEFT JOIN dependencias ON movimiento.iddependencias_emior = dependencias.iddependencias
-                LEFT JOIN detalle_tramite ON documentos.iddetalle_tramite = detalle_tramite.iddetalle_tramite
-                INNER JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
-                WHERE iddependencias_receptor = ? AND idestado = ?
-                ORDER BY movimiento.fecha_de_envio DESC
-            ', [$emisor, $idtipo_estado]);
-        } else {
-            $query = DB::connection('mysql_documentario')->select('
-                SELECT
-                    movimiento.idmovimiento AS movimient,movimiento.iddocumentos AS iddocument,
+                    u.dni,
+                    movimiento.idmovimiento AS movimient,
+                    movimiento.iddocumentos AS iddocument,
                     iddependencias_emior,
                     dependencias.nombre_dependencia AS nom_emiso,
                     iddependencias_receptor,
@@ -79,13 +79,69 @@ class bandeja extends Controller
                     documentos.recomendacion AS recomend,
                     movimiento.idestado AS estado,
                     documenpdf.nombre_del_documento AS nombrepdf,
-                    up.nombre AS nombre_doce
+
+                    -- Si encuentra el nombre en userprofile lo usa, si no, concatena los campos de postulante
+                    COALESCE(
+                        up.nombre,
+                        CONCAT_WS(" ", pos.nombres_postulante, pos.apellidos_pater_postulante, pos.apellidos_mater_postulante)
+                    ) AS nombre_doce
+
                 FROM movimiento
                 INNER JOIN documentos ON movimiento.iddocumentos = documentos.iddocumentos
                 LEFT JOIN documenpdf ON documentos.iddocumentos = documenpdf.iddocumentos
                 LEFT JOIN dependencias ON movimiento.iddependencias_emior = dependencias.iddependencias
                 LEFT JOIN detalle_tramite ON documentos.iddetalle_tramite = detalle_tramite.iddetalle_tramite
-                INNER JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
+
+                -- Camino 1: Docentes y Administrativos (SIA)
+                LEFT JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
+
+                -- Camino 2: Postulantes (Admisión)
+                LEFT JOIN gamnielb_admision.users u ON documentos.id_user = u.id
+                LEFT JOIN gamnielb_admision.postulante pos ON u.dni = pos.idpostulante
+
+                WHERE iddependencias_receptor = ? AND idestado = ?
+                ORDER BY movimiento.fecha_de_envio DESC
+            ', [$emisor, $idtipo_estado]);
+        } else {
+            $query = DB::connection('mysql_documentario')->select('
+                SELECT
+                    u.dni,
+                    movimiento.idmovimiento AS movimient,
+                    movimiento.iddocumentos AS iddocument,
+                    iddependencias_emior,
+                    dependencias.nombre_dependencia AS nom_emiso,
+                    iddependencias_receptor,
+                    fecha_de_envio,
+                    fecha_de_recepcion,
+                    documentos.numero_de_exp AS num_exp,
+                    documentos.asunto AS asunt,
+                    documentos.folio AS foli,
+                    documentos.idtipo_documento AS tipo_docu,
+                    documentos.iddetalle_tramite AS deta_trami,
+                    detalle_tramite.nombre_detalle_tramite AS nom_deta_trami,
+                    documentos.recomendacion AS recomend,
+                    movimiento.idestado AS estado,
+                    documenpdf.nombre_del_documento AS nombrepdf,
+
+                    -- Si encuentra el nombre en userprofile lo usa, si no, concatena los campos de postulante
+                    COALESCE(
+                        up.nombre,
+                        CONCAT_WS(" ", pos.nombres_postulante, pos.apellidos_pater_postulante, pos.apellidos_mater_postulante)
+                    ) AS nombre_doce
+
+                FROM movimiento
+                INNER JOIN documentos ON movimiento.iddocumentos = documentos.iddocumentos
+                LEFT JOIN documenpdf ON documentos.iddocumentos = documenpdf.iddocumentos
+                LEFT JOIN dependencias ON movimiento.iddependencias_emior = dependencias.iddependencias
+                LEFT JOIN detalle_tramite ON documentos.iddetalle_tramite = detalle_tramite.iddetalle_tramite
+
+                -- Camino 1: Docentes y Administrativos (SIA)
+                LEFT JOIN gamnielb_sia.userprofile up ON documentos.id_user = up.id_users
+
+                -- Camino 2: Postulantes (Admisión)
+                LEFT JOIN gamnielb_admision.users u ON documentos.id_user = u.id
+                LEFT JOIN gamnielb_admision.postulante pos ON u.dni = pos.idpostulante
+
                 WHERE iddependencias_receptor = ? AND idestado = ?
                 ORDER BY movimiento.fecha_de_recepcion DESC
             ', [$emisor, $idtipo_estado]);
@@ -97,22 +153,32 @@ class bandeja extends Controller
         }
     }
 
-    public function bandejaEstado_upda($idtipo_estado, $iddocument, $iddependencias_receptor)
+    public function bandejaEstado_upda($idtipo_estado, $iddocument, $movimient, $iddependencias_emior)
     {
         $fechaHoraActual = Carbon::now();
         try {
             DB::beginTransaction();
-            $query = DB::connection('mysql_documentario')->update('UPDATE movimiento SET idestado = ?, fecha_de_recepcion = ? WHERE iddocumentos = ? AND iddependencias_receptor = ?', [$idtipo_estado, $fechaHoraActual, $iddocument, $iddependencias_receptor]);
+            $query = DB::connection('mysql_documentario')->update('UPDATE movimiento SET idestado = ?, fecha_de_recepcion = ? WHERE iddocumentos = ? AND idmovimiento = ?', [$idtipo_estado, $fechaHoraActual, $iddocument, $movimient]);
             $query2 = DB::connection('mysql_documentario')->update('UPDATE documentos SET estado_actu = ? WHERE iddocumentos = ?', [$idtipo_estado, $iddocument]);
             DB::commit();
+            // dd($dependencia_id.' - cjiwncwecni');
 
-            $dependencia_id = DB::connection('mysql_documentario')->table('documentos')
-                ->select('emisor')
-                ->where('iddocumentos', $iddocument)
-                ->value('emisor');
+            //para ver si es personal o dependencia
+            if ($iddependencias_emior == 2 || $iddependencias_emior == 4 || $iddependencias_emior == 5) {
+                $tipo = 'personal';
+                $usu = DB::connection('mysql_documentario')->table('documentos')
+                    ->where('iddocumentos', $iddocument)
+                    ->value('id_user');
+                $iddependencias_emior = $usu;
+                // dd($usu);
+            } else {
+                $tipo = 'dependencia';
+            }
 
-            event(new noEditarDocumento($dependencia_id));
-            return redirect()->back()->with('success', 'Documento recibido');
+            // dd($tipo.' '.$iddependencias_emior);
+
+            event(new noEditarDocumento($iddependencias_emior, $tipo));
+            return redirect()->back()->with('success', 'Documento recibido...-');
         } catch (\Throwable $th) {
             DB::rollBack();
 

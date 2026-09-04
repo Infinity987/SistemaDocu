@@ -188,8 +188,6 @@
                 }
 
                 var userId = @json($datos->id_users);
-                console.log('User ID:', userId);
-
                 modal.addEventListener('shown.bs.modal', function() {
                     $wire.dispatch('refreshUserData', userId);
                 });

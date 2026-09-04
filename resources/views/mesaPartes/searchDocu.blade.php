@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.index')
+    {{-- @can('documentario.mesapar.index') --}}
         <div class="callout callout-danger mb-0">
             <section class="content-header p-0">
                 <div class="container-fluid">
@@ -22,11 +22,11 @@
                 </div>
             </section>
         </div>
-    @endcan
+    {{-- @endcan --}}
 @stop
 
 @section('content')
-    @can('documentario.mesapar.index')
+    {{-- @can('documentario.mesapar.index') --}}
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12 mb-1">
@@ -378,7 +378,7 @@
                 </div>
             </div>
         </div>
-    @endcan
+    {{-- @endcan --}}
 @stop
 {{-- @vite(['resources/js/app.js']) --}}
 

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use App\Rules\RecaptchaV3;
 
 class LoginController extends Controller
 {
@@ -27,12 +28,12 @@ class LoginController extends Controller
         return 'dni';
     }
 
-    // 🔹 Validación personalizada del login
     protected function validateLogin(Request $request)
     {
         $request->validate([
             'dni' => 'required|string|size:8|exists:users,dni',
             'password' => 'required|string',
+            // 'g-recaptcha-response' => ['required', new RecaptchaV3],
         ], [
             'dni.required' => 'El DNI es obligatorio.',
             'dni.string' => 'El DNI debe ser una cadena de texto.',
@@ -61,55 +62,40 @@ class LoginController extends Controller
                 'active_role_name' => $role->name
             ]);
 
-            if ($role->name === 'admin') {
-                return redirect('admin/users');
-            } else if ($role->name === 'docente') {
-                return redirect('/docente/horario');
-            } else if ($role->name === 'alumno') {
-                return redirect('/alumno/matriReali');
-            } else if ($role->name === 'postulante') {
-                return redirect()->route('postulante.index');
-            } else if ($role->name === 'egresado') {
-                return redirect('/egresado/index');
-            } else if ($role->name === 'admision') {
-                return redirect('admin/procesos');
-            } else if ($role->name === 'Dirección') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Jefatura de unidad Académica') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Jefatura de unidad Administrativa') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Secretaria Académica') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Coordin. Prog. Estudios Educ. Inicial') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Coordin. Prog. Estudios Primaria Epib') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Coordin. Prog. Estudios Educ. Física') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Coordin. Prog. Educac. Secundaria') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'J. Area Acad. Educ. Básica Regular') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Jefe de Unidad de Formación Contínua') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'J. Unidad de bienestar y empleabilidad') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'J. Unidad de Investigación') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'J. Area de Calidad') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Coord. del área de Práctica Profesional e investigación') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Biblioteca') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Y/O Cargos') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'PPD') {
-                return redirect()->route('documentario.mesapar.index');
-            } else if ($role->name === 'Mesa de partes') {
-                return redirect()->route('documentario.mesapar.index');
-            }
+            return match ($role->name) {
+                'admin'      => redirect('admin/users'),
+                'docente'    => redirect('/docente/horario'),
+                'alumno'     => redirect('/alumno/matriReali'),
+                'postulante' => redirect()->route('postulante.index'),
+                'egresado'   => redirect('/alumno/matriPorCurri'),
+                'admision'   => redirect('admin/procesos'),
+
+                'Dirección',
+                'Jefatura de unidad Académica',
+                'Jefatura de unidad Administrativa',
+                'Secretaria Académica',
+                'Coordin. Prog. Estudios Educ. Inicial',
+                'Coordin. Prog. Estudios Primaria Epib',
+                'Coordin. Prog. Estudios Educ. Física',
+                'Coordin. Prog. Educac. Secundaria',
+                'J. Area Acad. Educ. Básica Regular',
+                'Jefe de Unidad de Formación Contínua',
+                'J. Unidad de bienestar y empleabilidad',
+                'J. Unidad de Investigación',
+                'J. Area de Calidad',
+                'Coord. del área de Práctica Profesional e investigación',
+                'Biblioteca',
+                'Y/O Cargos',
+                'PPD',
+                'Mesa de partes',
+                'Asistente J. Unidad de Investigación',
+                'Asistente Jefatura de unidad Administrativa',
+                'Logística',
+                // ... puedes seguir agregando los nombres exactos aquí
+                => redirect()->route('documentario.mesapar.index'),
+
+                default => redirect()->route('documentario.mesapar.index'),
+            };
         }
 
         return redirect()->intended($this->redirectPath());
