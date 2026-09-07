@@ -12,6 +12,8 @@ use App\Http\Controllers\documentario\bandeja;
 use App\Http\Controllers\documentario\searchDocu;
 use App\Http\Controllers\documentario\reportes;
 use App\Http\Controllers\documentario\enviardocumentos;
+use App\Http\Controllers\documentario\pagos;
+use App\Http\Controllers\documentario\resoluciones;
 
 
 Route::resource('users', UserController::class)->names('admin.users');
@@ -35,6 +37,7 @@ Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware(
 route::post('/enviardocumentos/responder', [enviardocumentos::class, 'responder'])->name('enviardocumentos.responder');
 route::post('/enviardocumentos/responderoficinas', [enviardocumentos::class, 'responderoficinas'])->name('enviardocumentos.responderoficinas');
 route::get('/enviardocumentos/solucionar/{id}', [enviardocumentos::class, 'solucionar'])->name('enviardocumentos.solucionar');
+Route::post('/enviardocumentos/derivar-director/{id}', [enviardocumentos::class, 'derivarDirector'])->name('enviardocumentos.derivarDirector');
 
 route::get('/enviardocumentos/responder/{iddocument}', [enviardocumentos::class, 'responderDocumento'])->middleware('auth')->name('enviardocumentos.responderDocumento');
 //pdf de director
@@ -65,5 +68,10 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
         'Content-Disposition' => 'inline; filename="'.$filename.'"'
     ]);
 })->name('pdf.preview')->middleware('auth');
+// pagos ver
+route::get('/pagos', [pagos::class, 'index'])->name('pagos.index');
+//resoluciones
+route::get('/resoluciones', [resoluciones::class, 'index'])->name('resoluciones.index');
+Route::get('/resoluciones/generar/{id_proyecto}', [resoluciones::class, 'generarWord'])->name('resoluciones.generar');
 
 

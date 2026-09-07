@@ -94,28 +94,30 @@ public function calcularCorrelativo($value = null)
 
             // Obtener último expediente por tipo de documento
             $ultimoExpediente = DB::connection('mysql_documentario')->table('documentos')
-                ->where('emisor', $this->dependencia)
-                ->where('idtipo_documento', $this->idTipoDocumento)
-                ->orderBy('idDocumentos', 'desc')
-                ->value('numero_de_exp');
+            ->where('emisor', $this->dependencia)
+            ->where('idtipo_documento', $this->idTipoDocumento)
+            ->where('est_firma', 1) // 👈 Solo contamos los que son para firma
+            ->orderBy('idDocumentos', 'desc')
+            ->value('numero_de_exp');
 
-            $nuevoExpediente = $ultimoExpediente
-                ? str_pad($ultimoExpediente + 1, 3, '0', STR_PAD_LEFT)
-                : '001';
+            $nuevoExpediente = $ultimoExpediente 
+            ? str_pad((int)$ultimoExpediente + 1, 3, '0', STR_PAD_LEFT) 
+            : '001';
 
             // Insertar nuevo documento
-            $ultimoIdDocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
-                'numero_de_exp' => $nuevoExpediente,
-                'fecha_ingreso' => now(),
-                'asunto' => $this->asunto,
-                'idtipo_documento' => $this->idTipoDocumento, // 👈 ahora sí se guarda
-                'emisor' => $this->dependencia,
-                'iddetalle_tramite' => $this->tramite_documento,
-                'idusuario' => Auth::id(),
-                'recomendacion' => $this->recomendaciones,
-                'iddocumento_referencia' => $this->iddocument,
-                'folio' => $this->folio,
-            ]);
+           $ultimoIdDocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
+            'numero_de_exp' => $nuevoExpediente,
+            'fecha_ingreso' => now(),
+            'asunto' => $this->asunto,
+            'idtipo_documento' => $this->idTipoDocumento,
+            'emisor' => $this->dependencia,
+            'iddetalle_tramite' => $this->tramite_documento,
+            'idusuario' => Auth::id(),
+            'recomendacion' => $this->recomendaciones,
+            'iddocumento_referencia' => $this->iddocument,
+            'folio' => $this->folio,
+            'est_firma' => 1, // 👈 IMPORTANTE: Al responder, generas un doc propio
+        ]);
 
             // Actualizar documento anterior
             DB::connection('mysql_documentario')->update("
