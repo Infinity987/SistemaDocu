@@ -1044,8 +1044,11 @@
                     // 1. Buscamos el ID exacto que tiene la opción "Docente"
                     let objetoDocente = data.find(item => item.id.trim() === '2');
                     let idDocenteArea = objetoDocente.id;
+                    console.log('docente 1');
 
                     if ($('#input_docente_shadow_m').length === 0) {
+                    console.log('docente 2');
+
                         $('#form_regis_doc_m').append(
                             `<input type="hidden" id="input_docente_shadow_m" name="dependencia_enviar_m[]" value="${idDocenteArea}">`
                         );
@@ -1073,9 +1076,12 @@
                     // 1. Buscamos el ID exacto que tiene la opción "egresado"
                     let objetoEgresado = data.find(item => item.id.trim() === "5");
                     let idEgresadoArea = objetoEgresado.id;
+                    console.log('egresado 1');
 
                     if ($('#input_egresado_shadow_m').length === 0) {
-                        $('#form_regis_doc').append(
+                    console.log('egresado 2');
+
+                        $('#form_regis_doc_m').append(
                             `<input type="hidden" id="input_egresado_shadow_m" name="dependencia_enviar_m[]" value="${idEgresadoArea}">`
                         );
                     }
@@ -1093,7 +1099,7 @@
                     // Agregamos un botón de "X" para resetear si el usuario se equivocó
                     if (!$('#btn-reset-egresados_m').length) {
                         $(this).closest('.form-group').append(
-                            '<button type="button" id="btn-reset-egresados_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                            '<button type="button" id="btn-reset-egresados_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia..</button>'
                         );
                     }
                 }
@@ -1171,7 +1177,7 @@
                         $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
 
                         $('#input_docente_shadow_m').remove();
-                        $('#input_egresados_shadow_m').remove();
+                        $('#input_egresado_shadow_m').remove();
                         $('#btn-reset_m').remove();
                         $('#btn-reset-egresados_m').remove();
 

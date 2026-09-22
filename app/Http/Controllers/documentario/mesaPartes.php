@@ -560,7 +560,7 @@ class mesaPartes extends Controller
 
     public function registrarDocu_m(Request $request)
     {
-        dd($request);
+        // dd($request);
         // 1. Datos base
         $usuario_id_sistema = Auth::user()->id;
         $emisor_id = $request->emisor;
