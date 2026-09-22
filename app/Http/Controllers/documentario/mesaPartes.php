@@ -298,7 +298,8 @@ class mesaPartes extends Controller
 
     public function generarWordBorrador(Request $request)
     {
-        // ... validaciones ...
+        try {
+        $templatePath = storage_path('app/templates/responder.docx');
 
         if (!file_exists($templatePath)) {
             return "Error: No se encuentra la plantilla en: " . $templatePath;
@@ -431,8 +432,8 @@ if ($id_depen_receptor) {
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
 
-     try {     
-    } catch (\Exception $e) {
+        
+     }catch (\Exception $e) {
         return "Error en el servidor: " . $e->getMessage();
     } 
     }

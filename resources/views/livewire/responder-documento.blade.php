@@ -32,15 +32,15 @@
                             </h6>
                             
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Tipo de documento</label>
-                                <select wire:model.live="idTipoDocumento" class="form-select border-primary-subtle">
-                                    <option value="">Seleccione el tipo...</option>
-                                    @foreach ($tiposDocumento as $tipo)
-                                        <option value="{{ $tipo->idtipo_documento }}">{{ $tipo->nombre_documento }}</option>
-                                    @endforeach
-                                </select>
-                                @error('idTipoDocumento') <small class="text-danger">{{ $message }}</small> @enderror
-                            </div>
+    <label class="form-label fw-semibold">Tipo de documento</label>
+    <select wire:model.live="idTipoDocumento" id="selectTipoDocumento" class="form-select border-primary-subtle tom-select">
+        <option value="">Seleccione o busque el tipo...</option>
+        @foreach ($tiposDocumento as $tipo)
+            <option value="{{ $tipo->idtipo_documento }}">{{ $tipo->nombre_documento }}</option>
+        @endforeach
+    </select>
+    @error('idTipoDocumento') <small class="text-danger">{{ $message }}</small> @enderror
+</div>
 
                             @if (!is_null($correlativoPreview) && $idTipoDocumento)
                                 <div class="alert alert-warning py-2 border-0 shadow-sm">
@@ -68,16 +68,16 @@
                                 <i class="fas fa-paper-plane me-1"></i> Destino y Movimiento
                             </h6>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Oficina de Destino</label>
-                                <select wire:model="oficina_destino" class="form-select border-primary-subtle">
-                                    <option value="">Seleccione la oficina...</option>
-                                    @foreach ($dependencias as $oficinas)
-                                        <option value="{{ $oficinas->iddependencias }}">{{ $oficinas->nombre_dependencia }}</option>
-                                    @endforeach
-                                </select>
-                                @error('oficina_destino') <small class="text-danger">{{ $message }}</small> @enderror
-                            </div>
+                           <div class="mb-3">
+    <label class="form-label fw-semibold">Oficina de Destino</label>
+    <select wire:model="oficina_destino" id="selectOficinaDestino" class="form-select border-primary-subtle tom-select">
+        <option value="">Seleccione o busque la oficina...</option>
+        @foreach ($dependencias as $oficinas)
+            <option value="{{ $oficinas->iddependencias }}">{{ $oficinas->nombre_dependencia }}</option>
+        @endforeach
+    </select>
+    @error('oficina_destino') <small class="text-danger">{{ $message }}</small> @enderror
+</div>
 
 <div class="form-check mb-3">
     <input type="checkbox" wire:model.live="agregarReferencia" class="form-check-input" id="agregarReferencia">
@@ -207,5 +207,44 @@
             </html>
         `);
     }
+</script>
+
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        // Función para inicializar los selects
+        const initTomSelect = () => {
+            // Destruir instancias previas si existen (para evitar duplicados en re-renders)
+            if (window.tsTipoDoc) window.tsTipoDoc.destroy();
+            if (window.tsOficina) window.tsOficina.destroy();
+
+            // Inicializar Tipo de Documento
+            window.tsTipoDoc = new TomSelect('#selectTipoDocumento', {
+                create: false,
+                sortField: { field: "text", direction: "asc" },
+                placeholder: 'Escriba para buscar...',
+                highlight: true,
+                diacritics: true // Permite buscar "oficina" y encontrar "oficína"
+            });
+
+            // Inicializar Oficina de Destino
+            window.tsOficina = new TomSelect('#selectOficinaDestino', {
+                create: false,
+                sortField: { field: "text", direction: "asc" },
+                placeholder: 'Escriba para buscar la dependencia...',
+                highlight: true,
+                diacritics: true
+            });
+        };
+
+        // Ejecutar al cargar
+        initTomSelect();
+
+        // Volver a inicializar si Livewire actualiza este componente
+        Livewire.hook('commit', ({ component, succeed }) => {
+            succeed(() => {
+                setTimeout(initTomSelect, 50); // Pequeño delay para asegurar que el DOM esté listo
+            });
+        });
+    });
 </script>
 </div>

@@ -179,29 +179,111 @@ public function calcularCorrelativo($value = null)
 
 public function generarWord()
 {
-    $templatePath = storage_path('app/templates/responder.docx');
-    $template = new TemplateProcessor($templatePath);
+    try {
+        // 1. RUTA DE LA PLANTILLA
+        $templatePath = storage_path('app/templates/responder.docx');
 
-    // Reemplazar variables comunes
-    $template->setValue('asunto', $this->asunto);
-    $template->setValue('folio', $this->folio);
-    $template->setValue('dependencia', $this->dependencia);
-    $template->setValue('idTipoDocumento', $this->idTipoDocumento);
+        if (!file_exists($templatePath)) {
+            session()->flash('error', 'No se encuentra la plantilla Word en: ' . $templatePath);
+            return;
+        }
 
-    // 👇 Solo si el check está marcado
-    if ($this->agregarReferencia && $this->referenciaTexto) {
-        $template->setValue('referencia', "Referencia:  $this->referenciaTexto");
-    } else {
-        // Si no está marcado, dejamos vacío
-        $template->setValue('referencia', '');
+        $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+        // 2. DATOS DE CONFIGURACIÓN (LOGO Y AÑO)
+        $configuracion = DB::connection('mysql_segunda')
+            ->table('encargados')
+            ->where('estado', 1)
+            ->first();
+
+        if ($configuracion) {
+            $textoAnio = $configuracion->nombre_año ?? $configuracion->nombre_anio ?? 'AÑO VIGENTE';
+            $resoDirec = $configuracion->reso_direc ?? $configuracion->resolucion ?? 'RESOLUCIÓN DIRECTORAL';
+            
+            $template->setValue('texto_anio_oficial', $textoAnio);
+            $template->setValue('nombre_anio', $resoDirec);
+            
+            if (!empty($configuracion->logo)) {
+                $rutaLogo = public_path($configuracion->logo);
+                if (file_exists($rutaLogo)) {
+                    $template->setImageValue('logo', [
+                        'path' => $rutaLogo, 
+                        'width' => 90, 
+                        'height' => 90, 
+                        'ratio' => true
+                    ]);
+                }
+            }
+        }
+
+        // 3. DATOS DEL EMISOR (Quien redacta)
+        $dependenciaEmisor = DB::connection('mysql_documentario')
+            ->table('dependencias')
+            ->where('iddependencias', $this->dependencia)
+            ->first();
+
+        $perfilUsuario = DB::connection('mysql_segunda')
+            ->table('userprofile')
+            ->where('id_users', Auth::id())
+            ->first();
+
+        // 4. DATOS DEL DESTINATARIO (Oficina de destino seleccionada)
+        $dependenciaReceptor = DB::connection('mysql_documentario')
+            ->table('dependencias')
+            ->where('iddependencias', $this->oficina_destino)
+            ->first();
+
+        $nombreDestinatario = $dependenciaReceptor ? strtoupper($dependenciaReceptor->nombre_dependencia) : 'DESTINATARIO';
+        $cargoDestinatario = $dependenciaReceptor ? strtoupper($dependenciaReceptor->nombre_dependencia) : 'CARGO / DEPENDENCIA';
+
+        // 5. DATOS DEL TIPO DE DOCUMENTO Y CORRELATIVO
+        $tipoDoc = DB::connection('mysql_documentario')
+            ->table('tipo_documento')
+            ->where('idtipo_documento', $this->idTipoDocumento)
+            ->first();
+
+        $nombreTipoDoc = $tipoDoc ? strtoupper($tipoDoc->nombre_documento) : 'DOCUMENTO';
+        
+        // Formateamos el correlativo a 3 dígitos (ej: 001) usando el preview que ya calculamos
+        $nroFormateado = str_pad($this->correlativoPreview ?? 1, 3, "0", STR_PAD_LEFT);
+
+        // 6. ASIGNACIÓN DE VALORES A LA PLANTILLA WORD
+        $template->setValue('tipo_doc', $nombreTipoDoc);
+        $template->setValue('nro_doc', $nroFormateado);
+        $template->setValue('anio', date('Y'));
+        $template->setValue('siglas', $dependenciaEmisor->siglas ?? 'S/N');
+        
+        $template->setValue('destinatario_nombre', $nombreDestinatario);
+        $template->setValue('destinatario_cargo', $cargoDestinatario);
+        
+        $template->setValue('usuario_nombre', strtoupper($perfilUsuario->nombre ?? Auth::user()->name ?? 'USUARIO'));
+        $template->setValue('dependencia', strtoupper($dependenciaEmisor->nombre_dependencia ?? 'SIN DEPENDENCIA'));
+        
+        $template->setValue('asunto', strtoupper($this->asunto ?? 'SIN ASUNTO'));
+        $template->setValue('folio', $this->folio ?? '0');
+        $template->setValue('fecha', now()->translatedFormat('d \d\e F \d\e\l Y'));
+        
+        // Lógica de referencia
+        if ($this->agregarReferencia && !empty($this->referenciaTexto)) {
+            $template->setValue('referencia', "REFERENCIA     : " . strtoupper($this->referenciaTexto));
+        } else {
+            $template->setValue('referencia', '');
+        }
+
+        // 7. GENERACIÓN Y DESCARGA DEL ARCHIVO
+        $fileName = 'Borrador_' . ($nombreTipoDoc ?? 'Doc') . '_' . $nroFormateado . '_' . time() . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'word');
+        
+        $template->saveAs($tempFile);
+
+        // En Livewire, devolver un response()->download() desde un método público funciona perfectamente
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+
+    } catch (\Exception $e) {
+        Log::error('Error al generar Word en ResponderDocumento: ' . $e->getMessage());
+        session()->flash('error', 'Error al generar el documento: ' . $e->getMessage());
+        return null;
     }
-
-    // Guardar archivo generado
-    $fileName = 'respuesta_' . time() . '.docx';
-    $outputPath = storage_path("app/public/$fileName");
-    $template->saveAs($outputPath);
-
-    return response()->download($outputPath)->deleteFileAfterSend(true);
 }
 
 public function cargarReferencia()
