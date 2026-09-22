@@ -13,12 +13,13 @@ class noEditarDocumento implements ShouldBroadcast
 {
     use InteractsWithSockets, SerializesModels;
 
-    public $dependencia_id,$tipo;
+    public $dependencia_id,$tipo,$iddocument;
 
-    public function __construct($dependencia_id, $tipo)
+    public function __construct($dependencia_id, $tipo, $iddocument)
     {
         $this->dependencia_id = $dependencia_id;
         $this->tipo = $tipo;
+        $this->iddocument = $iddocument;
     }
 
     public function broadcastOn()
@@ -43,6 +44,7 @@ class noEditarDocumento implements ShouldBroadcast
         return [
             'message' => 'No se puede editar documento por que fue recepcionado por la dependencia',
             'dependencia_id' => $this->dependencia_id,
+            'iddocument' => $this->iddocument,
         ];
     }
 }

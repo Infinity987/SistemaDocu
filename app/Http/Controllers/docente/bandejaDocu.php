@@ -117,12 +117,12 @@ class bandejaDocu extends Controller
                 $tipo = 'dependencia';
             }
 
-            event(new noEditarDocumento($iddependencias_emior, $tipo));
+            event(new noEditarDocumento($iddependencias_emior, $tipo, $iddocument));
             return redirect()->back()->with('success', 'Documento recibido');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Error al recibir documento');
+            return redirect()->back()->with('error', 'Error al recibir documento___');
         }
     }
 

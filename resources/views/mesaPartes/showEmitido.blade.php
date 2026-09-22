@@ -77,6 +77,7 @@
                                 {{ $queryDoc->iddocumentos }}
                             </span>
                         </h3>
+                        <input type="hidden" name="current_document_id" id="current_document_id" value="{{ $queryDoc->iddocumentos }}">
                         <input type="hidden" name="emisor" id="emisor" value="{{ $queryDoc->emisor }}">
                         <input type="hidden" name="num_exR" id="num_exR" value="{{ $queryDoc->idtipo_documento }}">
                     </div>

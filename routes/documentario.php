@@ -31,6 +31,7 @@ route::get('/Docu/emitidos_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emiti
 route::get('/Docu/showEmitido/{id}', [mesaPartes::class, 'showEmitido'])->name('mesapar.showEmitido');
 route::post('/Docu/updateDocuEmi/{iddocumentos}', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
 route::get('/traerDepen', [mesaPartes::class, 'traerDepen'])->name('traerDepen');
+route::get('/traerDepen_m', [mesaPartes::class, 'traerDepen_m'])->name('traerDepen_m');
 route::get('/buscarDocentes', [mesaPartes::class, 'buscarDocentes'])->name('buscarDocentes');
 route::get('/buscarEgresados', [mesaPartes::class, 'buscarEgresados'])->name('buscarEgresados');
 Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware('auth')->name('buscarEntidad');

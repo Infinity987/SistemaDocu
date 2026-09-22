@@ -244,20 +244,65 @@ class mesaPartes extends Controller
     public function traerDepen(Request $request)
     {
         $busqueda = $request->get('q');
+
+        //mesa de partes
+        if (session('dependencia_id') == 24) {
+            $depens = DB::connection('mysql_documentario')->table('dependencias')
+                ->where('nombre_dependencia', 'like', "%{$busqueda}%")
+                ->whereNotIn('iddependencias', [1, 3, 4, 5])
+                ->get();
+            return response()->json($depens);
+        }
+
+        //docente
         if (session('dependencia_id') == 2) {
             $depens = DB::connection('mysql_documentario')->table('dependencias')
                 ->where('nombre_dependencia', 'like', "%{$busqueda}%")
-                ->whereNotIn('iddependencias', [1])
+                ->whereNotIn('iddependencias', [1, 3, 6])
                 ->get();
-        } else {
+            return response()->json($depens);
+        }
+
+        //alumno
+        if (session('dependencia_id') == 4) {
+            $depens = DB::connection('mysql_documentario')->table('dependencias')
+                ->where('nombre_dependencia', 'like', "%{$busqueda}%")
+                ->whereNotIn('iddependencias', [1, 3, 5])
+                ->get();
+            return response()->json($depens);
+        }
+
+        //egresado
+        if (session('dependencia_id') == 5) {
+            $depens = DB::connection('mysql_documentario')->table('dependencias')
+                ->where('nombre_dependencia', 'like', "%{$busqueda}%")
+                ->whereNotIn('iddependencias', [1, 3, 4])
+                ->get();
+            return response()->json($depens);
+        }
+
+        //todas las dependencias
+        $id_depen = session('dependencia_id');
+        $depens = DB::connection('mysql_documentario')->table('dependencias')
+            ->where('nombre_dependencia', 'like', "%{$busqueda}%")
+            ->whereNotIn('iddependencias', [1, 3, $id_depen])
+            ->get();
+        return response()->json($depens);
+    }
+
+    public function traerDepen_m(Request $request)
+    {
+        $busqueda = $request->get('q');
+
+        //mesa de partes
+        if (session('dependencia_id') == 24) {
             $id_depen = session('dependencia_id');
             $depens = DB::connection('mysql_documentario')->table('dependencias')
                 ->where('nombre_dependencia', 'like', "%{$busqueda}%")
-                ->whereNotIn('iddependencias', [1, $id_depen])
+                ->whereNotIn('iddependencias', [1, 3, $id_depen])
                 ->get();
+            return response()->json($depens);
         }
-
-        return response()->json($depens);
     }
 
     public function buscarDocentes(Request $request)
@@ -272,7 +317,6 @@ class mesaPartes extends Controller
 
         return response()->json($docentes);
     }
-
 
     public function buscarEgresados(Request $request)
     {
@@ -301,76 +345,38 @@ class mesaPartes extends Controller
         try {
         $templatePath = storage_path('app/templates/responder.docx');
 
-        if (!file_exists($templatePath)) {
-            return "Error: No se encuentra la plantilla en: " . $templatePath;
-        }
+        try {
+            // CORRECCIÓN AQUÍ: Cambiamos 'borrador_crear.docx' por 'responder.docx'
+            $templatePath = storage_path('app/templates/responder.docx');
 
-        $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
-
-
-           // --- 1. DATOS DE CONFIGURACIÓN (LOGO Y AÑO) ---
-        $configuracion = DB::connection('mysql_segunda')
-            ->table('encargados')
-            ->where('estado', 1)
-            ->first();
-
-        if ($configuracion) {
-    // Esta es la variable que pediste: el nombre oficial del año
-    // En el Word usa: ${texto_anio_oficial}
-    $template->setValue('texto_anio_oficial', $configuracion->nombre_año);
-    
-    // El resto de tus datos de configuración se mantienen igual
-    $template->setValue('nombre_anio', $configuracion->reso_direc); 
-    
-    $rutaLogo = public_path($configuracion->logo);
-            if (file_exists($rutaLogo)) {
-        $template->setImageValue('logo', [
-            'path' => $rutaLogo, 
-            'width' => 90, 
-            'height' => 90, 
-            'ratio' => true
-             ]);
+            if (!file_exists($templatePath)) {
+                return "Error: No se encuentra la plantilla en: " . $templatePath;
             }
-                        }
 
-        // 1. DATOS DEL EMISOR (Quien redacta: el usuario logueado)
-        $id_depen_emisor = session('dependencia_id');
-        $dependenciaEmisor = DB::connection('mysql_documentario')
-            ->table('dependencias')
-            ->where('iddependencias', $id_depen_emisor)
-            ->first();
+            $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
 
-        // Datos personales del usuario (Conexión mysql_segunda)
-        $perfilUsuario = DB::connection('mysql_segunda')
-            ->table('userprofile')
-            ->where('id_users', Auth::id())
-            ->first();
+            // Importante: Asegúrate de que los nombres de las variables
+            // coincidan con los de tu archivo responder.docx
+            $tipoDocNombre = DB::connection('mysql_documentario')->table('tipo_documento')
+                ->where('idtipo_documento', $request->tipo_documento)
+                ->value('nombre_documento');
 
-        // ... (código anterior de emisor igual) ...
+            // Usa los nombres que espera tu plantilla responder.docx
+            $template->setValue('asunto', $request->asunto);
+            $template->setValue('folio', $request->folio);
+            $template->setValue('tipo_doc', $tipoDocNombre ?? 'Documento'); // o como se llame en el Word
+            $template->setValue('fecha', now()->format('d/m/Y'));
 
-// 2. DATOS DEL DESTINATARIO (Lógica de Roles y Perfiles)
-$id_depen_receptor = is_array($request->dependencia_enviar) ? $request->dependencia_enviar[0] : null;
+            // Como es un registro nuevo, la referencia suele ir vacía
+            $template->setValue('referencia', '');
 
-$nombreDestinatario = "___________________________";
-$cargoDestinatario = "___________________________";
+            $fileName = 'Borrador_' . time() . '.docx';
+            $tempFile = tempnam(sys_get_temp_dir(), 'word');
+            $template->saveAs($tempFile);
 
-if ($id_depen_receptor) {
-    // A. Buscamos el ID del usuario que tiene el rol de esa dependencia
-    // Nota: model_id suele ser el ID del usuario en la tabla users
-    $rolAsignado = DB::connection('mysql')
-        ->table('model_has_roles')
-        ->where('role_id', $id_depen_receptor)
-        ->first();
-
-    if ($rolAsignado) {
-        // B. Buscamos el nombre en la otra base de datos usando el model_id
-        $perfilDestinatario = DB::connection('mysql_segunda')
-            ->table('userprofile')
-            ->where('id_users', $rolAsignado->model_id)
-            ->first();
-        
-        if ($perfilDestinatario) {
-            $nombreDestinatario = $perfilDestinatario->nombre;
+            return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            return "Error en el servidor: " . $e->getMessage();
         }
     }
 
@@ -381,7 +387,7 @@ if ($id_depen_receptor) {
         ->first();
     
     $cargoDestinatario = $depReceptora->nombre_dependencia ?? "DEPENDENCIA";
-}
+
 
 // --- CONTINUAR CON EL SETVALUE ---
         $template->setValue('destinatario_nombre', strtoupper($nombreDestinatario));
@@ -464,7 +470,7 @@ if ($id_depen_receptor) {
         // Mensajes personalizados
         $mensajes = [
             'tipo_documento.required' => 'El campo tipo de documento es obligatorio.',
-            'tipo_documento.not_in' => 'Debes seleccionar un tipo de documento',
+            'tipo_documento.not_in' => 'Debes seleccionar un tipo de documento...',
 
             'asunto.required' => 'El campo asunto es obligatorio.',
             'folio.required' => 'Es obligatorio.',
@@ -506,10 +512,10 @@ if ($id_depen_receptor) {
                 'est_firma'                => $request->est_firma
             ]);
 
-            ////////////////////////////// En caso envia a docentes
+            ////////////////////////////// En caso envia a docentes, egresados, alumnos
             if ($request->has('docentes_especificos')) {
                 $tot_docentes = $request->docentes_especificos;
-                // dd($request);
+                // dd($tot_docentes);
                 foreach ($tot_docentes as $id_user_docente) {
                     DB::connection('mysql_documentario')->table('movimiento')->insert([
                         'iddocumentos'            => $iddocumento,
@@ -531,7 +537,7 @@ if ($id_depen_receptor) {
                     //aqui el evento para docentes.
                     event(new DocumentoRecibido($id_user_docente, $cont_estados, 'personal'));
                 }
-            } if ($request->has('egresados')) {
+            } elseif ($request->has('egresados')) {
                 $tot_egresados = $request->egresados;
                 // dd($request);
                 foreach ($tot_egresados as $id_user_egresado) {
@@ -621,41 +627,51 @@ if ($id_depen_receptor) {
 
     public function registrarDocu_m(Request $request)
     {
-        // dd($request);
+        dd($request);
         // 1. Datos base
         $usuario_id_sistema = Auth::user()->id;
         $emisor_id = $request->emisor;
         $fecha_actual = $request->fecha_actual_m;
 
         $reglas = [
-            'tipo_documento_m'   => 'required|not_in:0',
-            'asunto_m'           => 'required|string',
-            'folio_m'            => 'required|integer|min:1',
+            'tipo_documento_m'     => 'required|not_in:0',
+            'asunto_m'             => 'required|string',
+            'folio_m'              => 'required|integer|min:1',
+            'para_su_m'            => 'required|not_in:0',
+            'dependencia_enviar_m' => 'required|array|min:1',
+            'archivo_pdf_m'        => 'required|file|mimes:pdf|max:10240', // Obligatorio PDF hasta 10MB
         ];
 
         // Validación específica para Mesa de Partes (ID 19)
         if ($request->emisor == 24) {
             if ($request->tipo_remitente_m == 'natural') {
-                // Si es persona natural, SOLO validamos el usuario
                 $reglas['usuario_m'] = 'required|not_in:0';
             } else {
-                // Si es entidad, SOLO validamos los campos de entidad
-                $reglas['id_entidad_m_externa'] = 'required|exists:mysql_documentario.entidades_externas,id';
+                $reglas['id_entidad_m_externa']     = 'required|not_in:0|exists:mysql_documentario.entidades_externas,id';
                 $reglas['numero_documento_externo_m'] = 'required|string|max:255';
             }
         }
 
         // Mensajes personalizados
         $mensajes = [
-            'tipo_documento_m.required' => 'El campo tipo de documento es obligatorio.',
-            'tipo_documento_m.not_in' => 'Debes seleccionar un tipo de documento',
-
-            'asunto_m.required' => 'El campo asunto es obligatorio.',
-            'folio_m.required' => 'Es obligatorio.',
-            'folio_m.not_in' => 'Debe ser diferente de 0.',
-
-            'dependencia_enviar_m.required' => 'La dependencia de envío es obligatoria.',
-            'dependencia_enviar_m.not_in' => 'Debes seleccionar una dependencia.',
+            'tipo_documento_m.required'          => 'El campo tipo de documento es obligatorio.',
+            'tipo_documento_m.not_in'            => 'Debes seleccionar un tipo de documento.___',
+            'asunto_m.required'                  => 'El campo asunto es obligatorio.',
+            'folio_m.required'                   => 'El folio es obligatorio.___',
+            'folio_m.min'                        => 'El folio debe ser mayor a 0.',
+            'para_su_m.required'                 => 'Debe seleccionar la acción a realizar.',
+            'para_su_m.not_in'                   => 'Debe seleccionar una acción válida.',
+            'dependencia_enviar_m.required'      => 'La dependencia de envío es obligatoria.',
+            'dependencia_enviar_m.min'           => 'Debes seleccionar al menos una dependencia.',
+            'usuario_m.required'                 => 'Debes seleccionar un usuario o persona natural.',
+            'usuario_m.not_in'                   => 'Debes seleccionar un usuario válido.',
+            'id_entidad_m_externa.required'      => 'Debes seleccionar una entidad remitente.',
+            'id_entidad_m_externa.not_in'        => 'Selecciona una entidad válida.',
+            'id_entidad_m_externa.exists'        => 'La entidad seleccionada no existe.',
+            'numero_documento_externo_m.required' => 'El N° de documento externo es obligatorio.',
+            'archivo_pdf_m.required'             => 'El documento PDF es obligatorio.',
+            'archivo_pdf_m.mimes'                => 'El archivo debe estar en formato PDF.',
+            'archivo_pdf_m.max'                  => 'El archivo no debe pesar más de 10 MB.',
         ];
 
         $request->validate($reglas, $mensajes);
@@ -685,25 +701,16 @@ if ($id_depen_receptor) {
             ]);
 
             // 4. Determinar Receptores (Todas o Selección)
-            $receptores = [];
-            if ($request->has('todasDepenSelects_m')) {
-                $receptores = DB::connection('mysql_documentario')->table('dependencias')
-                    ->where('iddependencias', '!=', 1)
-                    ->where('iddependencias', '!=', $emisor_id)
-                    ->pluck('iddependencias')
-                    ->toArray();
-            } else {
-                $receptores = $request->dependencia_enviar_m;
-            }
-
+            ////////////////////////////// En caso envia a docentes, egresados, alumnos
             if ($request->has('docentes_especificos_m')) {
-                // 5. Insertar Movimientos y Emitir Eventos
-                foreach ($request->docentes_especificos_m as $id_receptor) {
+                $tot_docentes = $request->docentes_especificos_m;
+                // dd($tot_docentes);
+                foreach ($tot_docentes as $id_user_docente) {
                     DB::connection('mysql_documentario')->table('movimiento')->insert([
                         'iddocumentos'            => $iddocumento,
                         'iddependencias_emior'    => $emisor_id,
-                        'iddependencias_receptor' => 2,
-                        'id_user_receptor'        => $id_receptor,
+                        'iddependencias_receptor' => 2, //solo docente id 2
+                        'id_user_receptor'        => $id_user_docente,
                         'fecha_de_envio'          => $fecha_actual,
                         'idestado'                => 1
                     ]);
@@ -714,12 +721,48 @@ if ($id_depen_receptor) {
                                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
                                         AND movimiento.id_user_receptor = ?
                                         WHERE estado.idestado IN (1,2,3)
-                                        GROUP BY estado.idestado;', [$id_receptor]);
+                                        GROUP BY estado.idestado;', [$id_user_docente]);
 
                     //aqui el evento para docentes.
-                    event(new DocumentoRecibido($id_receptor, $cont_estados, 'personal'));
+                    event(new DocumentoRecibido($id_user_docente, $cont_estados, 'personal'));
+                }
+            } elseif ($request->has('egresados_m')) {
+                $tot_egresados = $request->egresados_m;
+                // dd($request);
+                foreach ($tot_egresados as $id_user_egresado) {
+                    DB::connection('mysql_documentario')->table('movimiento')->insert([
+                        'iddocumentos'            => $iddocumento,
+                        'iddependencias_emior'    => $emisor_id,
+                        'iddependencias_receptor' => 5, //solo egresado id 5
+                        'id_user_receptor'        => $id_user_egresado,
+                        'fecha_de_envio'          => $fecha_actual,
+                        'idestado'                => 1
+                    ]);
+
+                    // Obtener conteos para el evento Real-Time
+                    $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+                                        FROM estado
+                                        LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                                        AND movimiento.id_user_receptor = ?
+                                        WHERE estado.idestado IN (1,2,3)
+                                        GROUP BY estado.idestado;', [$id_user_egresado]);
+
+                    //aqui el evento para docentes.
+                    event(new DocumentoRecibido($id_user_egresado, $cont_estados, 'personal'));
                 }
             } else {
+                // 4. Determinar Receptores
+                $receptores = [];
+                if ($request->has('todasDepenSelects_m')) {
+                    $receptores = DB::connection('mysql_documentario')->table('dependencias')
+                        ->where('iddependencias', '!=', 1)
+                        ->where('iddependencias', '!=', $emisor_id)
+                        ->pluck('iddependencias')
+                        ->toArray();
+                } else {
+                    $receptores = $request->dependencia_enviar_m;
+                }
+
                 // 5. Insertar Movimientos y Emitir Eventos
                 foreach ($receptores as $id_receptor) {
                     DB::connection('mysql_documentario')->table('movimiento')->insert([
@@ -741,6 +784,7 @@ if ($id_depen_receptor) {
                     event(new DocumentoRecibido($id_receptor, $cont_estados, 'dependencia'));
                 }
             }
+            ////////////////////////////// fin en caso envia a docentes
 
             // 6. Gestión de Archivo PDF (Sin Firma Digital)
             if ($request->hasFile('archivo_pdf_m')) {
@@ -767,7 +811,6 @@ if ($id_depen_receptor) {
             return response()->json(['error' => 'Error al registrar: ' . $th->getMessage()], 500);
         }
     }
-
 
     public function showEmitido($id)
     {

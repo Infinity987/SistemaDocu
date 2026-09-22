@@ -254,7 +254,7 @@
                                                         <div class="form-group">
                                                             <label for="archivo_pdf">
                                                                 <i class="fas fa-file-pdf text-danger"></i> Subir Documento
-                                                                (PDF):
+                                                                (PDF) ---:
                                                             </label>
                                                             <div class="custom-file">
                                                                 <input type="file" class="custom-file-input"
@@ -446,51 +446,6 @@
 
     <script>
         let dependenciaId = {{ $id_depen }};
-
-        // document.addEventListener("DOMContentLoaded", function() {
-        //     const notificationSound = new Audio('{{ asset('sound/noti.mp3') }}');
-
-        //     Echo.private('dependencia.' + dependenciaId)
-        //         .listen('.DocumentoRecibido', (e) => {
-        //             notificationSound.play().catch(err => console.log("Audio bloqueado temporalmente"));
-        //             const Toast = Swal.mixin({
-        //                 toast: true,
-        //                 position: "top-end",
-        //                 showConfirmButton: false,
-        //                 timer: 3000,
-        //                 timerProgressBar: true,
-        //                 didOpen: (toast) => {
-        //                     toast.onmouseenter = Swal.stopTimer;
-        //                     toast.onmouseleave = Swal.resumeTimer;
-        //                 },
-        //                 didClose: () => {
-        //                     $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-        //                         .cont_estados[0]
-        //                         .cont_estado);
-        //                 }
-        //             });
-
-        //             Toast.fire({
-        //                 icon: "success",
-        //                 title: "Nuevo documento recibido"
-        //             });
-        //         });
-        // });
-
-        // document.addEventListener("DOMContentLoaded", function() {
-        //     Echo.private('dependencia.' + dependenciaId)
-        //         .listen('.noEditarDocumento', (e) => {
-        //             $('#datatablesSimple').DataTable().ajax.reload();
-        //         });
-        // });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.editarDocumento', (e) => {
-                    $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
-                        .cont_estado);
-                });
-        });
     </script>
 
     <script>
@@ -540,7 +495,7 @@
                             return "Quitar todos los elementos";
                         }
                     },
-                    placeholder: 'Seleccione dependencia(s)',
+                    placeholder: 'Seleccione dependencia(s):_',
                     allowClear: true,
                     width: '100%',
                     dropdownParent: $('#exampleModalCenter'),
@@ -549,7 +504,6 @@
                         dataType: 'json',
                         delay: 250,
                         processResults: function(data) {
-                            // console.log(data)
                             return {
                                 results: data.map(function(depens) {
                                     return {
@@ -578,10 +532,17 @@
 
             // $('#tipo_documento').change(traer_num_expe);
 
-            $('#form_regis_doc').submit(function(event) {
+            // Usamos .off('submit') para evitar que el evento se duplique si el script se ejecuta de nuevo
+            $('#form_regis_doc').off('submit').on('submit', function(event) {
                 event.preventDefault();
 
                 var butonEnviardatos = $('#form_regis_doc button[type="submit"]');
+
+                // Si ya está deshabilitado, evitamos doble envío por pulsaciones rápidas
+                if (butonEnviardatos.prop('disabled')) {
+                    return;
+                }
+
                 butonEnviardatos.prop('disabled', true);
                 var formData = new FormData(this);
 
@@ -603,25 +564,45 @@
                             text: response.success,
                             icon: "success"
                         }).then(() => {
-
+                            // 1. Resetear formulario HTML estándar
                             $('#form_regis_doc')[0].reset();
+
+                            // 2. Recargar DataTable
                             $('#datatablesSimple').DataTable().ajax.reload();
+
+                            // 3. Limpiar errores visuales
                             $('.text-danger').text('');
-                            $('#usuario').val('0').trigger('change');
-                            $('#num_ex').hide();
+
+                            // 4. Limpiar correctamente todos los Select2 del formulario
+                            $('#tipo_documento').val('0').trigger('change');
+                            $('#para_su').val('0').trigger('change');
+                            $('#dependencia_enviar').val(null).trigger('change');
+                            $('#docentes_select').val(null).trigger('change');
+                            $('#egresados_select').val(null).trigger('change');
+
+                            // 5. Ocultar contenedores específicos y resetear estados visuales
+                            $('#container_docentes').hide();
+                            $('#container_egresados').hide();
+                            $('#num_expe').val('');
                             $('#detalle_fisico').fadeOut().removeAttr('required').val(
                                 '');
-                            // 1. Limpiar el valor del input file
+
+                            // 6. Limpiar input file y label de AdminLTE
                             $('#archivo_pdf').val('');
-
-                            // 2. Resetear el texto del label (importante en AdminLTE)
                             $('#archivo_pdf').next('.custom-file-label').html(
-                                'Seleccionar PDF');
+                                'Seleccionar PDF...');
 
-                            // 3. Limpiar mensajes de error si los hubiera
-                            $('#archivo_pdf_error').text('');
-                            $('#dependencia_enviar').val(null).trigger('change');
+                            // 7. Remover elementos dinámicos creados (si aplica)
+                            $('#input_docente_shadow').remove();
+                            $('#input_egresados_shadow').remove();
+                            $('#btn-reset').remove();
+                            $('#btn-reset-egresados').remove();
+
+                            // 8. Asegurar habilitación de dependencias por si quedaron bloqueadas
+                            $('#dependencia_enviar').prop('disabled', false);
                         });
+
+                        // Reactivar botón
                         butonEnviardatos.prop('disabled', false);
                     },
                     error: function(xhr) {
@@ -649,16 +630,11 @@
                                 $('#folio_error').text(errors.folio[0]);
                             }
                         }
+
+                        // Reactivar botón en caso de error
                         butonEnviardatos.prop('disabled', false);
                     }
                 });
-
-                //para quitar el boton de QUITAR A OTRA DEPENDENCIA
-                $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
-                $('#container_docentes').hide();
-                $('#docentes_select').val(null).trigger('change');
-                $('#input_docente_shadow').remove();
-                $('#btn-reset').remove();
             });
 
             // Variable para controlar si ya se cargó la pestaña de la oficina por primera vez
@@ -706,12 +682,22 @@
                 cargarTabla(tipo);
             });
 
+            // if (dependenciaId == 24) {
+            //     cargarTabla(1);
+            //     $('.tipo-btn[data-tipo="1"]').click();
+            // } else {
+            //     cargarTabla(2);
+            //     $('.tipo-btn[data-tipo="2"]').click();
+            // }
+
             if (dependenciaId == 24) {
+                $('.tipo-btn[data-tipo="1"]').removeClass('bg-gradient-info').addClass(
+                'bg-gradient-primary active');
                 cargarTabla(1);
-                $('.tipo-btn[data-tipo="1"]').click();
             } else {
+                $('.tipo-btn[data-tipo="2"]').removeClass('bg-gradient-info').addClass(
+                'bg-gradient-primary active');
                 cargarTabla(2);
-                $('.tipo-btn[data-tipo="2"]').click();
             }
 
             $('#dependencia_enviar').on('change', function() {
@@ -771,49 +757,14 @@
                     inicializarBusquedaEgresados();
 
                     // Agregamos un botón de "X" para resetear si el usuario se equivocó
-                    if (!$('#btn-reset').length) {
+                    if (!$('#btn-reset-egresados').length) {
                         $(this).closest('.form-group').append(
                             '<button type="button" id="btn-reset-egresados" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
                         );
                     }
                 }
             });
-            // $('#dependencia_enviar').on('change', function() {
-
-            //     let dependencia = $(this).val();
-
-            //     if (!dependencia) {
-            //         $('#container_usuarios').hide();
-            //         return;
-            //     }
-
-            //     $('#container_usuarios').show();
-
-            //     cargarUsuarios(dependencia);
-
-            // });
         });
-
-        // function cargarUsuarios(idDependencia) {
-
-        //     // $('#usuarios_select').empty();
-
-        //     $('#usuarios_select').select2({
-        //         placeholder: "Busque y seleccione uno o varios docentes",
-        //         ajax: {
-        //             url: '{{ route('documentario.buscarDocentes') }}',
-        //             dataType: 'json',
-        //             delay: 250,
-        //             processResults: function(data) {
-        //                 return {
-        //                     results: data
-        //                 };
-        //             }
-        //         },
-        //         dropdownParent: $('#exampleModalCenter')
-        //     });
-
-        // }
 
         $('#tipo_documento').on('change', function() {
             const idTipo = $(this).val();
@@ -1037,7 +988,6 @@
 
         }
 
-        // 2. Función para inicializar el segundo Select2 (Docentes)
         function inicializarBusquedaDocentes() {
             $('#docentes_select').select2({
                 placeholder: "Busque y seleccione uno o varios docentes",
