@@ -65,7 +65,6 @@
             const userId = "{{ auth()->id() }}";
             const depenId = "{{ session('dependencia_id') }}";
             const activeRole = "{{ session('active_role_name') }}";
-            console.log(depenId);
 
 
             if (!userId || typeof Echo === 'undefined') return;
@@ -121,9 +120,10 @@
                 notificationSoundNoEdit.play().catch(err => console.log("Audio en espera de interacción"));
 
                 Swal.fire({
-                    icon: "error",
+                    icon: "info",
                     title: "ALERTA!",
-                    text: e.message || "Este documento ya fue recepcionado, no se puede editar ....",
+                    text: e.message + ' ' + e.iddocument ||
+                        "Este documento ya fue recepcionado, no se puede editar .... ----",
                     confirmButtonText: "Aceptar",
                     customClass: {
                         popup: 'swal-large'
@@ -144,12 +144,13 @@
 
             Echo.private('App.Models.User.' + userId)
                 .listen('.noEditarDocumento', (e) => {
-
+                    console.log('aquii 111');
                     if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
-                        console.log('Recargando DataTable...');
+                        console.log('Recargando DataTable...////');
                         $('#datatablesSimple').DataTable().ajax.reload(null, false);
                         // El 'false' es para que no se resetee la paginación al recargar
                     } else {
+                        console.log('Recargando DataTable...////22222');
                         procesarNotificacionNoEditar(e);
                     }
                 });
@@ -171,14 +172,37 @@
 
                 Echo.private('dependencia.' + depenId)
                     .listen('.noEditarDocumento', (e) => {
+                        console.log('aquii 222');
+                        const documentoEnEdicionId = $('#current_document_id').val();
 
-                        if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
-                            console.log('Recargando DataTable...');
-                            $('#datatablesSimple').DataTable().ajax.reload(null, false);
-                            // El 'false' es para que no se resetee la paginación al recargar
+                        if (documentoEnEdicionId && String(e.iddocument) === String(documentoEnEdicionId)) {
+                            console.log('¡El documento actual fue recepcionado por otra dependencia!');
+                            // Verificamos si hay DataTable o ejecutamos directamente la alerta
+                            if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                                $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                                $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+                            } else {
+                                procesarNotificacionNoEditar(e);
+                            }
                         } else {
-                            procesarNotificacionNoEditar(e);
+                            console.log('El evento es para otro documento. Ignorando alerta...');
+
+                            // Opcional: Si estás en una lista (DataTable general) y quieres que se actualice la tabla
+                            // sin bloquear al usuario que edita otro documento, puedes recargar el DataTable aquí:
+                            if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                                $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                                $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+                            }
                         }
+                        // if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                        //     console.log('Recargando DataTable...222');
+                        //     $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                        //     $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+                        //     // El 'false' es para que no se resetee la paginación al recargar
+                        // } else {
+                        //     console.log('NO --- Recargando DataTable...');
+                        //     procesarNotificacionNoEditar(e);
+                        // }
                     });
                 Echo.private('dependencia.' + depenId)
                     .listen('.editarDocumento', (e) => {

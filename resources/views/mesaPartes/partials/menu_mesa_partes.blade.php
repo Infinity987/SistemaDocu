@@ -118,7 +118,7 @@
                                     style="background: linear-gradient(135deg, #924900, #d49d5e); ">
                                     <h5 class="modal-title" id="exampleModalCenter_mTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
-                                        registro</h5>
+                                        registro - RECEPCIONAR</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -139,15 +139,13 @@
                                                 <div class="col-sm-4">
                                                     <div class="form-group">
                                                         <label for="tipo_documento_m">
-                                                            <i class="fas fa-file-invoice text-primary mr-1"></i> Tipo
-                                                            documento:
-                                                            <span class="text-danger">*</span>
+                                                            <i class="fas fa-file-contract text-primary"></i> Tipo
+                                                            documento: <span class="text-danger">*</span>
                                                         </label>
                                                         <select id="tipo_documento_m"
-                                                            class="form-control select2-bootstrap4"
-                                                            name="tipo_documento_m">
-                                                            <option value="0" selected disabled>Seleccione tipo
-                                                                documento ...</option>
+                                                            class="form-control select2 shadow" name="tipo_documento_m">
+                                                            <option value="0">Seleccione tipo documento ...
+                                                            </option>
                                                             @if ($rol->nombre_dependencia == 'Mesa de Partes')
                                                                 <option value="1">Fut</option>
                                                             @endif
@@ -159,8 +157,7 @@
                                                             <option value="7">Resoluciones</option>
                                                             <option value="8">Otros</option>
                                                         </select>
-                                                        <span id="tipo_documento_m_error"
-                                                            class="error invalid-feedback"></span>
+                                                        <span id="tipo_documento_m_error" class="text-danger"></span>
                                                     </div>
                                                 </div>
 
@@ -201,75 +198,79 @@
                                                 </div>
                                             </div>
 
-                                            <div class="row">
-                                                @if ($id_depen == 24)
-                                                    <div class="col-sm-4">
-                                                        <div class="form-group">
-                                                            <label><i class="fas fa-user-friends text-indigo mr-1"></i>
-                                                                Tipo de Remitente: <span
-                                                                    class="text-danger">*</span></label>
-                                                            <select id="tipo_remitente_m" name="tipo_remitente_m"
-                                                                class="form-control">
-                                                                <option value="natural">Persona Natural</option>
-                                                                <option value="juridica">Entidad Externa (Jurídica)
-                                                                </option>
-                                                            </select>
-                                                        </div>
+                                            <div class="row mb-3"
+                                                style="background: linear-gradient(90deg, #31b6f453, #31b6f415);">
+                                                <div class="col-sm-4">
+                                                    <div class="form-group">
+                                                        <label><i class="fas fa-user-friends text-indigo mr-1"></i>
+                                                            Tipo de Remitente: <span
+                                                                class="text-danger">*</span></label>
+                                                        <select id="tipo_remitente_m" name="tipo_remitente_m"
+                                                            class="form-control">
+                                                            <option value="natural">Persona Natural</option>
+                                                            <option value="juridica">Entidad Externa (Jurídica)
+                                                            </option>
+                                                        </select>
                                                     </div>
+                                                </div>
 
-                                                    <div class="col-sm-8" id="div_persona_m_natural">
-                                                        <div class="form-group">
-                                                            <label><i class="fas fa-user-circle text-olive mr-1"></i>
-                                                                Usuario / Persona Natural: <span
-                                                                    class="text-danger">*</span></label>
-                                                            <select id="usuario_m" class="form-control select2"
-                                                                name="usuario_m" style="width: 100%;"></select>
-                                                            <span id="usuario_m_error"
-                                                                class="text-danger small"></span>
-                                                        </div>
+                                                <div class="col-sm-8" id="div_persona_m_natural">
+                                                    <div class="form-group">
+                                                        <label><i class="fas fa-user-circle text-olive mr-1"></i>
+                                                            Usuario / Persona Natural: <span
+                                                                class="text-danger">*</span></label>
+                                                        <select id="usuario_m" class="form-control select2"
+                                                            name="usuario_m" style="width: 100%;"></select>
+                                                        <span id="usuario_m_error" class="text-danger small"></span>
                                                     </div>
+                                                </div>
 
-                                                    <div id="div_entidad_m_externa" class="col-sm-12"
-                                                        style="display:none;">
-                                                        <div class="card card-outline card-info shadow-sm">
-                                                            <div class="card-body p-3">
-                                                                <div class="row">
-                                                                    <div class="col-sm-6">
-                                                                        <div class="form-group">
-                                                                            <label><i
-                                                                                    class="fas fa-building text-info mr-1"></i>
-                                                                                Entidad remitente:</label>
-                                                                            <select id="entidad_m"
-                                                                                name="id_entidad_m_externa"
-                                                                                class="form-control select2"></select>
-                                                                        </div>
+                                                <div id="div_entidad_m_externa" class="col-sm-12"
+                                                    style="display:none;">
+                                                    <div class="card card-outline card-info shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="row">
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-building text-info mr-1"></i>
+                                                                            Entidad remitente:</label>
+                                                                        <select id="entidad_m"
+                                                                            name="id_entidad_m_externa"
+                                                                            class="form-control select2"></select>
+                                                                        <span id="id_entidad_m_externa_error"
+                                                                            class="text-danger small"></span>
                                                                     </div>
-                                                                    <div class="col-sm-6">
-                                                                        <div class="form-group">
-                                                                            <label><i
-                                                                                    class="fas fa-id-card text-info mr-1"></i>
-                                                                                N° Documento Externo:</label>
-                                                                            <input type="text"
-                                                                                name="numero_documento_externo_m"
-                                                                                class="form-control"
-                                                                                placeholder="Ej: Oficio N.º 123-2026-MPP">
-                                                                        </div>
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-id-card text-info mr-1"></i>
+                                                                            N° Documento Externo:</label>
+                                                                        <input type="text"
+                                                                            name="numero_documento_externo_m"
+                                                                            class="form-control"
+                                                                            placeholder="Ej: Oficio N.º 123-2026-MPP">
+                                                                        <span id="numero_documento_externo_m_error"
+                                                                            class="text-danger small"></span>
                                                                     </div>
-                                                                    <div class="col-sm-12 text-right">
-                                                                        <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
-                                                                            target="_blank"
-                                                                            class="btn btn-link btn-sm text-info">
-                                                                            <i
-                                                                                class="fas fa-external-link-alt mr-1"></i>
-                                                                            Consultar RUC en SUNAT
-                                                                        </a>
-                                                                    </div>
+                                                                </div>
+                                                                <div class="col-sm-12 text-right">
+                                                                    <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
+                                                                        target="_blank"
+                                                                        class="btn btn-link btn-sm text-info">
+                                                                        <i class="fas fa-external-link-alt mr-1"></i>
+                                                                        Consultar RUC en SUNAT
+                                                                    </a>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endif
+                                                </div>
+                                            </div>
 
+                                            <div class="row mb-3"
+                                                style="background: linear-gradient(90deg, #f4b03179, #f4b03117);">
                                                 <div class="col-sm-12">
                                                     <div class="form-group">
                                                         <label for="dependencia_enviar_m">
@@ -295,6 +296,21 @@
                                                             name="docentes_especificos_m[]" multiple>
                                                         </select>
                                                         <small class="text-muted">Nota: Al enviar a docentes, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_egresados_m"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-success"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Egresado(s)</label>
+                                                        <select id="egresados_select_m" class="form-control select2"
+                                                            name="egresados_m[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a egresados, no se
                                                             pueden
                                                             añadir otras dependencias.</small>
                                                     </div>
@@ -361,7 +377,7 @@
                                                     <div class="form-group mb-0">
                                                         <label for="archivo_pdf_m" class="mb-1"><i
                                                                 class="fas fa-file-pdf text-danger mr-1"></i> Documento
-                                                            Digital (PDF):</label>
+                                                            Digital (PDF)___---:</label>
                                                         <div class="custom-file">
                                                             <input type="file" class="custom-file-input"
                                                                 id="archivo_pdf_m" name="archivo_pdf_m"
@@ -374,13 +390,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {{-- <div class="text-center mt-4">
-                                                <button type="button" onclick="descargarWordBorrador()"
-                                                    class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                                                    <i class="fas fa-file-word mr-1"></i> Generar Borrador Word
-                                                </button>
-                                            </div> --}}
                                         </div>
                                     </div>
 
@@ -482,7 +491,7 @@
                                     style="background: linear-gradient(135deg, #736001, #e6b884);">
                                     <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
-                                        registro</h5>
+                                        registro  - DE LA OFICINA</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -510,9 +519,7 @@
                                                             class="form-control select2 shadow" name="tipo_documento">
                                                             <option value="0">Seleccione tipo documento ...
                                                             </option>
-                                                            {{-- @if ($rol->nombre_dependencia == 'Mesa de Partes')
-                                                                <option value="1">Fut</option>
-                                                            @endif --}}
+
                                                             <option value="2">Oficios</option>
                                                             <option value="3">Informe</option>
                                                             <option value="4">Requerimiento</option>
@@ -562,8 +569,9 @@
                                                 </div>
                                             </div>
 
-                                            <div class="row">
-                                                <div class="col-sm-9">
+                                            <div class="row mt-3 mb-3"
+                                                style="background-image: linear-gradient(to right, rgb(236, 217, 185), rgba(255, 255, 255, 0.1));">
+                                                <div class="col-sm-9" id="container_dependencias">
                                                     <div class="form-group">
                                                         <label for="dependencia_enviar">
                                                             <i class="fas fa-map-marker-alt text-success"></i>
@@ -573,6 +581,8 @@
                                                             class="form-control select2 shadow"
                                                             name="dependencia_enviar[]" multiple>
                                                         </select>
+                                                        {{-- <select id="dependencia_enviar" name="dependencia">
+                                                            </select> --}}
                                                         <span id="dependencia_enviar_error"
                                                             class="text-danger"></span>
                                                     </div>
@@ -581,8 +591,7 @@
                                                 <div class="col-md-12" id="container_docentes"
                                                     style="display: none;">
                                                     <div class="form-group">
-                                                        <label class="text-primary"><i
-                                                                class="fas fa-user-graduate"></i>
+                                                        <label class="text-info"><i class="fas fa-users"></i>
                                                             Seleccionar Docente(s)</label>
                                                         <select id="docentes_select" class="form-control select2"
                                                             name="docentes_especificos[]" multiple>
@@ -593,21 +602,45 @@
                                                     </div>
                                                 </div>
 
-                                                {{-- <div class="col-sm-3 text-center">
+                                                <div class="col-md-12" id="container_egresados"
+                                                    style="display: none;">
                                                     <div class="form-group">
-                                                        <label><i class="fas fa-share-all text-muted"></i> ¿A
-                                                            todas?</label>
-                                                        <div class="d-flex justify-content-center pt-1">
-                                                            <div
-                                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                <input type="checkbox" class="custom-control-input"
-                                                                    id="customSwitch3" name="todasDepenSelects">
-                                                                <label class="custom-control-label"
-                                                                    for="customSwitch3"></label>
+                                                        <label class="text-success"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Egresado(s)</label>
+                                                        <select id="egresados_select" class="form-control select2"
+                                                            name="egresados[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a egresados, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+                                                {{-- <div id="container_usuarios" style="display:none;">
+                                                        <label>Destinatarios</label>
+
+                                                        <select id="usuarios_select" name="docentes_especificos[]" multiple>
+                                                        </select>
+                                                    </div> --}}
+
+                                                @if (session('active_role_name') == 'Dirección')
+                                                    <div class="col-sm-3 text-center">
+                                                        <div class="form-group">
+                                                            <label><i class="fas fa-share-all text-muted"></i> ¿A
+                                                                todas?</label>
+                                                            <div class="d-flex justify-content-center pt-1">
+                                                                <div
+                                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                    <input type="checkbox"
+                                                                        class="custom-control-input"
+                                                                        id="customSwitch3" name="todasDepenSelects">
+                                                                    <label class="custom-control-label"
+                                                                        for="customSwitch3"></label>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div> --}}
+                                                @endif
                                             </div>
 
                                             <div class="row">
@@ -672,7 +705,7 @@
                                                     <div class="form-group">
                                                         <label for="archivo_pdf">
                                                             <i class="fas fa-file-pdf text-danger"></i> Subir Documento
-                                                            (PDF):
+                                                            (PDF) ---:
                                                         </label>
                                                         <div class="custom-file">
                                                             <input type="file" class="custom-file-input"
@@ -797,24 +830,24 @@
             cargarTabla_m(1);
             $('.tipo-btn_m[data-tipo_m="1"]').click();
 
-            $('.tipo-btn_m').on('click', function() {
-                let tipo = $(this).data('tipo');
-                if (tipoActivo === tipo) return; // si ya está activo, no hace nada
-                tipoActivo = tipo;
+            // $('.tipo-btn_m').on('click', function() {
+            //     let tipo = $(this).data('tipo');
+            //     if (tipoActivo === tipo) return; // si ya está activo, no hace nada
+            //     tipoActivo = tipo;
 
-                // Resetear todos los botones
-                $('.tipo-btn_m')
-                    .removeClass('bg-gradient-primary')
-                    .addClass('bg-gradient-info')
-                    .removeClass('active');
+            //     // Resetear todos los botones
+            //     $('.tipo-btn_m')
+            //         .removeClass('bg-gradient-primary')
+            //         .addClass('bg-gradient-info')
+            //         .removeClass('active');
 
-                // Activar el botón presionado
-                $(this)
-                    .removeClass('bg-gradient-info')
-                    .addClass('bg-gradient-primary')
-                    .addClass('active');
-                cargarTabla(tipo);
-            });
+            //     // Activar el botón presionado
+            //     $(this)
+            //         .removeClass('bg-gradient-info')
+            //         .addClass('bg-gradient-primary')
+            //         .addClass('active');
+            //     cargarTabla(tipo);
+            // });
 
             // Escuchar el cambio en el tipo de remitente
             $('#tipo_remitente_m').on('change', function() {
@@ -920,16 +953,15 @@
                             return "Quitar todos los elementos";
                         }
                     },
-                    placeholder: 'Seleccione dependencia(s)',
+                    placeholder: 'Seleccione dependencia(s):::',
                     allowClear: true,
                     width: '100%',
                     dropdownParent: $('#exampleModalCenter_m'),
                     ajax: {
-                        url: '{{ route('documentario.traerDepen') }}',
+                        url: '{{ route('documentario.traerDepen_m') }}',
                         dataType: 'json',
                         delay: 250,
                         processResults: function(data) {
-                            // console.log(data)
                             return {
                                 results: data.map(function(depens) {
                                     return {
@@ -965,47 +997,52 @@
                 });
             });
 
-            $('#dependencia_enviar').on('change', function() {
-                let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
-                let esDocente = data.some(item => item.text.trim() === 'Docente');
+            // $('#dependencia_enviar').on('change', function() {
+            //     let data = $(this).select2('data');
 
-                if (esDocente) {
-                    // 1. Buscamos el ID exacto que tiene la opción "Docente"
-                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
-                    let idDocenteArea = objetoDocente.id;
+            //     let esDocente = data.some(item => item.id.trim() === "2");
+            //     let esEgresado = data.some(item => item.id.trim() === "5");
 
-                    if ($('#input_docente_shadow').length === 0) {
-                        $('#form_regis_doc').append(
-                            `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
-                        );
-                    }
+            //     if (esDocente) {
+            //         // 1. Buscamos el ID exacto que tiene la opción "Docente"
+            //         let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+            //         let idDocenteArea = objetoDocente.id;
 
-                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
-                    $(this).val([idDocenteArea]).trigger('change.select2');
+            //         if ($('#input_docente_shadow').length === 0) {
+            //             $('#form_regis_doc').append(
+            //                 `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
+            //             );
+            //         }
 
-                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
-                    $(this).prop('disabled', true);
+            //         // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+            //         $(this).val([idDocenteArea]).trigger('change.select2');
 
-                    // 4. Mostramos el buscador de la tabla userprofile
-                    $('#container_docentes').fadeIn();
-                    inicializarBusquedaDocentes();
+            //         // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+            //         $(this).prop('disabled', true);
 
-                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
-                    if (!$('#btn-reset').length) {
-                        $(this).closest('.form-group').append(
-                            '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
-                        );
-                    }
-                }
-            });
+            //         // 4. Mostramos el buscador de la tabla userprofile
+            //         $('#container_docentes').fadeIn();
+            //         inicializarBusquedaDocentes();
+
+            //         // Agregamos un botón de "X" para resetear si el usuario se equivocó
+            //         if (!$('#btn-reset').length) {
+            //             $(this).closest('.form-group').append(
+            //                 '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+            //             );
+            //         }
+            //     }
+            // });
 
             $('#dependencia_enviar_m').on('change', function() {
                 let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
-                let esDocente = data.some(item => item.text.trim() === 'Docente');
+
+                let esDocente = data.some(item => item.id.trim() === "2");
+                let esEgresado = data.some(item => item.id.trim() === "5");
+
 
                 if (esDocente) {
                     // 1. Buscamos el ID exacto que tiene la opción "Docente"
-                    let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+                    let objetoDocente = data.find(item => item.id.trim() === '2');
                     let idDocenteArea = objetoDocente.id;
 
                     if ($('#input_docente_shadow_m').length === 0) {
@@ -1028,6 +1065,35 @@
                     if (!$('#btn-reset_m').length) {
                         $(this).closest('.form-group').append(
                             '<button type="button" id="btn-reset_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                }
+
+                if (esEgresado) {
+                    // 1. Buscamos el ID exacto que tiene la opción "egresado"
+                    let objetoEgresado = data.find(item => item.id.trim() === "5");
+                    let idEgresadoArea = objetoEgresado.id;
+
+                    if ($('#input_egresado_shadow_m').length === 0) {
+                        $('#form_regis_doc').append(
+                            `<input type="hidden" id="input_egresado_shadow_m" name="dependencia_enviar_m[]" value="${idEgresadoArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idEgresadoArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_egresados_m').fadeIn();
+                    inicializarBusquedaEgresados_m();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset-egresados_m').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset-egresados_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
                         );
                     }
                 }
@@ -1056,7 +1122,7 @@
         });
 
 
-        $('#form_regis_doc_m').submit(function(event) {
+        $('#form_regis_doc_m').off('submit').on('submit', function(event) {
             event.preventDefault();
 
             var butonEnviardatos_m = $('#form_regis_doc_m button[type="submit"]');
@@ -1085,6 +1151,16 @@
                         $('#form_regis_doc_m')[0].reset();
                         $('#datatablesSimple_m').DataTable().ajax.reload();
                         $('.text-danger_m').text('');
+
+                        $('#tipo_documento_m').val('0').trigger('change');
+                        $('#para_su_m').val('0').trigger('change');
+                        $('#dependencia_enviar_m').val(null).trigger('change');
+                        $('#docentes_select_m').val(null).trigger('change');
+                        $('#egresados_select_m').val(null).trigger('change');
+                        $('#container_docentes_m').hide();
+                        $('#container_egresados_m').hide();
+
+
                         $('#usuario_m').val('0').trigger('change');
                         $('#num_ex_m').hide();
                         $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
@@ -1094,9 +1170,16 @@
                         // 2. Resetear el texto del label (importante en AdminLTE)
                         $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
 
+                        $('#input_docente_shadow_m').remove();
+                        $('#input_egresados_shadow_m').remove();
+                        $('#btn-reset_m').remove();
+                        $('#btn-reset-egresados_m').remove();
+
                         // 3. Limpiar mensajes de error si los hubiera
                         $('#archivo_pdf_m_error').text('');
-                        $('#dependencia_enviar_m').val(null).trigger('change');
+                        $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger(
+                            'change');
+
                     });
                     butonEnviardatos_m.prop('disabled', false);
                 },
@@ -1106,12 +1189,14 @@
                     $('.text-danger_m').text('');
 
                     if (errors) {
+                        // Limpia los mensajes de error previos
+                        $('.error, .invalid-feedback, span[id$="_error"]').text('');
+
                         if (errors.tipo_documento_m) {
                             $('#tipo_documento_m_error').text(errors.tipo_documento_m[0]);
                         }
                         if (errors.dependencia_enviar_m) {
-                            $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[
-                                0]);
+                            $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[0]);
                         }
                         if (errors.asunto_m) {
                             $('#asunto_m_error').text(errors.asunto_m[0]);
@@ -1125,24 +1210,20 @@
                         if (errors.folio_m) {
                             $('#folio_m_error').text(errors.folio_m[0]);
                         }
+                        if (errors.id_entidad_m_externa) {
+                            $('#id_entidad_m_externa_error').text(errors.id_entidad_m_externa[0]);
+                        }
+                        if (errors.numero_documento_externo_m) {
+                            $('#numero_documento_externo_m_error').text(errors
+                                .numero_documento_externo_m[0]);
+                        }
+                        if (errors.archivo_pdf_m) {
+                            $('#archivo_pdf_m_error').text(errors.archivo_pdf_m[0]);
+                        }
                     }
                     butonEnviardatos_m.prop('disabled', false);
                 }
             });
-
-            //para quitar el boton de QUITAR A OTRA DEPENDENCIA
-            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
-            $('#container_docentes').hide();
-            $('#docentes_select').val(null).trigger('change');
-            $('#input_docente_shadow').remove();
-            $('#btn-reset').remove();
-
-            //para quitar el boton de QUITAR A OTRA DEPENDENCIA
-            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
-            $('#container_docentes_m').hide();
-            $('#docentes_select_m').val(null).trigger('change');
-            $('#input_docente_shadow_m').remove();
-            $('#btn-reset_m').remove();
         });
 
         $('#tipo_documento_m').on('change', function() {
@@ -1182,44 +1263,6 @@
                 }
             });
         });
-
-        // function traer_num_expe_m() {
-        //     $('#num_expe_m').val('');
-        //     let rutaTipoDocumen =
-        //         "{{ route('documentario.num_tipo_documento_expe_m', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
-        //     let url1 = rutaTipoDocumen.replace(':id', $('#tipo_documento_m').val());
-        //     let url = url1.replace(':emi', $('#emisor').val());
-        //     let formData = $(this).serialize();
-        //     $.ajax({
-        //         type: 'GET',
-        //         url: url,
-        //         data: formData,
-        //         success: function(response) {
-        //             let num_expeRe = response['numero_de_exp'];
-        //             if (num_expeRe === undefined || num_expeRe === null || num_expeRe === '') {
-        //                 num_expeRe = 1;
-        //                 $('#num_expe_m').val(num_expeRe);
-        //                 $('#num_ex_m').show();
-        //             } else {
-        //                 num_expeRe = parseInt(num_expeRe);
-        //                 if (isNaN(num_expeRe)) {
-        //                     $('#num_ex_m').hide();
-        //                 } else {
-        //                     num_expeRe += 1;
-        //                     $('#num_expe_m').val(num_expeRe);
-        //                     $('#num_ex_m').show();
-        //                 }
-        //             }
-        //             var fecha = new Date();
-        //             fecha.setHours(fecha.getHours() - 5);
-        //             var fecha_hora_actu = fecha.toISOString().slice(0, 19);
-        //             $('#fecha_actual_m').val(fecha_hora_actu);
-        //         },
-        //         error: function() {
-        //             console.log('error al traer datos');
-        //         }
-        //     })
-        // }
 
         function cargarTabla_m(tipo) {
 
@@ -1409,14 +1452,22 @@
             });
         }
 
-        // Botón para desbloquear y volver a elegir dependencias normales
-        $(document).on('click', '#btn-reset', function() {
-            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
-            $('#container_docentes').hide();
-            $('#docentes_select').val(null).trigger('change');
-            $('#input_docente_shadow').remove();
-            $(this).remove();
-        });
+        function inicializarBusquedaEgresados_m() {
+            $('#egresados_select_m').select2({
+                placeholder: "Busque por N° DNI O APELLIDOS/NOMBRES y seleccione uno o varios egresados",
+                ajax: {
+                    url: '{{ route('documentario.buscarEgresados') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter_m')
+            });
+        }
 
         // Botón para desbloquear y volver a elegir dependencias normales
         $(document).on('click', '#btn-reset_m', function() {
@@ -1424,6 +1475,14 @@
             $('#container_docentes_m').hide();
             $('#docentes_select_m').val(null).trigger('change');
             $('#input_docente_shadow_m').remove();
+            $(this).remove();
+        });
+
+        $(document).on('click', '#btn-reset-egresados_m', function() {
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_egresados_m').hide();
+            $('#egresados_select_m').val(null).trigger('change');
+            $('#input_egresado_shadow_m').remove();
             $(this).remove();
         });
     </script>

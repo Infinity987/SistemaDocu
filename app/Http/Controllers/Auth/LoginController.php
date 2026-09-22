@@ -22,7 +22,6 @@ class LoginController extends Controller
         $this->middleware('auth')->only('logout');
     }
 
-    // 🔹 Sobreescribimos el método para usar DNI en lugar de email
     public function username()
     {
         return 'dni';
