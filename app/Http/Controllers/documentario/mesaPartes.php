@@ -345,38 +345,76 @@ class mesaPartes extends Controller
         try {
         $templatePath = storage_path('app/templates/responder.docx');
 
-        try {
-            // CORRECCIÓN AQUÍ: Cambiamos 'borrador_crear.docx' por 'responder.docx'
-            $templatePath = storage_path('app/templates/responder.docx');
+        if (!file_exists($templatePath)) {
+            return "Error: No se encuentra la plantilla en: " . $templatePath;
+        }
 
-            if (!file_exists($templatePath)) {
-                return "Error: No se encuentra la plantilla en: " . $templatePath;
+        $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+
+           // --- 1. DATOS DE CONFIGURACIÓN (LOGO Y AÑO) ---
+        $configuracion = DB::connection('mysql_segunda')
+            ->table('encargados')
+            ->where('estado', 1)
+            ->first();
+
+        if ($configuracion) {
+    // Esta es la variable que pediste: el nombre oficial del año
+    // En el Word usa: ${texto_anio_oficial}
+    $template->setValue('texto_anio_oficial', $configuracion->nombre_año);
+    
+    // El resto de tus datos de configuración se mantienen igual
+    $template->setValue('nombre_anio', $configuracion->reso_direc); 
+    
+    $rutaLogo = public_path($configuracion->logo);
+            if (file_exists($rutaLogo)) {
+        $template->setImageValue('logo', [
+            'path' => $rutaLogo, 
+            'width' => 90, 
+            'height' => 90, 
+            'ratio' => true
+             ]);
             }
+                        }
 
-            $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+        // 1. DATOS DEL EMISOR (Quien redacta: el usuario logueado)
+        $id_depen_emisor = session('dependencia_id');
+        $dependenciaEmisor = DB::connection('mysql_documentario')
+            ->table('dependencias')
+            ->where('iddependencias', $id_depen_emisor)
+            ->first();
 
-            // Importante: Asegúrate de que los nombres de las variables
-            // coincidan con los de tu archivo responder.docx
-            $tipoDocNombre = DB::connection('mysql_documentario')->table('tipo_documento')
-                ->where('idtipo_documento', $request->tipo_documento)
-                ->value('nombre_documento');
+        // Datos personales del usuario (Conexión mysql_segunda)
+        $perfilUsuario = DB::connection('mysql_segunda')
+            ->table('userprofile')
+            ->where('id_users', Auth::id())
+            ->first();
 
-            // Usa los nombres que espera tu plantilla responder.docx
-            $template->setValue('asunto', $request->asunto);
-            $template->setValue('folio', $request->folio);
-            $template->setValue('tipo_doc', $tipoDocNombre ?? 'Documento'); // o como se llame en el Word
-            $template->setValue('fecha', now()->format('d/m/Y'));
+        // ... (código anterior de emisor igual) ...
 
-            // Como es un registro nuevo, la referencia suele ir vacía
-            $template->setValue('referencia', '');
+// 2. DATOS DEL DESTINATARIO (Lógica de Roles y Perfiles)
+$id_depen_receptor = is_array($request->dependencia_enviar) ? $request->dependencia_enviar[0] : null;
 
-            $fileName = 'Borrador_' . time() . '.docx';
-            $tempFile = tempnam(sys_get_temp_dir(), 'word');
-            $template->saveAs($tempFile);
+$nombreDestinatario = "___________________________";
+$cargoDestinatario = "___________________________";
 
-            return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
-        } catch (\Exception $e) {
-            return "Error en el servidor: " . $e->getMessage();
+if ($id_depen_receptor) {
+    // A. Buscamos el ID del usuario que tiene el rol de esa dependencia
+    // Nota: model_id suele ser el ID del usuario en la tabla users
+    $rolAsignado = DB::connection('mysql')
+        ->table('model_has_roles')
+        ->where('role_id', $id_depen_receptor)
+        ->first();
+
+    if ($rolAsignado) {
+        // B. Buscamos el nombre en la otra base de datos usando el model_id
+        $perfilDestinatario = DB::connection('mysql_segunda')
+            ->table('userprofile')
+            ->where('id_users', $rolAsignado->model_id)
+            ->first();
+        
+        if ($perfilDestinatario) {
+            $nombreDestinatario = $perfilDestinatario->nombre;
         }
     }
 
@@ -387,7 +425,7 @@ class mesaPartes extends Controller
         ->first();
     
     $cargoDestinatario = $depReceptora->nombre_dependencia ?? "DEPENDENCIA";
-
+}
 
 // --- CONTINUAR CON EL SETVALUE ---
         $template->setValue('destinatario_nombre', strtoupper($nombreDestinatario));
@@ -627,7 +665,7 @@ class mesaPartes extends Controller
 
     public function registrarDocu_m(Request $request)
     {
-        dd($request);
+        // dd($request);
         // 1. Datos base
         $usuario_id_sistema = Auth::user()->id;
         $emisor_id = $request->emisor;

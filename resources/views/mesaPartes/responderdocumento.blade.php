@@ -55,10 +55,7 @@
 
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
 
-    <!-- Estilos de Tom Select -->
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-<!-- Script de Tom Select -->
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    
     @livewireScripts
 
     <script>
