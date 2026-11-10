@@ -44,23 +44,28 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
     {
-        // dd("aquui");
-        $roles = $user->roles;
+        // 1. Filtramos el rol 'personal_base' porque es un rol de permisos, no de navegación.
+        // Esto evita que el usuario vaya al "selector de roles" solo por tener este rol extra.
+        $rolesNavegacion = $user->roles->filter(function ($role) {
+            return $role->name !== 'personal_base';
+        });
 
-        if ($roles->count() > 1) {
-            // Redirigir a la pantalla de selección
+        // 2. Si tiene más de un rol de navegación (ej. es Docente Y Dirección), debe elegir
+        if ($rolesNavegacion->count() > 1) {
             return redirect()->route('selector.roles');
         }
 
-        if ($roles->count() === 1) {
-            // Solo tiene un rol, lo asignamos de inmediato
-            // dd("aquui");
-            $role = $roles->first();
+        // 3. Si tiene exactamente un rol de navegación
+        if ($rolesNavegacion->count() === 1) {
+            $role = $rolesNavegacion->first();
+
+            // Guardamos en sesión el ID del rol como dependencia_id y su nombre
             session([
                 'dependencia_id' => $role->id,
                 'active_role_name' => $role->name
             ]);
 
+            // 4. Redirección inteligente y automática
             return match ($role->name) {
                 'admin'      => redirect('admin/users'),
                 'docente'    => redirect('/docente/horario'),
@@ -69,94 +74,12 @@ class LoginController extends Controller
                 'egresado'   => redirect('/alumno/matriPorCurri'),
                 'admision'   => redirect('admin/procesos'),
 
-                'Dirección',
-                'Jefatura de unidad Académica',
-                'Jefatura de unidad Administrativa',
-                'Secretaria Académica',
-                'Coordin. Prog. Estudios Educ. Inicial',
-                'Coordin. Prog. Estudios Primaria Epib',
-                'Coordin. Prog. Estudios Educ. Física',
-                'Coordin. Prog. Educac. Secundaria',
-                'J. Area Acad. Educ. Básica Regular',
-                'Jefe de Unidad de Formación Contínua',
-                'J. Unidad de bienestar y empleabilidad',
-                'J. Unidad de Investigación',
-                'J. Area de Calidad',
-                'Coord. del área de Práctica Profesional e investigación',
-                'Biblioteca',
-                'Y/O Cargos',
-                'PPD',
-                'Mesa de partes',
-                'Asistente J. Unidad de Investigación',
-                'Asistente Jefatura de unidad Administrativa',
-                'Logística',
-                // ... puedes seguir agregando los nombres exactos aquí
-                => redirect()->route('documentario.mesapar.index'),
-
                 default => redirect()->route('documentario.mesapar.index'),
             };
         }
 
+        // Fallback por si acaso (ej. usuario sin roles, aunque no debería pasar)
         return redirect()->intended($this->redirectPath());
-        // $roles = $user->roles;
-        // $roleIds = $user->roles->pluck('id')->toArray();
-        // dd($roleIds);
-
-        // if ($user->hasRole('admin')) {
-        //     session(['dependencia_id' => 1]);
-        //     return redirect('admin/users');
-        // } else if ($user->hasRole('docente')) {
-        //     return redirect('/docente/horario');
-        // } else if ($user->hasRole('alumno')) {
-        //     return redirect('/alumno/matriReali');
-        // } else if ($user->hasRole('postulante')) {
-        //     return redirect('/postulante/index');
-        // } else if ($user->hasRole('egresado')) {
-        //     return redirect('/egresado/index');
-        // } else if ($user->hasRole('admision')) {
-        //     return redirect('admin/postulantes/verpostulantes');
-        // } else if ($user->hasRole('Dirección')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Jefatura de unidad Académica')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Jefatura de unidad Administrativa')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Secretaria Académica')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Coordin. Prog. Estudios Educ. Inicial')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Coordin. Prog. Estudios Primaria Epib')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Coordin. Prog. Estudios Educ. Física')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Coordin. Prog. Educac. Secundaria')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('J. Area Acad. Educ. Básica Regular')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Jefe de Unidad de Formación Contínua')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('J. Unidad de bienestar y empleabilidad')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('J. Unidad de Investigación')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('J. Area de Calidad')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Coord. del área de Práctica Profesional e investigación')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Biblioteca')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Y/O Cargos')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('PPD')) {
-        //     return redirect('/Docu');
-        // } else if ($user->hasRole('Mesa de partes')) {
-        //     // return redirect('documentario/Docu');
-        //     session(['dependencia_id' => 24]);
-
-        //     return redirect()->route('documentario.mesapar.index',);
-        // }
-
-        // return redirect('/login'); // fallback por si no tiene rol
     }
 
     public function showLoginForm()

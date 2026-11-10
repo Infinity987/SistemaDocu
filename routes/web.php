@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\RoleSelectionController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RoleController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -29,6 +30,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/seleccionar-rol', [RoleSelectionController::class, 'index'])->name('selector.roles');
     Route::post('/seleccionar-rol', [RoleSelectionController::class, 'store'])->name('set.active.role');
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('/admin/roles', RoleController::class)->names('roles');
 });
 
 // Route::get('/home', function(){

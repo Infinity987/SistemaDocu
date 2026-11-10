@@ -330,11 +330,18 @@ return [
             'can' => 'rol-admin',
         ],
         [
+            'text' => 'Oficinas',
+            'route' => 'roles.index',
+            'icon' => 'fas fa-fw fa-building',
+            'active' => ['admin/roles*'],
+            'can' => 'rol-admin',
+        ],
+        [
             'text' => 'Docentes y Usuarios',
             'route' => 'admin.users.index',
             'icon' => 'fas fa-fw fa-user',
             'active' => ['admin/users*'],
-            'can' => 'rol-admin'
+            'can' => 'rol-admin',
         ],
         [
             'text' => 'Encargados',
@@ -448,8 +455,6 @@ return [
                     'icon' => 'fas fa-bars',
                     'can' => 'rol-admision'
                 ],
-
-
             ],
         ],
         [
@@ -618,14 +623,14 @@ return [
             'active' => ['admin/searchDocu*'],
             'can' => 'rol-documentario'
         ],
-         [
+        [
             'text' => 'PAGOS',
             'route' => 'documentario.pagos.index',
             'icon' => 'fas fa-search',
             'active' => ['admin/pagos*'],
             'can' => 'rol-documentario'
         ],
-[
+        [
             'text' => 'RESOLUCIONES',
             'route' => 'documentario.resoluciones.index',
             'icon' => 'fas fa-search',

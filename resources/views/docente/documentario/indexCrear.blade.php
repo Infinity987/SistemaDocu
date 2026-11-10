@@ -10,7 +10,7 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-boxes"></i>
-                                - CREAR DOCUMENTO DOCE {{ session('active_role_name') }}</h1>
+                                - CREAR DOCUMENTO DOCE //// {{ session('dependencia_id') }} {{ Auth::user()->id }} - {{ session('active_role_name') }}</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -414,13 +414,13 @@
         //         });
         // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.editarDocumento', (e) => {
-                    $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
-                        .cont_estado);
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.editarDocumento', (e) => {
+        //             $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
+        //                 .cont_estado);
+        //         });
+        // });
 
         // para docente
         // let userId = "{{ auth()->id() }}";

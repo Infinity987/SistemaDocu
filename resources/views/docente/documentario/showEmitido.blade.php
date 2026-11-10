@@ -326,7 +326,7 @@
                                                     <div class="form-group">
                                                         <label for="para_su">
                                                             <i class="fas fa-directions" style="color: #6f42c1;"></i>
-                                                            Para su: <span class="text-danger">*</span>
+                                                            Para su: --- <span class="text-danger">*</span>
                                                         </label>
                                                         <select id="para_su" class="form-control shadow"
                                                             placeholder="Ingrese el asunto" name="para_su"
@@ -531,22 +531,22 @@
     @livewireScripts
 
     <script>
-        let dependenciaId = {{ $id_depen }};
+        // let dependenciaId = {{ $id_depen }};
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const audio = new Audio('{{ asset('sound/alert.mp3') }}');
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.noEditarDocumento', (e) => {
-                    audio.play().catch(err => console.log("Audio en espera de interacción ..."));
-                    Swal.fire({
-                        title: "ALERTA!",
-                        text: "Este documento ya fue recepcionado, no se puede editar ....",
-                        icon: "error"
-                    }).then(() => {
-                        window.location.href = window.location.href;
-                    });
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     const audio = new Audio('{{ asset('sound/alert.mp3') }}');
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.noEditarDocumento', (e) => {
+        //             audio.play().catch(err => console.log("Audio en espera de interacción ..."));
+        //             Swal.fire({
+        //                 title: "ALERTA!",
+        //                 text: "Este documento ya fue recepcionado, no se puede editar ....",
+        //                 icon: "error"
+        //             }).then(() => {
+        //                 window.location.href = window.location.href;
+        //             });
+        //         });
+        // });
 
         // document.addEventListener("DOMContentLoaded", function() {
         //     Echo.private('dependencia.' + dependenciaId)

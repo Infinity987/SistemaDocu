@@ -65,7 +65,7 @@
             const userId = "{{ auth()->id() }}";
             const depenId = "{{ session('dependencia_id') }}";
             const activeRole = "{{ session('active_role_name') }}";
-
+            console.log(depenId);
 
             if (!userId || typeof Echo === 'undefined') return;
 
@@ -135,35 +135,54 @@
                 });
             };
 
-            // --- CANAL PERSONAL (Docente, Alumno, etc) ---
-            Echo.private('App.Models.User.' + userId)
-                .listen('.DocumentoRecibido', (e) => {
-                    console.log('Notificación personal recibida');
-                    procesarNotificacion(e);
-                });
+            if (["2","4","5"].includes(depenId)) {
+                // Si es Docente (2), Alumno (4) o Egresado (5):
+                // SOLO solicita unirse al canal individual
+                // Echo.private(`App.Models.User.${userId}`)
+                //     .listen('NuevoDocumentoEvent', (e) => {
+                //         console.log('Notificación personal recibida:', e);
+                //     });
+                console.log('indi');
 
-            Echo.private('App.Models.User.' + userId)
-                .listen('.noEditarDocumento', (e) => {
-                    console.log('aquii 111');
-                    if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
-                        console.log('Recargando DataTable...////');
-                        $('#datatablesSimple').DataTable().ajax.reload(null, false);
-                        // El 'false' es para que no se resetee la paginación al recargar
-                    } else {
-                        console.log('Recargando DataTable...////22222');
-                        procesarNotificacionNoEditar(e);
-                    }
-                });
+                Echo.private('App.Models.User.' + userId)
+                    .listen('.DocumentoRecibido', (e) => {
+                        console.log('Notificación personal recibida');
+                        procesarNotificacion(e);
+                        console.log('indi 1');
+                    });
 
-            Echo.private('App.Models.User.' + userId)
-                .listen('.editarDocumento', (e) => {
-                    console.log('Notificación de oficina recibida ------- d');
-                    procesarNotificacion(e);
-                });
 
-            // --- CANAL DE DEPENDENCIA (Oficinas) ---
-            // Solo escuchamos si el rol activo es de oficina
-            if (depenId && !['docente', 'alumno', 'egresado', 'postulante'].includes(activeRole)) {
+
+                Echo.private('App.Models.User.' + userId)
+                    .listen('.noEditarDocumento', (e) => {
+                        console.log('aquii 111');
+                        if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                            console.log('Recargando DataTable...////');
+                            $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                            // El 'false' es para que no se resetee la paginación al recargar
+                        } else {
+                            console.log('Recargando DataTable...////22222');
+                            procesarNotificacionNoEditar(e);
+                        }
+                        console.log('indi 2');
+                    });
+
+                Echo.private('App.Models.User.' + userId)
+                    .listen('.editarDocumento', (e) => {
+                        console.log('Notificación de oficina recibida ------- d');
+                        procesarNotificacion(e);
+                        console.log('indi 3');
+                    });
+
+
+            } else {
+                // Si es cualquier otra dependencia administrativa:
+                // SOLO solicita unirse al canal por dependencia
+                // Echo.private(`dependencia.${dependenciaId}`)
+                //     .listen('NuevoDocumentoEvent', (e) => {
+                //         console.log('Notificación de dependencia recibida:', e);
+                //     });
+                console.log('depen--');
                 Echo.private('dependencia.' + depenId)
                     .listen('.DocumentoRecibido', (e) => {
                         console.log('Notificación de oficina recibida');
@@ -209,6 +228,16 @@
                         console.log('Notificación de oficina recibida -------');
                         procesarNotificacion(e);
                     });
+
+            }
+
+            // --- CANAL PERSONAL (Docente, Alumno, etc) ---
+
+
+            // --- CANAL DE DEPENDENCIA (Oficinas) ---
+            // Solo escuchamos si el rol activo es de oficina
+            if (depenId && !['docente', 'alumno', 'egresado', 'postulante'].includes(activeRole)) {
+
             }
         });
     </script>

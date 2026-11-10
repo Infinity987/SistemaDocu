@@ -658,7 +658,7 @@
                                                     <div class="form-group">
                                                         <label for="para_su">
                                                             <i class="fas fa-directions" style="color: #6f42c1;"></i>
-                                                            Para su: <span class="text-danger">*</span>
+                                                            Para su: -- <span class="text-danger">*</span>
                                                         </label>
                                                         <select id="para_su" class="form-control shadow"
                                                             name="para_su">
@@ -1158,7 +1158,7 @@
                         $('#datatablesSimple_m').DataTable().ajax.reload();
                         $('.text-danger_m').text('');
 
-                        $('#tipo_documento_m').val('0').trigger('change');
+                        $('#tipo_documento_m').val('0');
                         $('#para_su_m').val('0').trigger('change');
                         $('#dependencia_enviar_m').val(null).trigger('change');
                         $('#docentes_select_m').val(null).trigger('change');
@@ -1166,9 +1166,9 @@
                         $('#container_docentes_m').hide();
                         $('#container_egresados_m').hide();
 
-
                         $('#usuario_m').val('0').trigger('change');
                         $('#num_ex_m').hide();
+                        $('#num_ex_m').val('');
                         $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
                         // 1. Limpiar el valor del input file
                         $('#archivo_pdf_m').val('');
@@ -1180,6 +1180,8 @@
                         $('#input_egresado_shadow_m').remove();
                         $('#btn-reset_m').remove();
                         $('#btn-reset-egresados_m').remove();
+
+                        $('span[id$="_error"]').text('');
 
                         // 3. Limpiar mensajes de error si los hubiera
                         $('#archivo_pdf_m_error').text('');
@@ -1257,11 +1259,11 @@
                     let ultimoNumero = (response && response.numero_de_exp) ? parseInt(response
                         .numero_de_exp) : 0;
                     let proximoNumero = ultimoNumero + 1;
+                    console.log(proximoNumero);
 
                     $('#num_expe_m').val(proximoNumero);
                     $('#num_ex_m').fadeIn();
 
-                    // Opcional: Actualizar fecha automática
                     var fecha_m = new Date();
                     fecha_m.setHours(fecha_m.getHours() - 5);
                     var fecha_hora_actu = fecha_m.toISOString().slice(0, 19);
@@ -1440,7 +1442,6 @@
             });
         }
 
-        // 2. Función para inicializar el segundo Select2 (Docentes)
         function inicializarBusquedaDocentes_m() {
             $('#docentes_select_m').select2({
                 placeholder: "Busque y seleccione uno o varios docentes",

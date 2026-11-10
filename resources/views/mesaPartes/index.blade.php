@@ -10,7 +10,7 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-boxes"></i>
-                                - CREAR DOCUMENTO -- {{ session('dependencia_id') }} {{ Auth::user()->id }}</h1>
+                                - CREAR DOCUMENTO -- - {{ session('dependencia_id') }} {{ Auth::user()->id }} - {{ session('active_role_name') }}</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -458,7 +458,6 @@
             }
         }
 
-
         $(document).ready(function() {
             /////////////////////////////////////////////////////////////para DOCUMENTOS DE recepcion
             $('#check_fisico').on('change', function() {
@@ -574,7 +573,7 @@
                             $('.text-danger').text('');
 
                             // 4. Limpiar correctamente todos los Select2 del formulario
-                            $('#tipo_documento').val('0').trigger('change');
+                            $('#tipo_documento').val('0');
                             $('#para_su').val('0').trigger('change');
                             $('#dependencia_enviar').val(null).trigger('change');
                             $('#docentes_select').val(null).trigger('change');

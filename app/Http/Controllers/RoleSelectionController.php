@@ -19,20 +19,24 @@ class RoleSelectionController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['role_id' => 'required|exists:roles,id']);
-        $user = auth()->user();
-        // Seguridad: Verificar que el usuario realmente tenga ese rol
-        $role = Role::find($request->role_id);
-        if ($user->hasRole($role)) {
-            session()->forget(['dependencia_id', 'active_role_name']);
+        $request->validate([
+            'role_id' => 'required|exists:roles,id'
+        ]);
 
-            // dd($role->name);
-            // Guardamos en sesión el ID y el nombre del rol activo
+        $user = auth()->user();
+        $role = Role::find($request->role_id);
+
+        // Seguridad: Verificar que el usuario realmente tenga ese rol asignado
+        if ($user->hasRole($role->name)) {
+
+            // Limpiar sesión anterior y establecer la nueva
+            session()->forget(['dependencia_id', 'active_role_name']);
             session([
                 'dependencia_id' => $role->id,
                 'active_role_name' => $role->name
             ]);
 
+            // Redirección inteligente y 100% automática
             return match ($role->name) {
                 'admin'      => redirect('admin/users'),
                 'docente'    => redirect('/docente/horario'),
@@ -41,23 +45,13 @@ class RoleSelectionController extends Controller
                 'egresado'   => redirect('/egresado/index'),
                 'admision'   => redirect('admin/procesos'),
 
-                'Dirección',
-                'Jefatura de unidad Académica',
-                'Jefatura de unidad Administrativa',
-                'Secretaria Académica',
-                'Mesa de partes',
-                'Biblioteca',
-                'PPD',
-                'Y/O Cargos',
-                'J. Unidad de Investigación',
-                'J. Area de Calidad',
-                // ... puedes seguir agregando los nombres exactos aquí
-                => redirect()->route('documentario.mesapar.index'),
-
+                // 🌟 LA CLAVE: CUALQUIER otro rol (Dirección, Biblioteca, o una nueva oficina
+                // como "Auxiliar", "Tesorería", etc.) caerá aquí automáticamente.
+                // ¡Nunca más tendrás que agregar nombres de oficinas aquí!
                 default => redirect()->route('documentario.mesapar.index'),
             };
         }
 
-        return back()->with('error', 'Acceso no autorizado.');
+        return back()->with('error', 'Acceso no autorizado a este rol.');
     }
 }

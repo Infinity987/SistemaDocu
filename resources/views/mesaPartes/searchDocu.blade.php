@@ -405,50 +405,50 @@
     </script>
 
     <script>
-        let dependenciaId = {{ $id_depen }};
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.DocumentoRecibido', (e) => {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                            var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
-                            audio.play();
-                        },
-                        didClose: () => {
-                            $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-                                .cont_estados[0]
-                                .cont_estado);
-                        }
-                    });
+        // let dependenciaId = {{ $id_depen }};
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.DocumentoRecibido', (e) => {
+        //             const Toast = Swal.mixin({
+        //                 toast: true,
+        //                 position: "top-end",
+        //                 showConfirmButton: false,
+        //                 timer: 3000,
+        //                 timerProgressBar: true,
+        //                 didOpen: (toast) => {
+        //                     toast.onmouseenter = Swal.stopTimer;
+        //                     toast.onmouseleave = Swal.resumeTimer;
+        //                     var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
+        //                     audio.play();
+        //                 },
+        //                 didClose: () => {
+        //                     $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
+        //                         .cont_estados[0]
+        //                         .cont_estado);
+        //                 }
+        //             });
 
-                    Toast.fire({
-                        icon: "success",
-                        title: "Nuevo documento recibido"
-                    });
-                });
-        });
+        //             Toast.fire({
+        //                 icon: "success",
+        //                 title: "Nuevo documento recibido"
+        //             });
+        //         });
+        // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.noEditarDocumento', (e) => {
-                    $('#datatablesSimple').DataTable().ajax.reload();
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.noEditarDocumento', (e) => {
+        //             $('#datatablesSimple').DataTable().ajax.reload();
+        //         });
+        // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.editarDocumento', (e) => {
-                    $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
-                        .cont_estado);
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.editarDocumento', (e) => {
+        //             $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
+        //                 .cont_estado);
+        //         });
+        // });
     </script>
 
     <script>

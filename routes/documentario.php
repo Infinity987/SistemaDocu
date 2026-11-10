@@ -14,6 +14,7 @@ use App\Http\Controllers\documentario\reportes;
 use App\Http\Controllers\documentario\enviardocumentos;
 use App\Http\Controllers\documentario\pagos;
 use App\Http\Controllers\documentario\resoluciones;
+use App\Http\Controllers\Admin\OficinaController;
 
 
 Route::resource('users', UserController::class)->names('admin.users');
@@ -74,5 +75,7 @@ route::get('/pagos', [pagos::class, 'index'])->name('pagos.index');
 //resoluciones
 route::get('/resoluciones', [resoluciones::class, 'index'])->name('resoluciones.index');
 Route::get('/resoluciones/generar/{id_proyecto}', [resoluciones::class, 'generarWord'])->name('resoluciones.generar');
+Route::resource('oficinas', OficinaController::class)->names('admin.oficinas');
+
 
 

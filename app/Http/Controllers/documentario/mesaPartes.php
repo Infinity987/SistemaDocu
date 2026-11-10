@@ -29,6 +29,7 @@ class mesaPartes extends Controller
             $id_depen = session('dependencia_id');
             // dd($id_depen);
             $rol = DB::connection('mysql_documentario')->table('dependencias')->where('iddependencias', $id_depen)->first();
+            // dd($rol);
             $id_usuTrabajador = Auth::user()->id;
 
             $cont_est = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
@@ -560,7 +561,6 @@ class mesaPartes extends Controller
 
     public function registrarDocu_m(Request $request)
     {
-        // dd($request);
         // 1. Datos base
         $usuario_id_sistema = Auth::user()->id;
         $emisor_id = $request->emisor;
