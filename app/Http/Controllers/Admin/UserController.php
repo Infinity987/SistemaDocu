@@ -52,20 +52,6 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // if (is_array($request->roles) && in_array(2, $request->roles)) {
-        //     $search_doce = DB::connection('mysql_segunda')->table('docente')->where('id_users', '=', $user->id)->exists();
-        //     if (!$search_doce) {
-        //         $insert_tabla_doce = DB::connection('mysql_segunda')->table('docente')->insert([
-        //             'especialidad' => 'docente',
-        //             'estado' => 1,
-        //             'id_users' => $user->id,
-        //         ]);
-        //     }
-        // }
-
-        // $user->roles()->Sync($request->roles);
-        // return redirect()->route('admin.users.edit', $user)->with('info', 'Se asignó los roles');
-
         $user->roles()->Sync($request->roles);
         $verTodasDepenUsu = DB::connection('mysql_documentario')->table('dependencia_user')
             ->select('dependencia_id', 'estado')
@@ -121,6 +107,8 @@ class UserController extends Controller
 
             }
         }
+
+        $user->touch();
         // dump("----------------------------------");
         // dd('pause');
 

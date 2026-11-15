@@ -5,7 +5,7 @@
             method="get">
             <button type="submit" class="btn btn-block bg-gradient-success btn-sm" data-toggle="modal"
                 data-target="#editardocu">
-                <i class="fas fa-check"></i>
+                <i class="fas fa-check"></i>----ua
             </button>
         </form>
     </div>
@@ -16,7 +16,7 @@
                 <i class="fas fa-cogs"></i> Acciones
             </button>
             <ul class="dropdown-menu">
-                
+
                 @if ($id_depen == 24)
                     {{-- SOLO PARA MESA DE PARTES --}}
                     <li>

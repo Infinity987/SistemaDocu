@@ -99,9 +99,9 @@ class bandeja extends Controller
                 LEFT JOIN gamnielb_admision.users u ON documentos.id_user = u.id
                 LEFT JOIN gamnielb_admision.postulante pos ON u.dni = pos.idpostulante
 
-                WHERE iddependencias_receptor = ? AND idestado = ?
+                WHERE iddependencias_receptor = ? AND idestado = ? AND movimiento.id_user_receptor = ?
                 ORDER BY movimiento.fecha_de_envio DESC
-            ', [$emisor, $idtipo_estado]);
+            ', [$emisor, $idtipo_estado, Auth::user()->id]);
         } else {
             $query = DB::connection('mysql_documentario')->select('
                 SELECT
@@ -142,9 +142,9 @@ class bandeja extends Controller
                 LEFT JOIN gamnielb_admision.users u ON documentos.id_user = u.id
                 LEFT JOIN gamnielb_admision.postulante pos ON u.dni = pos.idpostulante
 
-                WHERE iddependencias_receptor = ? AND idestado = ?
+                WHERE iddependencias_receptor = ? AND idestado = ? AND movimiento.id_user_receptor = ?
                 ORDER BY movimiento.fecha_de_recepcion DESC
-            ', [$emisor, $idtipo_estado]);
+            ', [$emisor, $idtipo_estado, Auth::user()->id]);
         }
 
 
@@ -155,6 +155,7 @@ class bandeja extends Controller
 
     public function bandejaEstado_upda($idtipo_estado, $iddocument, $movimient, $iddependencias_emior)
     {
+        // dd($movimient);
         $fechaHoraActual = Carbon::now();
         try {
             DB::beginTransaction();
@@ -177,12 +178,12 @@ class bandeja extends Controller
 
             // dd($tipo.' '.$iddependencias_emior);
 
-            event(new noEditarDocumento($iddependencias_emior, $tipo));
+            event(new noEditarDocumento($iddependencias_emior, $tipo, $iddocument));
             return redirect()->back()->with('success', 'Documento recibido...-');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return redirect()->back()->with('error', 'Error al recibir documento');
+                return redirect()->back()->with('error', 'Error al recibir documento,---'.$th->getMessage());
         }
     }
 }

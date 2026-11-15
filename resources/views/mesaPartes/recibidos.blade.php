@@ -104,8 +104,7 @@
                                                 <th class="text-center align-middle"><i class="fas fa-user"></i><br>PERSONA</th>
                                                 <th class="text-center align-middle"><i
                                                         class="fas fa-comment-alt"></i><br>MOTIVO</th>
-                                                <th class="text-center align-middle"><i
-                                                        class="fas fa-file-pdf"></i><br>PDF</th>
+                                                <th class="text-center align-middle"><i class="fas fa-file-pdf"></i><br>PDF</th>
                                                 <th class="text-center align-middle"><i class="fas fa-cogs"></i><br>ACCIONES
                                                 </th>
                                             </tr>

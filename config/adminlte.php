@@ -344,6 +344,12 @@ return [
             'can' => 'rol-admin',
         ],
         [
+            'text' => 'Reporte Usuarios',
+            'route' => 'documentario.usuarios_activos',
+            'icon' => 'fas fa-users-cog',
+            'can' => 'rol-admin',
+        ],
+        [
             'text' => 'Encargados',
             'route' => 'encargados.index',
             'icon' => 'fas fa-user-tie',
@@ -650,13 +656,33 @@ return [
         ],
         // FIN TRAMITE DOCUMENTARIO
 
-
-
-
-
-
         ['header' => 'ALUMNO', 'can' => 'alumno.index',],
-        ['header' => 'EGRESADO', 'can' => 'egresado.index',],
+        ['header' => 'EGRESADO-', 'can' => 'egresado.index',],
+
+        // INICIO TRAMITE DE EGRESADO
+        [
+            'text' => 'Registrar Documentos',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['admin/Docu*'],
+            'can' => 'egresado.index'
+        ],
+        [
+            'text' => 'Bandeja',
+            'route' => 'documentario.mesapar.bandeja',
+            'icon' => 'fas fa-inbox',
+            'active' => ['admin/recibidos*'],
+            'can' => 'egresado.index'
+        ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['admin/searchDocu*'],
+            'can' => 'egresado.index'
+        ],
+        // FIN TRAMITE DE EGRESADO
+
         // [
         //     'text' => 'contraseña',
         //     'url' => 'admin/settings',
