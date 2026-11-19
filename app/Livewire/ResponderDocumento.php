@@ -231,68 +231,90 @@ public function buscarDocentes()
         return $rules;
     }
 
-    public function submit()
+        public function submit()
     {
+        // 1. Validación de campos del formulario
         $this->validate();
 
+        // ✅ 2. VALIDACIÓN DE SEGURIDAD ANTES DE TOCAR LA BASE DE DATOS
+        if ($this->tipo_destinatario === 'dependencia') {
+            $nombreDependencia = DB::connection('mysql_documentario')->table('dependencias')
+                ->where('iddependencias', $this->oficina_destino)
+                ->value('nombre_dependencia') ?? 'Desconocida';
+
+            $jefesCount = DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('dependencia_id', $this->oficina_destino)
+                ->where('tipo_usuario', 2) 
+                ->where('estado', 1)       
+                ->count();
+
+                            if ($jefesCount === 0) {
+                    session()->flash('error_jefe', "No se puede enviar el documento. La dependencia '{$nombreDependencia}' NO tiene un jefe activo asignado. Por favor, regularice esto en el módulo de usuarios.");
+                    return; 
+                }
+
+                if ($jefesCount > 1) {
+                    session()->flash('error_jefe', "Envío bloqueado por seguridad. La dependencia '{$nombreDependencia}' tiene MÚLTIPLES jefes activos. El sistema no puede determinar a quién dirigir el documento hasta que se regularice.");
+                    return; 
+                }
+        }
+
+        // 3. Si llegamos aquí, todo está correcto. Iniciamos la transacción ESPECÍFICA
         try {
-            DB::beginTransaction();
+            // ✅ IMPORTANTE: Especificamos la conexión para la transacción
+            DB::connection('mysql_documentario')->beginTransaction();
 
             // Obtener último expediente por tipo de documento
             $ultimoExpediente = DB::connection('mysql_documentario')->table('documentos')
-            ->where('emisor', $this->dependencia)
-            ->where('idtipo_documento', $this->idTipoDocumento)
-            ->where('est_firma', 1) // 👈 Solo contamos los que son para firma
-            ->orderBy('idDocumentos', 'desc')
-            ->value('numero_de_exp');
+                ->where('emisor', $this->dependencia)
+                ->where('idtipo_documento', $this->idTipoDocumento)
+                ->where('est_firma', 1)
+                ->orderBy('idDocumentos', 'desc')
+                ->value('numero_de_exp');
 
             $nuevoExpediente = $ultimoExpediente 
-            ? str_pad((int)$ultimoExpediente + 1, 3, '0', STR_PAD_LEFT) 
-            : '001';
+                ? str_pad((int)$ultimoExpediente + 1, 3, '0', STR_PAD_LEFT) 
+                : '001';
 
-            // Insertar nuevo documento
-                      // Insertar nuevo documento (LA RESPUESTA)
+            // Insertar nuevo documento (LA RESPUESTA)
             $ultimoIdDocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
                 'numero_de_exp'          => $nuevoExpediente,
                 'fecha_ingreso'          => now(),
                 'asunto'                 => $this->asunto,
                 'idtipo_documento'       => $this->idTipoDocumento,
-                'emisor'                 => $this->dependencia, // Ahora sí es tu dependencia (Ej: 8)
+                'emisor'                 => $this->dependencia,
                 'iddetalle_tramite'      => $this->tramite_documento,
-                
-                // 👇 AQUÍ ESTÁN LOS CAMPOS DE USUARIO Y ESTADO (Agregados)
-                'id_user'                => Auth::id(),         // El usuario del sistema que realiza la acción
-                      
-                
+                'id_user'                => Auth::id(),
                 'recomendacion'          => $this->recomendaciones,
-                'iddocumento_referencia' => $this->iddocument,  // Vinculado al documento original
+                'iddocumento_referencia' => $this->iddocument,
                 'folio'                  => $this->folio,
-                'estado_actu'            => 1,                  // Estado inicial del nuevo documento
-                'est_firma'              => 1,                  // IMPORTANTE: Al responder, generas un doc propio para firma
+                'estado_actu'            => 1,
+                'est_firma'              => 1,
             ]);
 
-            // Actualizar documento anterior
-            DB::connection('mysql_documentario')->update("
-                UPDATE movimiento
-                SET idestado = 3, fecha_finalizacion = now()
-                WHERE iddocumentos = ?
-            ", [$this->iddocument]);
+            // Actualizar documento anterior (Trazabilidad)
+            $usuarioQueResponde = Auth::id();
+            $fechaHoraActual = now();
 
-            DB::connection('mysql_documentario')->update("
-                UPDATE documentos
-                SET fecha_finalizacion = now()
-                WHERE iddocumentos = ?
-            ", [$this->iddocument]);
+            DB::connection('mysql_documentario')->table('movimiento')
+                ->where('iddocumentos', $this->iddocument)
+                ->where('idestado', '!=', 3)
+                ->update([
+                    'idestado'           => 3,
+                    'fecha_finalizacion' => $fechaHoraActual,
+                    'id_user_finali'     => $usuarioQueResponde
+                ]);
 
-     if ($this->tipo_destinatario === 'docente') {
+            // Lógica de envío según destinatario
+            if ($this->tipo_destinatario === 'docente') {
                 foreach ($this->docentes_seleccionados as $id_user_docente) {
                     DB::connection('mysql_documentario')->table('movimiento')->insert([
-                        'iddocumentos' => $ultimoIdDocumento,
-                        'iddependencias_emior' => $this->dependencia,
-                        'iddependencias_receptor' => 2, // ID de docentes
-                        'id_user_receptor' => $id_user_docente,
-                        'fecha_de_envio' => now(),
-                        'idestado' => 1
+                        'iddocumentos'            => $ultimoIdDocumento,
+                        'iddependencias_emior'    => $this->dependencia,
+                        'iddependencias_receptor' => 2,
+                        'id_user_receptor'        => $id_user_docente,
+                        'fecha_de_envio'          => now(),
+                        'idestado'                => 1
                     ]);
 
                     $cont_estados = DB::connection('mysql_documentario')->select('
@@ -309,12 +331,12 @@ public function buscarDocentes()
             } elseif ($this->tipo_destinatario === 'egresado') {
                 foreach ($this->egresados_seleccionados as $id_user_egresado) {
                     DB::connection('mysql_documentario')->table('movimiento')->insert([
-                        'iddocumentos' => $ultimoIdDocumento,
-                        'iddependencias_emior' => $this->dependencia,
-                        'iddependencias_receptor' => 5, // ID de egresados
-                        'id_user_receptor' => $id_user_egresado,
-                        'fecha_de_envio' => now(),
-                        'idestado' => 1
+                        'iddocumentos'            => $ultimoIdDocumento,
+                        'iddependencias_emior'    => $this->dependencia,
+                        'iddependencias_receptor' => 5,
+                        'id_user_receptor'        => $id_user_egresado,
+                        'fecha_de_envio'          => now(),
+                        'idestado'                => 1
                     ]);
 
                     $cont_estados = DB::connection('mysql_documentario')->select('
@@ -329,14 +351,21 @@ public function buscarDocentes()
                     event(new DocumentoRecibido($id_user_egresado, $cont_estados, 'personal'));
                 }
             } else {
-                // Envío normal a dependencia
+                // Ya validamos que hay exactamente 1 jefe, así que obtenemos su ID directamente
+                $id_user_receptor = DB::connection('mysql_documentario')->table('dependencia_user')
+                    ->where('dependencia_id', $this->oficina_destino)
+                    ->where('tipo_usuario', 2)
+                    ->where('estado', 1)
+                    ->value('user_id');
+
                 DB::connection('mysql_documentario')->table('movimiento')->insert([
-                    'iddocumentos' => $ultimoIdDocumento,
-                    'iddependencias_emior' => $this->dependencia,
+                    'iddocumentos'            => $ultimoIdDocumento,
+                    'iddependencias_emior'    => $this->dependencia,
                     'iddependencias_receptor' => $this->oficina_destino,
-                    'fecha_de_envio' => now(),
-                    'fecha_de_recepcion' => null,
-                    'idestado' => 1
+                    'id_user_receptor'        => $id_user_receptor, 
+                    'fecha_de_envio'          => now(),
+                    'fecha_de_recepcion'      => null,
+                    'idestado'                => 1
                 ]);
 
                 $cont_estados = DB::connection('mysql_documentario')->select('
@@ -345,61 +374,55 @@ public function buscarDocentes()
                     LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
                     AND movimiento.iddependencias_receptor = ?
                     WHERE estado.idestado IN (1,2,3)
-                    GROUP BY estado.idestado;
+                    GROUP BY estado.idestado
                 ', [$this->oficina_destino]);
 
-                 event(new DocumentoRecibido($this->oficina_destino, $cont_estados, 'dependencia'));
+                event(new DocumentoRecibido($this->oficina_destino, $cont_estados, 'dependencia'));
             }
 
-                      // ✅ GUARDAR ARCHIVO PDF (Método infalible para Windows/XAMPP)
+            // Manejo del archivo PDF
             if ($this->archivo_virtual) {
-                // 1. Limpiar nombre del archivo
                 $nombreOriginal = $this->archivo_virtual->getClientOriginalName();
                 $nombreLimpio = preg_replace('/[^A-Za-z0-9\.\_\-]/', '_', $nombreOriginal);
                 $nombreArchivo = time() . '_' . $nombreLimpio;
                 
-                // 2. Definir rutas
                 $directorio = public_path('documentos' . DIRECTORY_SEPARATOR . 'documentos_director_pdf');
-                $rutaTemporal = $this->archivo_virtual->getRealPath(); // Ruta real del archivo temporal de Livewire
+                $rutaTemporal = $this->archivo_virtual->getRealPath(); 
                 $rutaDestino = $directorio . DIRECTORY_SEPARATOR . $nombreArchivo;
 
-                // 3. Crear el directorio de forma robusta con Laravel (si no existe)
                 if (!\Illuminate\Support\Facades\File::exists($directorio)) {
                     \Illuminate\Support\Facades\File::makeDirectory($directorio, 0755, true, true);
                 }
 
-                // 4. Usar copy() en lugar de move() (mucho más estable en Windows)
                 if (!copy($rutaTemporal, $rutaDestino)) {
-                    throw new \Exception("No se pudo guardar el PDF. Verifica que la carpeta 'public/documentos/documentos_director_pdf' tenga permisos de escritura.");
+                    throw new \Exception("No se pudo guardar el PDF. Verifica permisos de la carpeta.");
                 }
 
-                // 5. Guardar el registro en la base de datos
                 DB::connection('mysql_documentario')->table('documenpdf')->insert([
                     'nombre_del_documento' => $nombreArchivo,
                     'fecha_subida'         => now(),
                     'iddocumentos'         => $ultimoIdDocumento,
                     'token_pdf'            => \Illuminate\Support\Str::uuid(),
-                    'tipo_pdf'             => 1, // 1 para virtual
+                    'tipo_pdf'             => 1,
                     'usuario_id'           => Auth::id()
                 ]);
             }
             
-            DB::commit();
+            // ✅ Commit específico para la conexión correcta
+            DB::connection('mysql_documentario')->commit();
             
-            // 👇 REDIRECCIÓN A LA BANDEJA CON MENSAJE DE ÉXITO
             return redirect()->route('documentario.mesapar.bandeja')
                 ->with('success', "Documento respondido y enviado exitosamente con N° Exp: $nuevoExpediente");
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            // ✅ Rollback específico para la conexión correcta
+            DB::connection('mysql_documentario')->rollBack();
             Log::error('Error al enviar documento: ' . $e->getMessage());
             
-            // Si hay error, nos quedamos en la misma vista y mostramos la alerta roja
             session()->flash('error', "Error al insertar datos: " . $e->getMessage());
             return null; 
         }
     }
-
 
     public function getCustomPreviewUrl()
 {

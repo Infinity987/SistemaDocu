@@ -418,11 +418,13 @@
     </div>
 </div>
 
-<!-- Scripts -->
+
+
+
 <script>
     document.addEventListener('livewire:initialized', () => {
+        // 1. Lógica de TomSelect (tu código original, se mantiene)
         const initTomSelect = () => {
-            // Inicializar Tipo de Documento (siempre existe)
             const elTipoDoc = document.getElementById('selectTipoDocumento');
             if (elTipoDoc && !elTipoDoc.tomselect) {
                 new TomSelect(elTipoDoc, {
@@ -434,7 +436,6 @@
                 });
             }
 
-            // Inicializar Oficina de Destino (SOLO si existe en el DOM)
             const elOficina = document.getElementById('selectOficinaDestino');
             if (elOficina && !elOficina.tomselect) {
                 new TomSelect(elOficina, {
@@ -447,14 +448,38 @@
             }
         };
 
-        // Ejecutar al cargar
         setTimeout(initTomSelect, 100);
 
-        // Volver a inicializar si Livewire actualiza el componente
         Livewire.hook('commit', ({ component, succeed }) => {
             succeed(() => {
                 setTimeout(initTomSelect, 100);
             });
         });
+
+        // 2. ✅ NUEVO: Detectar si viene el mensaje de error de "Jefes" desde Laravel
+        @if (session()->has('error_jefe'))
+            Swal.fire({
+                icon: 'warning', // Icono de advertencia (amarillo/naranja)
+                title: '⚠️ Envío Bloqueado por Seguridad',
+                html: `
+                    <div class="text-start">
+                        <p class="mb-2">{{ session('error_jefe') }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            El documento NO se ha guardado para evitar inconsistencias en el sistema.
+                        </small>
+                    </div>
+                `,
+                confirmButtonText: 'Entendido, volver a la bandeja',
+                confirmButtonColor: '#0d6efd', // Color primary de Bootstrap
+                allowOutsideClick: false, // Obliga a hacer clic en el botón
+                allowEscapeKey: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Redirigir a la bandeja después de que el usuario acepte
+                    window.location.href = "{{ route('documentario.mesapar.bandeja') }}";
+                }
+            });
+        @endif
     });
 </script>
