@@ -313,26 +313,26 @@ public function derivarDirector($id)
     try {
         DB::connection('mysql_documentario')->beginTransaction();
 
-        $idDirector = 7; 
+        $idDirector = 7;
         $idMesaPartes = 24;
-        $idTipoFUT = 1; 
+        $idTipoFUT = 1;
 
-       
+
         $docOriginal = DB::connection('mysql_documentario')->table('documentos')
             ->where('iddocumentos', $id)
             ->first();
 
-    
+
         $queryUltimo = DB::connection('mysql_documentario')->table('documentos')
             ->where('emisor', $idMesaPartes)
             ->where('est_firma', 0);
 
         if ($docOriginal->idtipo_documento == $idTipoFUT) {
-          
+
             $ultimoExpediente = $queryUltimo->where('idtipo_documento', $idTipoFUT)
                 ->max('numero_de_exp');
         } else {
-            
+
             $ultimoExpediente = $queryUltimo->where('idtipo_documento', '!=', $idTipoFUT)
                 ->max('numero_de_exp');
         }
@@ -348,28 +348,28 @@ public function derivarDirector($id)
             'idusuario'               => Auth::id(),
             'iddetalle_tramite'       => $docOriginal->iddetalle_tramite,
             'recomendacion'           => "Derivado por Mesa de Partes: " . $docOriginal->recomendacion,
-            'iddocumento_referencia'  => $id, 
+            'iddocumento_referencia'  => $id,
             'folio'                   => $docOriginal->folio,
-            'est_firma'               => 0, 
+            'est_firma'               => 0,
         ]);
 
-       
+
         DB::connection('mysql_documentario')->table('movimiento')
             ->where('iddocumentos', $id)
             ->where('iddependencias_receptor', $idMesaPartes)
             ->where('idestado', 2)
             ->update([
-                'idestado' => 3, 
+                'idestado' => 3,
                 'fecha_finalizacion' => now()
             ]);
 
-       
+
         DB::connection('mysql_documentario')->table('movimiento')->insert([
             'iddocumentos'            => $nuevoIdDoc,
             'iddependencias_emior'    => $idMesaPartes,
-            'iddependencias_receptor' => $idDirector, 
+            'iddependencias_receptor' => $idDirector,
             'fecha_de_envio'          => now(),
-            'idestado'                => 1 
+            'idestado'                => 1
         ]);
 
          $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
@@ -380,7 +380,7 @@ public function derivarDirector($id)
                                         GROUP BY estado.idestado;', [$idDirector]);
 
         DB::connection('mysql_documentario')->commit();
-        
+
         $tipoMsj = ($docOriginal->idtipo_documento == $idTipoFUT) ? "FUT" : "General";
         event(new DocumentoRecibido($idDirector, $cont_estados,'dependencia'));
         return back()->with('success', "Derivado con éxito. Nuevo Exp. $tipoMsj: $nuevoExpediente");
