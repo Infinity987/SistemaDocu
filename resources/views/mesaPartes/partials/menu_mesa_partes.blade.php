@@ -115,7 +115,7 @@
                         <div class="modal-dialog modal-lg" role="document">
                             <div class="modal-content">
                                 <div class="modal-header"
-                                    style="background: linear-gradient(135deg, #924900, #d49d5e); ">
+                                    style="background: linear-gradient(135deg, #663300, #fac88e); ">
                                     <h5 class="modal-title" id="exampleModalCenter_mTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
                                         registro - RECEPCIONAR</h5>
@@ -453,8 +453,8 @@
             <!-- tabla documentos -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-danger card-outline">
-                        <div class="card-header" style="background-color: #eeeeee">
+                    <div class="card card-info card-outline">
+                        <div class="card-header" style="background-color: #e6efee">
                             <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <strong>Tabla
                                     documentos recepcionados</strong></h3>
                         </div>
@@ -470,7 +470,8 @@
                                                 <th style="width: 10%; text-align: center;">Fecha y hora</th>
                                                 <th style="width: 5%; text-align: center;">Tipo</th>
                                                 <th style="width: 40%; text-align: center;">Asunto</th>
-                                                <th style="width: 10%; text-align: center;">Dependencia</th>
+                                                <th style="width: 10%; text-align: center;">Para Dependencia</th>
+                                                <th style="width: 10%; text-align: center;">Para Usuario</th>
                                                 <th style="width: 8%; text-align: center;">Acciones</th>
                                             </tr>
                                         </thead>
@@ -501,7 +502,7 @@
                         <div class="modal-dialog modal-lg" role="document">
                             <div class="modal-content">
                                 <div class="modal-header"
-                                    style="background: linear-gradient(135deg, #736001, #e6b884);">
+                                    style="background: linear-gradient(135deg, #705d00, #ffe5c7);">
                                     <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
                                         registro - DE LA OFICINA</h5>
@@ -803,8 +804,8 @@
             <!-- tabla documentos -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-danger card-outline shadow">
-                        <div class="card-header border-0" style="background-color: #dddddd">
+                    <div class="card card-success card-outline shadow">
+                        <div class="card-header border-0" style="background-color: #e3efdf">
                             <h3 class="card-title">
                                 <i class="fas fa-folder-open mr-2 text-danger"></i>
                                 <strong>Listado de Documentos Emitidos</strong>
@@ -820,8 +821,8 @@
                                             <th class="text-center py-2">Cont.</th>
                                             <th class="py-2">Fecha y Hora</th>
                                             <th class="py-2">Asunto</th>
-                                            <th class="py-2">Dependencia</th>
-                                            <th class="py-2">Persona</th>
+                                            <th class="py-2">Para Dependencia:</th>
+                                            <th class="py-2">Para usuario:</th>
                                             <th class="text-center py-2">Acciones</th>
                                         </tr>
                                     </thead>
@@ -842,25 +843,6 @@
         $(document).ready(function() {
             cargarTabla_m(1);
             $('.tipo-btn_m[data-tipo_m="1"]').click();
-
-            // $('.tipo-btn_m').on('click', function() {
-            //     let tipo = $(this).data('tipo');
-            //     if (tipoActivo === tipo) return; // si ya está activo, no hace nada
-            //     tipoActivo = tipo;
-
-            //     // Resetear todos los botones
-            //     $('.tipo-btn_m')
-            //         .removeClass('bg-gradient-primary')
-            //         .addClass('bg-gradient-info')
-            //         .removeClass('active');
-
-            //     // Activar el botón presionado
-            //     $(this)
-            //         .removeClass('bg-gradient-info')
-            //         .addClass('bg-gradient-primary')
-            //         .addClass('active');
-            //     cargarTabla(tipo);
-            // });
 
             // Escuchar el cambio en el tipo de remitente
             $('#tipo_remitente_m').on('change', function() {
@@ -1131,8 +1113,6 @@
                 }
             });
         });
-
-        // $('#tipo_documento_m').change(traer_num_expe_m);
 
         $('.tipo-btn_m').on('click', function() {
             let tipo = $(this).data('tipo_m');
@@ -1507,6 +1487,17 @@
                         }
                     },
                     {
+                        data: "nombre",
+                        name: 'nombre',
+                        render: function(data, type, row) {
+                            if (data != null) {
+                                return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                            } else {
+                                return '<p> <i class="fa-solid fa-calendar-days"></i> ---- </p>';
+                            }
+                        }
+                    },
+                    {
                         data: "btn",
                         searchable: false
                     }
@@ -1582,6 +1573,13 @@
                     },
                     {
                         targets: 6,
+                        width: "40%",
+                        createdCell: function(td, cellData) {
+                            $(td).css('background-color', '#f19e402f');
+                        }
+                    },
+                    {
+                        targets: 7,
                         width: "8%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
@@ -1670,6 +1668,7 @@
         });
 
         function limpiarFormularioMP() {
+            $('#form_regis_doc_m button[type="submit"]').prop('disabled', false);
             $('#form_regis_doc_m')[0].reset();
             $('#datatablesSimple_m').DataTable().ajax.reload();
 
