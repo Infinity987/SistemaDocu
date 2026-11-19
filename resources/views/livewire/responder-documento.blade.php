@@ -419,11 +419,9 @@
 </div>
 
 
-
-
 <script>
     document.addEventListener('livewire:initialized', () => {
-        // 1. Lógica de TomSelect (tu código original, se mantiene)
+        // 1. Lógica de TomSelect (se mantiene igual)
         const initTomSelect = () => {
             const elTipoDoc = document.getElementById('selectTipoDocumento');
             if (elTipoDoc && !elTipoDoc.tomselect) {
@@ -456,30 +454,34 @@
             });
         });
 
-        // 2. ✅ NUEVO: Detectar si viene el mensaje de error de "Jefes" desde Laravel
-        @if (session()->has('error_jefe'))
-            Swal.fire({
-                icon: 'warning', // Icono de advertencia (amarillo/naranja)
-                title: '⚠️ Envío Bloqueado por Seguridad',
-                html: `
-                    <div class="text-start">
-                        <p class="mb-2">{{ session('error_jefe') }}</p>
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
-                            El documento NO se ha guardado para evitar inconsistencias en el sistema.
-                        </small>
-                    </div>
-                `,
-                confirmButtonText: 'Entendido, volver a la bandeja',
-                confirmButtonColor: '#0d6efd', // Color primary de Bootstrap
-                allowOutsideClick: false, // Obliga a hacer clic en el botón
-                allowEscapeKey: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Redirigir a la bandeja después de que el usuario acepte
-                    window.location.href = "{{ route('documentario.mesapar.bandeja') }}";
-                }
-            });
-        @endif
+        
+</script>
+
+@script
+<script>
+    // Escuchamos el evento que lanzamos desde el PHP
+    $wire.on('mostrarAlertaJefe', (event) => {
+        Swal.fire({
+            icon: 'warning',
+            title: '⚠️ Envío Bloqueado por Seguridad',
+            html: `
+                <div class="text-start">
+                    <p class="mb-2">${event.mensaje}</p>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        El documento NO se ha guardado para evitar inconsistencias en el sistema.
+                    </small>
+                </div>
+            `,
+            confirmButtonText: 'Entendido, volver a la bandeja',
+            confirmButtonColor: '#0d6efd',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{{ route('documentario.mesapar.bandeja') }}";
+            }
+        });
     });
 </script>
+@endscript

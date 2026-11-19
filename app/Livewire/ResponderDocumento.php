@@ -51,6 +51,7 @@ public $agregarReferencia = false;
     public $resultadosEgresados = [];
     public $egresados_seleccionados = [];
     public $egresadosSeleccionadosInfo = [];
+public $mensajeErrorJefe = null;
 
   public function updated($property, $value)
     {
@@ -248,15 +249,15 @@ public function buscarDocentes()
                 ->where('estado', 1)       
                 ->count();
 
-                            if ($jefesCount === 0) {
-                    session()->flash('error_jefe', "No se puede enviar el documento. La dependencia '{$nombreDependencia}' NO tiene un jefe activo asignado. Por favor, regularice esto en el módulo de usuarios.");
-                    return; 
-                }
+             if ($jefesCount === 0) {
+                $this->dispatch('mostrarAlertaJefe', mensaje: "No se puede enviar el documento. La dependencia '{$nombreDependencia}' NO tiene un jefe activo asignado. Por favor, regularice esto en el módulo de usuarios.");
+                return; 
+            }
 
-                if ($jefesCount > 1) {
-                    session()->flash('error_jefe', "Envío bloqueado por seguridad. La dependencia '{$nombreDependencia}' tiene MÚLTIPLES jefes activos. El sistema no puede determinar a quién dirigir el documento hasta que se regularice.");
-                    return; 
-                }
+            if ($jefesCount > 1) {
+                $this->dispatch('mostrarAlertaJefe', mensaje: "Envío bloqueado por seguridad. La dependencia '{$nombreDependencia}' tiene MÚLTIPLES jefes activos. El sistema no puede determinar a quién dirigir el documento hasta que se regularice.");
+                return; 
+            }
         }
 
         // 3. Si llegamos aquí, todo está correcto. Iniciamos la transacción ESPECÍFICA
