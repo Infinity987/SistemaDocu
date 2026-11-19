@@ -115,7 +115,7 @@
                         <div class="modal-dialog modal-lg" role="document">
                             <div class="modal-content">
                                 <div class="modal-header"
-                                    style="background: linear-gradient(135deg, #663300, #fac88e); ">
+                                    style="background: linear-gradient(135deg, #006666, #8ee4fa); ">
                                     <h5 class="modal-title" id="exampleModalCenter_mTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
                                         registro - RECEPCIONAR</h5>
@@ -127,7 +127,7 @@
                                 <form action="{{ route('documentario.registrarDocu_m') }}" method="post"
                                     id="form_regis_doc_m" enctype="multipart/form-data">
                                     @csrf
-                                    <div class="modal-body">
+                                    <div class="modal-body" style="background: linear-gradient(135deg, #c4ffff, #f2f2f2); ">
                                         <input type="hidden" name="est_firma" value="0">
                                         <div class="container-fluid">
                                             <div class="row">
