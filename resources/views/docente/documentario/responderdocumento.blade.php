@@ -3,37 +3,37 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-
-
-    <div class="callout callout-danger">
-        <section class="content-header p-0">
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-sm-6">
-                        <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-inbox"></i> - Formulario de respuesta DOCENTE</h1>
-                        </h1>
+    @canany(['documentario.mesapar.index', 'alumno.matricula.index', 'docente.index'])
+        <div class="callout callout-danger">
+            <section class="content-header p-0">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-inbox"></i> - Formulario de respuesta DOCENTE
+                            </h1>
+                            </h1>
+                        </div>
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item active">inicio</li>
+                            </ol>
+                        </div>
                     </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item active">inicio</li>
-                        </ol>
-                    </div>
-                </div>
-            </div><!-- /.container-fluid -->
-        </section>
-    </div>
-
+                </div><!-- /.container-fluid -->
+            </section>
+        </div>
+    @endcanany
 @stop
 
 @section('content')
-    @livewire('responder-documento-docen', [
-        'documento' => $documento,
-        'dependencias' => $dependencias,
-        'detalledocumento' => $detalledocumento,
-        'id_depen' => $depen,
-    ])
-
-
+    @canany(['documentario.mesapar.index', 'alumno.matricula.index', 'docente.index'])
+        @livewire('responder-documento-docen', [
+            'documento' => $documento,
+            'dependencias' => $dependencias,
+            'detalledocumento' => $detalledocumento,
+            'id_depen' => $depen,
+        ])
+    @endcanany
 @stop
 
 @section('css')
