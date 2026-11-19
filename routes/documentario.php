@@ -13,6 +13,7 @@ use App\Http\Controllers\documentario\searchDocu;
 use App\Http\Controllers\documentario\reportes;
 use App\Http\Controllers\documentario\enviardocumentos;
 use App\Http\Controllers\documentario\pagos;
+use App\Http\Controllers\documentario\resoluciones;
 
 
 Route::resource('users', UserController::class)->names('admin.users');
@@ -68,5 +69,8 @@ Route::get('/preview-pdf/{filename}', function ($filename) {
 })->name('pdf.preview')->middleware('auth');
 // pagos ver
 route::get('/pagos', [pagos::class, 'index'])->name('pagos.index');
+//resoluciones
+route::get('/resoluciones', [resoluciones::class, 'index'])->name('resoluciones.index');
+Route::get('/resoluciones/generar/{id_proyecto}', [resoluciones::class, 'generarWord'])->name('resoluciones.generar');
 
 
