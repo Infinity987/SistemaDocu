@@ -16,19 +16,19 @@
     <div class="wrapper">
 
         {{-- Preloader Animation (fullscreen mode) --}}
-        @if($preloaderHelper->isPreloaderEnabled())
+        @if ($preloaderHelper->isPreloaderEnabled())
             @include('adminlte::partials.common.preloader')
         @endif
 
         {{-- Top Navbar --}}
-        @if($layoutHelper->isLayoutTopnavEnabled())
+        @if ($layoutHelper->isLayoutTopnavEnabled())
             @include('adminlte::partials.navbar.navbar-layout-topnav')
         @else
             @include('adminlte::partials.navbar.navbar')
         @endif
 
         {{-- Left Main Sidebar --}}
-        @if(!$layoutHelper->isLayoutTopnavEnabled())
+        @if (!$layoutHelper->isLayoutTopnavEnabled())
             @include('adminlte::partials.sidebar.left-sidebar')
         @endif
 
@@ -45,7 +45,7 @@
         @endif
 
         {{-- Right Control Sidebar --}}
-        @if($layoutHelper->isRightSidebarEnabled())
+        @if ($layoutHelper->isRightSidebarEnabled())
             @include('adminlte::partials.sidebar.right-sidebar')
         @endif
 
@@ -55,4 +55,198 @@
 @section('adminlte_js')
     @stack('js')
     @yield('js')
+
+    @vite('resources/js/app.js')
+
+    {{-- Script Global de Notificaciones en Tiempo Real --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Verificamos que el usuario esté autenticado para evitar errores
+            const userId = "{{ auth()->id() }}";
+            const depenId = "{{ session('dependencia_id') }}";
+            const activeRole = "{{ session('active_role_name') }}";
+            console.log(depenId);
+
+            if (!userId || typeof Echo === 'undefined') return;
+
+            const notificationSound = new Audio('{{ asset('sound/noti.mp3') }}');
+            const notificationSoundNoEdit = new Audio('{{ asset('sound/alert.mp3') }}');
+
+            const procesarNotificacion = (e) => {
+                // 1. Sonido
+                notificationSound.play().catch(err => console.log("Audio en espera de interacción"));
+
+                // 2. Alerta Visual (SweetAlert2)
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+
+                Toast.fire({
+                    icon: "info",
+                    title: "Nuevo documento recibido",
+                    text: e.message || "Revisa tu bandeja de entrada"
+                });
+
+                // 3. Actualizar el Badge del Navbar dinámicamente
+                // e.cont_estados[0] suele ser el estado 'Pendiente'
+                $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
+                    .cont_estados[0].cont_estado);
+                $('#noti-count').text(e.cont_estados[0].cont_estado == 0 ? '' : e
+                    .cont_estados[0].cont_estado + ' notificaciones ..');
+                $('#badgeNotificaciones1').text(e.cont_estados[0].cont_estado == 0 ?
+                    '' : e.cont_estados[0]
+                    .cont_estado);
+                $('#badgeNotificaciones2').text(e.cont_estados[1].cont_estado == 0 ?
+                    '' : e.cont_estados[1]
+                    .cont_estado);
+                $('#badgeNotificaciones3').text(e.cont_estados[2].cont_estado == 0 ?
+                    '' : e.cont_estados[2]
+                    .cont_estado);
+                // $('#badgeVerde').text(e.cont_fechas[0].verde);
+                // $('#badgeAmarillo').text(e.cont_fechas[0].amarillo);
+                // $('#badgeRojo').text(e.cont_fechas[0].rojo);
+                if ($.fn.DataTable.isDataTable('#datatablesS')) {
+                    console.log('Recargando DataTable...');
+                    $('#datatablesS').DataTable().ajax.reload(null, false);
+                    // El 'false' es para que no se resetee la paginación al recargar
+                }
+            };
+
+            const procesarNotificacionNoEditar = (e) => {
+                notificationSoundNoEdit.play().catch(err => console.log("Audio en espera de interacción"));
+
+                Swal.fire({
+                    icon: "info",
+                    title: "ALERTA!",
+                    text: e.message + ' ' + e.iddocument ||
+                        "Este documento ya fue recepcionado, no se puede editar .... ----",
+                    confirmButtonText: "Aceptar",
+                    customClass: {
+                        popup: 'swal-large'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = window.location.href;
+                    }
+                });
+            };
+
+            if (["2", "4", "5"].includes(depenId)) {
+                // Si es Docente (2), Alumno (4) o Egresado (5):
+                // SOLO solicita unirse al canal individual
+                // Echo.private(`App.Models.User.${userId}`)
+                //     .listen('NuevoDocumentoEvent', (e) => {
+                //         console.log('Notificación personal recibida:', e);
+                //     });
+                console.log('indi');
+
+                Echo.private('App.Models.User.' + userId)
+                    .listen('.DocumentoRecibido', (e) => {
+                        console.log('Notificación personal recibida');
+                        procesarNotificacion(e);
+                        console.log('indi 1');
+                    });
+
+
+
+                Echo.private('App.Models.User.' + userId)
+                    .listen('.noEditarDocumento', (e) => {
+                        console.log('aquii 111');
+                        if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                            console.log('Recargando DataTable...////');
+                            $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                            // El 'false' es para que no se resetee la paginación al recargar
+                        } else {
+                            console.log('Recargando DataTable...////22222');
+                            procesarNotificacionNoEditar(e);
+                        }
+                        console.log('indi 2');
+                    });
+
+                Echo.private('App.Models.User.' + userId)
+                    .listen('.editarDocumento', (e) => {
+                        console.log('Notificación de oficina recibida ------- d');
+                        procesarNotificacion(e);
+                        console.log('indi 3');
+                    });
+
+
+            } else {
+                // Si es cualquier otra dependencia administrativa:
+                // SOLO solicita unirse al canal por dependencia
+                // Echo.private(`dependencia.${dependenciaId}`)
+                //     .listen('NuevoDocumentoEvent', (e) => {
+                //         console.log('Notificación de dependencia recibida:', e);
+                //     });
+                console.log('depen--');
+                Echo.private('dependencia.' + depenId)
+                    .listen('.DocumentoRecibido', (e) => {
+                        console.log('Notificación de oficina recibida');
+                        procesarNotificacion(e);
+                    });
+
+                Echo.private('dependencia.' + depenId)
+                    .listen('.noEditarDocumento', (e) => {
+                        const documentoEnEdicionId = $('#current_document_id').val();
+
+                        if (documentoEnEdicionId && String(e.iddocument) === String(documentoEnEdicionId)) {
+                            console.log('¡El documento actual fue recepcionado por otra dependencia!');
+                            // Verificamos si hay DataTable o ejecutamos directamente la alerta
+                                                    console.log('01');
+                            if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                                                        console.log('02');
+                                $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                                $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+
+                            } else {
+                                procesarNotificacionNoEditar(e);
+                                                        console.log('03');
+                            }
+                        } else {
+                                                    console.log('04');
+                            console.log('El evento es para otro documento. Ignorando alerta...');
+
+                            // Opcional: Si estás en una lista (DataTable general) y quieres que se actualice la tabla
+                            // sin bloquear al usuario que edita otro documento, puedes recargar el DataTable aquí:
+                            if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                                $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                                $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+                            }
+                            if ($.fn.DataTable.isDataTable('#datatablesS')) {
+                                window.location.href = window.location.href;
+                                // $('#datatablesS').DataTable().ajax.reload(null, false);
+                            }
+                        }
+                        // if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                        //     console.log('Recargando DataTable...222');
+                        //     $('#datatablesSimple').DataTable().ajax.reload(null, false);
+                        //     $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+                        //     // El 'false' es para que no se resetee la paginación al recargar
+                        // } else {
+                        //     console.log('NO --- Recargando DataTable...');
+                        //     procesarNotificacionNoEditar(e);
+                        // }
+                    });
+                Echo.private('dependencia.' + depenId)
+                    .listen('.editarDocumento', (e) => {
+                        console.log('Notificación de oficina recibida -------');
+                        procesarNotificacion(e);
+                    });
+
+            }
+
+            // --- CANAL PERSONAL (Docente, Alumno, etc) ---
+
+
+            // --- CANAL DE DEPENDENCIA (Oficinas) ---
+            // Solo escuchamos si el rol activo es de oficina
+            if (depenId && !['docente', 'alumno', 'egresado', 'postulante'].includes(activeRole)) {
+
+            }
+        });
+    </script>
 @stop

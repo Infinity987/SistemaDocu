@@ -47,32 +47,26 @@ class UserController extends Controller
             ->first();
 
         $roles = Role::all();
-        return view('admin.users.edit', compact('use', 'roles', 'nom_usu'));
+
+        $tiposUsuario = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('user_id', $user)
+            ->where('estado', 1)
+            ->pluck('tipo_usuario', 'dependencia_id');
+
+        return view('admin.users.edit', compact('use', 'roles', 'nom_usu', 'tiposUsuario'));
     }
 
     public function update(Request $request, User $user)
     {
-        // if (is_array($request->roles) && in_array(2, $request->roles)) {
-        //     $search_doce = DB::connection('mysql_segunda')->table('docente')->where('id_users', '=', $user->id)->exists();
-        //     if (!$search_doce) {
-        //         $insert_tabla_doce = DB::connection('mysql_segunda')->table('docente')->insert([
-        //             'especialidad' => 'docente',
-        //             'estado' => 1,
-        //             'id_users' => $user->id,
-        //         ]);
-        //     }
-        // }
-
-        // $user->roles()->Sync($request->roles);
-        // return redirect()->route('admin.users.edit', $user)->with('info', 'Se asignó los roles');
-
+        // dd($request);
         $user->roles()->Sync($request->roles);
         $verTodasDepenUsu = DB::connection('mysql_documentario')->table('dependencia_user')
-            ->select('dependencia_id', 'estado')
+            ->select('dependencia_id', 'estado', 'tipo_usuario')
             ->where('user_id', $user->id)
             ->Where('estado', 1)
             ->get();
         $actuales = $verTodasDepenUsu->pluck('dependencia_id')->map(fn($id) => (string) $id)->toArray();
+        // dd($actuales);
 
         if (empty($request->roles)) {
             foreach ($actuales as $actu) {
@@ -92,6 +86,17 @@ class UserController extends Controller
                         'estado' => 1
                     ]);
                 }
+
+                $buscar_existe_doce = DB::connection('mysql_segunda')->table('docente')->where('id_users', '=', $user->id)->exists();
+
+                if (!$buscar_existe_doce) {
+                    DB::connection('mysql_segunda')->table('docente')->insert([
+                        'especialidad' => 'docente',
+                        'estado' => 1,
+                        'id_users' => $user->id
+                    ]);
+                }
+                // dd($buscar_existe_doce);
             } else {
                 if (!empty($agregados)) {
                     foreach ($agregados as $agrega_depen) {
@@ -106,11 +111,28 @@ class UserController extends Controller
                 foreach ($faltantes as $quitd) {
                     $update_cero = DB::connection('mysql_documentario')->update('UPDATE dependencia_user SET updated_at = ?, estado = ? WHERE user_id = ? AND dependencia_id = ? AND estado = ?', [now(), 0, $user->id, $quitd, 1]);
                 }
+                // dd('aquiddddd_ddd');
+
             }
         }
+
+        $tipos = $request->input('tipo_usuario', []);
+        foreach ($request->roles ?? [] as $rolId) {
+            DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('user_id', $user->id)
+                ->where('dependencia_id', $rolId)
+                ->where('estado', 1)
+                ->update([
+                    'tipo_usuario' => (int) ($tipos[$rolId] ?? 1),
+                    'updated_at'   => now(),
+                ]);
+        }
+
+
+        $user->touch();
         // dump("----------------------------------");
         // dd('pause');
 
-        return redirect()->route('admin.users.edit', $user)->with('info', 'Se asignó los roles');
+        return redirect()->route('admin.users.edit', $user)->with('info', 'Se asignó los roles ...');
     }
 }

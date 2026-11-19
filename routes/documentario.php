@@ -14,13 +14,15 @@ use App\Http\Controllers\documentario\reportes;
 use App\Http\Controllers\documentario\enviardocumentos;
 use App\Http\Controllers\documentario\pagos;
 use App\Http\Controllers\documentario\resoluciones;
+use App\Http\Controllers\Admin\OficinaController;
+use App\Http\Controllers\ReporteUsuariosController;
 
 
 Route::resource('users', UserController::class)->names('admin.users');
 route::post('/admin/registerUser', [RegisterController::class, 'register'])->name('admin.registerUser');
 
 route::get('/Docu', [mesaPartes::class, 'index'])->name('mesapar.index');
-route::get('/Docu/num_tipo_documento_expe/{idtipo_docu}/{emisor}', [mesaPartes::class, 'num_tipo_documento_expe'])->name('num_tipo_documento_expe'); //trae el ultimo id del ducu, para sumarlo
+route::get('/Docu/num_tipo_documento_expe/{idtipo_docu}/{emisor}/{iddocumento?}', [mesaPartes::class, 'num_tipo_documento_expe'])->name('num_tipo_documento_expe'); //trae el ultimo id del ducu, para sumarlo
 route::get('/Docu/num_tipo_documento_expe_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'num_tipo_documento_expe_m'])->name('num_tipo_documento_expe_m'); //trae el ultimo id del ducu, PARA MESA DE PARTES
 route::get('/buscarUsuario', [mesaPartes::class, 'buscarUsuario'])->name('buscarUsuario');
 Route::post('/docu/generar-word', [mesaPartes::class, 'generarWordBorrador'])->name('mesaPartes.word');
@@ -29,9 +31,12 @@ route::post('/Docu/registrarDocu_m', [mesaPartes::class, 'registrarDocu_m'])->na
 route::get('/Docu/emitidos/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos'])->name('mesapar.emitidos');
 route::get('/Docu/emitidos_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'emitidos_m'])->name('mesapar.emitidos_m');
 route::get('/Docu/showEmitido/{id}', [mesaPartes::class, 'showEmitido'])->name('mesapar.showEmitido');
-route::post('/Docu/updateDocuEmi', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
+route::post('/Docu/updateDocuEmi/{iddocumentos}', [mesaPartes::class, 'updateDocuEmi'])->name('mesapar.updateDocuEmi');
 route::get('/traerDepen', [mesaPartes::class, 'traerDepen'])->name('traerDepen');
+route::get('/traerDepen_m', [mesaPartes::class, 'traerDepen_m'])->name('traerDepen_m');
 route::get('/buscarDocentes', [mesaPartes::class, 'buscarDocentes'])->name('buscarDocentes');
+route::get('/buscarEgresados', [mesaPartes::class, 'buscarEgresados'])->name('buscarEgresados');
+Route::get('/documentario/buscar-alumnos', [mesaPartes::class, 'buscarAlumnos'])->name('buscarAlumnos');
 Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware('auth')->name('buscarEntidad');
 route::post('/enviardocumentos/responder', [enviardocumentos::class, 'responder'])->name('enviardocumentos.responder');
 route::post('/enviardocumentos/responderoficinas', [enviardocumentos::class, 'responderoficinas'])->name('enviardocumentos.responderoficinas');
@@ -44,7 +49,7 @@ Route::post('/enviardocumentos/generar-pdf', [enviardocumentos::class, 'generarP
 
 route::get('/bandeja', [bandeja::class, 'index'])->name('mesapar.bandeja');
 route::get('/bandeja/{idtipo_estado}/{emisor}', [bandeja::class, 'bandejaEstado'])->name('bandeja.bandejaEstado');
-route::get('/bandeja/recibir/{idtipo_estado}/{iddocument}/{iddependencias_receptor}', [bandeja::class, 'bandejaEstado_upda'])->name('bandeja.recibir');
+route::get('/bandeja/recibir/{idtipo_estado}/{iddocument}/{movimient}/{iddependencias_emior}', [bandeja::class, 'bandejaEstado_upda'])->name('bandeja.recibir');
 
 route::get('/searchDocu', [searchDocu::class, 'index'])->name('searchDocu.index');
 route::get('/searchDocu/search', [searchDocu::class, 'search'])->name('searchDocu.numex');
@@ -72,5 +77,9 @@ route::get('/pagos', [pagos::class, 'index'])->name('pagos.index');
 //resoluciones
 route::get('/resoluciones', [resoluciones::class, 'index'])->name('resoluciones.index');
 Route::get('/resoluciones/generar/{id_proyecto}', [resoluciones::class, 'generarWord'])->name('resoluciones.generar');
+Route::resource('oficinas', OficinaController::class)->names('admin.oficinas');
+
+Route::get('/admin/usuarios-activos', [ReporteUsuariosController::class, 'index'])->name('usuarios_activos');
+// Route::get('/buscarPersonalPorDependencia/{id_dependencia}', [mesaPartes::class, 'buscarPersonalPorDependencia'])->name('documentario.buscarPersonalDependencia');
 
 

@@ -330,11 +330,24 @@ return [
             'can' => 'rol-admin',
         ],
         [
+            'text' => 'Oficinas',
+            'route' => 'roles.index',
+            'icon' => 'fas fa-fw fa-building',
+            'active' => ['admin/roles*'],
+            'can' => 'rol-admin',
+        ],
+        [
             'text' => 'Docentes y Usuarios',
             'route' => 'admin.users.index',
             'icon' => 'fas fa-fw fa-user',
             'active' => ['admin/users*'],
-            'can' => 'rol-admin'
+            'can' => 'rol-admin',
+        ],
+        [
+            'text' => 'Reporte Usuarios',
+            'route' => 'documentario.usuarios_activos',
+            'icon' => 'fas fa-users-cog',
+            'can' => 'rol-admin',
         ],
         [
             'text' => 'Encargados',
@@ -448,8 +461,6 @@ return [
                     'icon' => 'fas fa-bars',
                     'can' => 'rol-admision'
                 ],
-
-
             ],
         ],
         [
@@ -544,6 +555,29 @@ return [
                 ],
             ]
         ],
+        ['header' => 'SECCION DOCUMENTARIO -', 'can' => 'rol-alumno'],
+
+        [
+            'text' => 'Registrar Documentos',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['documentario/Docu*'],
+            'can' => 'rol-alumno'
+        ],
+        [
+            'text' => 'Bandeja -',
+            'route' => 'documentario.mesapar.bandeja',
+            'icon' => 'fas fa-inbox',
+            'active' => ['documentario/recibidos*'],
+            'can' => 'rol-alumno'
+        ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['documentario/searchDocu*'],
+            'can' => 'rol-alumno'
+        ],
 
         // INICIO ROL DOCENTE
         ['header' => 'DOCENTE', 'can' => 'rol-docente'],
@@ -569,19 +603,48 @@ return [
             'can' => 'rol-docente',
         ],
         ['header' => 'SECCION DOCUMENTARIO', 'can' => 'rol-docente'],
+        // [
+        //     'text' => 'Crear',
+        //     'route' => 'docente.creardocu',
+        //     'icon' => 'fas fa-clipboard',
+        //     'active' => ['docente/Docu-docente*'],
+        //     'can' => 'rol-docente',
+        // ],
+        // [
+        //     'text' => 'Bandeja',
+        //     'route' => 'docente.bandejaDoce',
+        //     'icon' => 'fas fa-inbox',
+        //     'active' => ['docente/Bandeja-docente*'],
+        //     'can' => 'rol-docente',
+        // ],
+        // [
+        //     'text' => 'Buscar',
+        //     'route' => 'documentario.searchDocu.index',
+        //     'icon' => 'fas fa-search',
+        //     'active' => ['docente/searchDocu*'],
+        //     'can' => 'rol-docente'
+        // ],
+
         [
-            'text' => 'Crear',
-            'route' => 'docente.creardocu',
-            'icon' => 'fas fa-clipboard',
-            'active' => ['docente/Docu-docente*'],
-            'can' => 'rol-docente',
+            'text' => 'Registrar Documentos',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['admin/Docu*'],
+            'can' => 'rol-docente'
         ],
         [
             'text' => 'Bandeja',
-            'route' => 'docente.bandejaDoce',
+            'route' => 'documentario.mesapar.bandeja',
             'icon' => 'fas fa-inbox',
-            'active' => ['docente/Bandeja-docente*'],
-            'can' => 'rol-docente',
+            'active' => ['admin/recibidos*'],
+            'can' => 'rol-docente'
+        ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['admin/searchDocu*'],
+            'can' => 'rol-docente'
         ],
         // FIN ROL DOCENTE
 
@@ -594,31 +657,31 @@ return [
             'text' => 'Crear',
             'route' => 'documentario.mesapar.index',
             'icon' => 'fas fa-fw fa-user',
-            'active' => ['admin/Docu*'],
+            'active' => ['documentario/Docu*'],
             'can' => 'rol-documentario'
         ],
         [
             'text' => 'Bandeja',
             'route' => 'documentario.mesapar.bandeja',
             'icon' => 'fas fa-inbox',
-            'active' => ['admin/recibidos*'],
+            'active' => ['documentario/recibidos*'],
             'can' => 'rol-documentario'
         ],
         [
             'text' => 'Buscar',
             'route' => 'documentario.searchDocu.index',
             'icon' => 'fas fa-search',
-            'active' => ['admin/searchDocu*'],
+            'active' => ['documentario/searchDocu*'],
             'can' => 'rol-documentario'
         ],
-         [
+        [
             'text' => 'PAGOS',
             'route' => 'documentario.pagos.index',
             'icon' => 'fas fa-search',
             'active' => ['admin/pagos*'],
             'can' => 'rol-documentario'
         ],
-[
+        [
             'text' => 'RESOLUCIONES',
             'route' => 'documentario.resoluciones.index',
             'icon' => 'fas fa-search',
@@ -638,13 +701,33 @@ return [
         ],
         // FIN TRAMITE DOCUMENTARIO
 
-
-
-
-
-
         ['header' => 'ALUMNO', 'can' => 'alumno.index',],
-        ['header' => 'EGRESADO', 'can' => 'egresado.index',],
+        ['header' => 'EGRESADO-', 'can' => 'egresado.index',],
+
+        // INICIO TRAMITE DE EGRESADO
+        [
+            'text' => 'Registrar Documentos',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['admin/Docu*'],
+            'can' => 'egresado.index'
+        ],
+        [
+            'text' => 'Bandeja',
+            'route' => 'documentario.mesapar.bandeja',
+            'icon' => 'fas fa-inbox',
+            'active' => ['admin/recibidos*'],
+            'can' => 'egresado.index'
+        ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['admin/searchDocu*'],
+            'can' => 'egresado.index'
+        ],
+        // FIN TRAMITE DE EGRESADO
+
         // [
         //     'text' => 'contraseña',
         //     'url' => 'admin/settings',

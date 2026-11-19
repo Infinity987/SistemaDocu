@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @can('documentario.mesapar.index')
+    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index', 'docente.index'])
         <div class="callout callout-danger mb-0">
             <section class="content-header p-0">
                 <div class="container-fluid">
@@ -22,11 +22,11 @@
                 </div>
             </section>
         </div>
-    @endcan
+    @endcanany
 @stop
 
 @section('content')
-    @can('documentario.mesapar.index')
+    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index', 'docente.index'])
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12 mb-1">
@@ -53,7 +53,7 @@
                                         <span
                                             class="time text-{{ $doc->idestado == 3 ? 'white' : ($doc->idestado == 2 ? 'white' : 'dark') }}">
                                             <i class="fas fa-clock"></i>
-                                            {{ $doc->fecha_finalizacion ? \Carbon\Carbon::parse($doc->fecha_finalizacion)->format('d/m/Y H:i') : '---'}}
+                                            {{ $doc->fecha_finalizacion ? \Carbon\Carbon::parse($doc->fecha_finalizacion)->format('d/m/Y H:i') : '---' }}
                                         </span>
                                         <h3
                                             class="timeline-header bg-{{ $doc->idestado == 3 ? 'success' : ($doc->idestado == 2 ? 'info' : 'warning') }}">
@@ -312,7 +312,8 @@
                                                                                                 readonly>
                                                                                         </div>
 
-                                                                                        <div class="knob-label">Dias en Pendiente
+                                                                                        <div class="knob-label">Dias en
+                                                                                            Pendiente
                                                                                         </div>
                                                                                     </div>
                                                                                     <!-- ./col -->
@@ -331,7 +332,8 @@
                                                                                                 readonly>
                                                                                         </div>
 
-                                                                                        <div class="knob-label">Dias en revisión
+                                                                                        <div class="knob-label">Dias en
+                                                                                            revisión
                                                                                         </div>
                                                                                     </div>
                                                                                     <!-- ./col -->
@@ -344,7 +346,8 @@
                                                                                                 data-width="90"
                                                                                                 data-height="90"
                                                                                                 data-fgcolor="#00c0ef"
-                                                                                                style="width: 49px; height: 30px; position: absolute; vertical-align: middle; margin-top: 30px; margin-left: -69px; border: 0px; background: none; font: bold 18px Arial; text-align: center; color: rgb(0, 192, 239); padding: 0px; appearance: none;" readonly>
+                                                                                                style="width: 49px; height: 30px; position: absolute; vertical-align: middle; margin-top: 30px; margin-left: -69px; border: 0px; background: none; font: bold 18px Arial; text-align: center; color: rgb(0, 192, 239); padding: 0px; appearance: none;"
+                                                                                                readonly>
                                                                                         </div>
 
                                                                                         <div class="knob-label">Total dias
@@ -378,7 +381,7 @@
                 </div>
             </div>
         </div>
-    @endcan
+    @endcanany
 @stop
 {{-- @vite(['resources/js/app.js']) --}}
 
@@ -405,50 +408,50 @@
     </script>
 
     <script>
-        let dependenciaId = {{ $id_depen }};
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.DocumentoRecibido', (e) => {
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: "top-end",
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.onmouseenter = Swal.stopTimer;
-                            toast.onmouseleave = Swal.resumeTimer;
-                            var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
-                            audio.play();
-                        },
-                        didClose: () => {
-                            $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-                                .cont_estados[0]
-                                .cont_estado);
-                        }
-                    });
+        // let dependenciaId = {{ $id_depen }};
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.DocumentoRecibido', (e) => {
+        //             const Toast = Swal.mixin({
+        //                 toast: true,
+        //                 position: "top-end",
+        //                 showConfirmButton: false,
+        //                 timer: 3000,
+        //                 timerProgressBar: true,
+        //                 didOpen: (toast) => {
+        //                     toast.onmouseenter = Swal.stopTimer;
+        //                     toast.onmouseleave = Swal.resumeTimer;
+        //                     var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
+        //                     audio.play();
+        //                 },
+        //                 didClose: () => {
+        //                     $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
+        //                         .cont_estados[0]
+        //                         .cont_estado);
+        //                 }
+        //             });
 
-                    Toast.fire({
-                        icon: "success",
-                        title: "Nuevo documento recibido"
-                    });
-                });
-        });
+        //             Toast.fire({
+        //                 icon: "success",
+        //                 title: "Nuevo documento recibido"
+        //             });
+        //         });
+        // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.noEditarDocumento', (e) => {
-                    $('#datatablesSimple').DataTable().ajax.reload();
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.noEditarDocumento', (e) => {
+        //             $('#datatablesSimple').DataTable().ajax.reload();
+        //         });
+        // });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            Echo.private('dependencia.' + dependenciaId)
-                .listen('.editarDocumento', (e) => {
-                    $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
-                        .cont_estado);
-                });
-        });
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     Echo.private('dependencia.' + dependenciaId)
+        //         .listen('.editarDocumento', (e) => {
+        //             $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e.cont_estados[0]
+        //                 .cont_estado);
+        //         });
+        // });
     </script>
 
     <script>

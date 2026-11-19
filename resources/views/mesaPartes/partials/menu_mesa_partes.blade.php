@@ -38,6 +38,42 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
         }
     </style>
+
+    <style>
+        /* Estilo para las celdas de ID y Expediente */
+        .id-column {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            width: 50px;
+        }
+
+        /* Badge personalizado para el expediente */
+        .badge-exp {
+            background-color: #f19e40;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* Evitar que el texto largo rompa la tabla */
+        .text-truncate-custom {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Quitar bordes internos innecesarios */
+        #datatablesSimple thead th {
+            border-bottom: 2px solid #dee2e6;
+            border-top: 0;
+        }
+
+        #datatablesSimple tbody td {
+            vertical-align: middle;
+        }
+    </style>
 @endpush
 
 <div class="container-fluid">
@@ -60,6 +96,7 @@
             border: 1px solid #ced4da;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             overflow: hidden;">
+
         <!-- crear docu RECEPCIONAR -->
         <div class="tab-pane fade show active" id="pills-general" role="tabpanel">
 
@@ -69,7 +106,7 @@
                     <!-- Button trigger modal -->
                     <button type="button" class="btn btn-success shadow-lg" data-toggle="modal"
                         data-target="#exampleModalCenter_m">
-                        <i class="fas fa-sign-in-alt"></i> Crear nuevo registro
+                        <i class="fas fa-sign-in-alt"></i> Registrar nuevo registro
                     </button>
 
                     <!-- Modal -->
@@ -81,7 +118,7 @@
                                     style="background: linear-gradient(135deg, #924900, #d49d5e); ">
                                     <h5 class="modal-title" id="exampleModalCenter_mTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
-                                        registro</h5>
+                                        registro - RECEPCIONAR</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -102,15 +139,13 @@
                                                 <div class="col-sm-4">
                                                     <div class="form-group">
                                                         <label for="tipo_documento_m">
-                                                            <i class="fas fa-file-invoice text-primary mr-1"></i> Tipo
-                                                            documento:
-                                                            <span class="text-danger">*</span>
+                                                            <i class="fas fa-file-contract text-primary"></i> Tipo
+                                                            documento: <span class="text-danger">*</span>
                                                         </label>
                                                         <select id="tipo_documento_m"
-                                                            class="form-control select2-bootstrap4"
-                                                            name="tipo_documento_m">
-                                                            <option value="0" selected disabled>Seleccione tipo
-                                                                documento ...</option>
+                                                            class="form-control select2 shadow" name="tipo_documento_m">
+                                                            <option value="0">Seleccione tipo documento ...
+                                                            </option>
                                                             @if ($rol->nombre_dependencia == 'Mesa de Partes')
                                                                 <option value="1">Fut</option>
                                                             @endif
@@ -122,8 +157,7 @@
                                                             <option value="7">Resoluciones</option>
                                                             <option value="8">Otros</option>
                                                         </select>
-                                                        <span id="tipo_documento_m_error"
-                                                            class="error invalid-feedback"></span>
+                                                        <span id="tipo_documento_m_error" class="text-danger"></span>
                                                     </div>
                                                 </div>
 
@@ -164,75 +198,79 @@
                                                 </div>
                                             </div>
 
-                                            <div class="row">
-                                                @if ($id_depen == 24)
-                                                    <div class="col-sm-4">
-                                                        <div class="form-group">
-                                                            <label><i class="fas fa-user-friends text-indigo mr-1"></i>
-                                                                Tipo de Remitente: <span
-                                                                    class="text-danger">*</span></label>
-                                                            <select id="tipo_remitente_m" name="tipo_remitente_m"
-                                                                class="form-control">
-                                                                <option value="natural">Persona Natural</option>
-                                                                <option value="juridica">Entidad Externa (Jurídica)
-                                                                </option>
-                                                            </select>
-                                                        </div>
+                                            <div class="row mb-3"
+                                                style="background: linear-gradient(90deg, #31b6f453, #31b6f415);">
+                                                <div class="col-sm-4">
+                                                    <div class="form-group">
+                                                        <label><i class="fas fa-user-friends text-indigo mr-1"></i>
+                                                            Tipo de Remitente: <span
+                                                                class="text-danger">*</span></label>
+                                                        <select id="tipo_remitente_m" name="tipo_remitente_m"
+                                                            class="form-control">
+                                                            <option value="natural">Persona Natural</option>
+                                                            <option value="juridica">Entidad Externa (Jurídica)
+                                                            </option>
+                                                        </select>
                                                     </div>
+                                                </div>
 
-                                                    <div class="col-sm-8" id="div_persona_m_natural">
-                                                        <div class="form-group">
-                                                            <label><i class="fas fa-user-circle text-olive mr-1"></i>
-                                                                Usuario / Persona Natural: <span
-                                                                    class="text-danger">*</span></label>
-                                                            <select id="usuario_m" class="form-control select2"
-                                                                name="usuario_m" style="width: 100%;"></select>
-                                                            <span id="usuario_m_error"
-                                                                class="text-danger small"></span>
-                                                        </div>
+                                                <div class="col-sm-8" id="div_persona_m_natural">
+                                                    <div class="form-group">
+                                                        <label><i class="fas fa-user-circle text-olive mr-1"></i>
+                                                            Usuario / Persona Natural: <span
+                                                                class="text-danger">*</span></label>
+                                                        <select id="usuario_m" class="form-control select2"
+                                                            name="usuario_m" style="width: 100%;"></select>
+                                                        <span id="usuario_m_error" class="text-danger small"></span>
                                                     </div>
+                                                </div>
 
-                                                    <div id="div_entidad_m_externa" class="col-sm-12"
-                                                        style="display:none;">
-                                                        <div class="card card-outline card-info shadow-sm">
-                                                            <div class="card-body p-3">
-                                                                <div class="row">
-                                                                    <div class="col-sm-6">
-                                                                        <div class="form-group">
-                                                                            <label><i
-                                                                                    class="fas fa-building text-info mr-1"></i>
-                                                                                Entidad remitente:</label>
-                                                                            <select id="entidad_m"
-                                                                                name="id_entidad_m_externa"
-                                                                                class="form-control select2"></select>
-                                                                        </div>
+                                                <div id="div_entidad_m_externa" class="col-sm-12"
+                                                    style="display:none;">
+                                                    <div class="card card-outline card-info shadow-sm">
+                                                        <div class="card-body p-3">
+                                                            <div class="row">
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-building text-info mr-1"></i>
+                                                                            Entidad remitente:</label>
+                                                                        <select id="entidad_m"
+                                                                            name="id_entidad_m_externa"
+                                                                            class="form-control select2"></select>
+                                                                        <span id="id_entidad_m_externa_error"
+                                                                            class="text-danger small"></span>
                                                                     </div>
-                                                                    <div class="col-sm-6">
-                                                                        <div class="form-group">
-                                                                            <label><i
-                                                                                    class="fas fa-id-card text-info mr-1"></i>
-                                                                                N° Documento Externo:</label>
-                                                                            <input type="text"
-                                                                                name="numero_documento_externo_m"
-                                                                                class="form-control"
-                                                                                placeholder="Ej: Oficio N.º 123-2026-MPP">
-                                                                        </div>
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-id-card text-info mr-1"></i>
+                                                                            N° Documento Externo:</label>
+                                                                        <input type="text"
+                                                                            name="numero_documento_externo_m"
+                                                                            class="form-control"
+                                                                            placeholder="Ej: Oficio N.º 123-2026-MPP">
+                                                                        <span id="numero_documento_externo_m_error"
+                                                                            class="text-danger small"></span>
                                                                     </div>
-                                                                    <div class="col-sm-12 text-right">
-                                                                        <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
-                                                                            target="_blank"
-                                                                            class="btn btn-link btn-sm text-info">
-                                                                            <i
-                                                                                class="fas fa-external-link-alt mr-1"></i>
-                                                                            Consultar RUC en SUNAT
-                                                                        </a>
-                                                                    </div>
+                                                                </div>
+                                                                <div class="col-sm-12 text-right">
+                                                                    <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
+                                                                        target="_blank"
+                                                                        class="btn btn-link btn-sm text-info">
+                                                                        <i class="fas fa-external-link-alt mr-1"></i>
+                                                                        Consultar RUC en SUNAT
+                                                                    </a>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endif
+                                                </div>
+                                            </div>
 
+                                            <div class="row mb-3"
+                                                style="background: linear-gradient(90deg, #f4b03179, #f4b03117);">
                                                 <div class="col-sm-12">
                                                     <div class="form-group">
                                                         <label for="dependencia_enviar_m">
@@ -245,6 +283,49 @@
                                                             data-placeholder="Seleccione dependencias..."></select>
                                                         <span id="dependencia_enviar_m_error"
                                                             class="text-danger small"></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_docentes_m"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-primary"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Docente(s)</label>
+                                                        <select id="docentes_select_m" class="form-control select2"
+                                                            name="docentes_especificos_m[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a docentes, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_egresados_m"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-success"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Egresado(s)</label>
+                                                        <select id="egresados_select_m" class="form-control select2"
+                                                            name="egresados_m[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a egresados, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_alumnos_m"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-primary"><i class="fas fa-book-reader"></i>
+                                                            Seleccionar Alumno(s)</label>
+                                                        <select id="alumnos_select_m" class="form-control select2"
+                                                            name="alumnos_m[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a alumnos, no se
+                                                            pueden añadir otras dependencias.</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -309,7 +390,7 @@
                                                     <div class="form-group mb-0">
                                                         <label for="archivo_pdf_m" class="mb-1"><i
                                                                 class="fas fa-file-pdf text-danger mr-1"></i> Documento
-                                                            Digital (PDF):</label>
+                                                            Digital (PDF)___---:</label>
                                                         <div class="custom-file">
                                                             <input type="file" class="custom-file-input"
                                                                 id="archivo_pdf_m" name="archivo_pdf_m"
@@ -322,13 +403,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {{-- <div class="text-center mt-4">
-                                                <button type="button" onclick="descargarWordBorrador()"
-                                                    class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                                                    <i class="fas fa-file-word mr-1"></i> Generar Borrador Word
-                                                </button>
-                                            </div> --}}
                                         </div>
                                     </div>
 
@@ -381,7 +455,8 @@
                 <div class="col-12">
                     <div class="card card-danger card-outline">
                         <div class="card-header" style="background-color: #eeeeee">
-                            <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos recepcionados</h3>
+                            <h3 class="card-title"><i class="fas fa-folder-open mr-2 text-danger"></i> <strong>Tabla
+                                    documentos recepcionados</strong></h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -391,9 +466,11 @@
                                         <thead>
                                             <tr style="background-color:#f19e40">
                                                 <th style="width: 5%; text-align: center;">N° Expe.</th>
-                                                <th style="width: 5%; text-align: center;">Contador</th>
+                                                <th style="width: 5%; text-align: center;">Cont.</th>
                                                 <th style="width: 10%; text-align: center;">Fecha y hora</th>
+                                                <th style="width: 5%; text-align: center;">Tipo</th>
                                                 <th style="width: 40%; text-align: center;">Asunto</th>
+                                                <th style="width: 10%; text-align: center;">Dependencia</th>
                                                 <th style="width: 8%; text-align: center;">Acciones</th>
                                             </tr>
                                         </thead>
@@ -427,7 +504,7 @@
                                     style="background: linear-gradient(135deg, #736001, #e6b884);">
                                     <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
-                                        registro</h5>
+                                        registro - DE LA OFICINA</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -455,9 +532,7 @@
                                                             class="form-control select2 shadow" name="tipo_documento">
                                                             <option value="0">Seleccione tipo documento ...
                                                             </option>
-                                                            @if ($rol->nombre_dependencia == 'Mesa de Partes')
-                                                                <option value="1">Fut</option>
-                                                            @endif
+
                                                             <option value="2">Oficios</option>
                                                             <option value="3">Informe</option>
                                                             <option value="4">Requerimiento</option>
@@ -507,8 +582,9 @@
                                                 </div>
                                             </div>
 
-                                            <div class="row">
-                                                <div class="col-sm-9">
+                                            <div class="row mt-3 mb-3"
+                                                style="background-image: linear-gradient(to right, rgb(236, 217, 185), rgba(255, 255, 255, 0.1));">
+                                                <div class="col-sm-9" id="container_dependencias">
                                                     <div class="form-group">
                                                         <label for="dependencia_enviar">
                                                             <i class="fas fa-map-marker-alt text-success"></i>
@@ -518,26 +594,66 @@
                                                             class="form-control select2 shadow"
                                                             name="dependencia_enviar[]" multiple>
                                                         </select>
+                                                        {{-- <select id="dependencia_enviar" name="dependencia">
+                                                            </select> --}}
                                                         <span id="dependencia_enviar_error"
                                                             class="text-danger"></span>
                                                     </div>
                                                 </div>
 
-                                                <div class="col-sm-3 text-center">
+                                                <div class="col-md-12" id="container_docentes"
+                                                    style="display: none;">
                                                     <div class="form-group">
-                                                        <label><i class="fas fa-share-all text-muted"></i> ¿A
-                                                            todas?</label>
-                                                        <div class="d-flex justify-content-center pt-1">
-                                                            <div
-                                                                class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
-                                                                <input type="checkbox" class="custom-control-input"
-                                                                    id="customSwitch3" name="todasDepenSelects">
-                                                                <label class="custom-control-label"
-                                                                    for="customSwitch3"></label>
+                                                        <label class="text-info"><i class="fas fa-users"></i>
+                                                            Seleccionar Docente(s)</label>
+                                                        <select id="docentes_select" class="form-control select2"
+                                                            name="docentes_especificos[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a docentes, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_egresados"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-success"><i
+                                                                class="fas fa-user-graduate"></i>
+                                                            Seleccionar Egresado(s)</label>
+                                                        <select id="egresados_select" class="form-control select2"
+                                                            name="egresados[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a egresados, no se
+                                                            pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+                                                {{-- <div id="container_usuarios" style="display:none;">
+                                                        <label>Destinatarios</label>
+
+                                                        <select id="usuarios_select" name="docentes_especificos[]" multiple>
+                                                        </select>
+                                                    </div> --}}
+
+                                                @if (session('active_role_name') == 'Dirección')
+                                                    <div class="col-sm-3 text-center">
+                                                        <div class="form-group">
+                                                            <label><i class="fas fa-share-all text-muted"></i> ¿A
+                                                                todas?</label>
+                                                            <div class="d-flex justify-content-center pt-1">
+                                                                <div
+                                                                    class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
+                                                                    <input type="checkbox"
+                                                                        class="custom-control-input"
+                                                                        id="customSwitch3" name="todasDepenSelects">
+                                                                    <label class="custom-control-label"
+                                                                        for="customSwitch3"></label>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                @endif
                                             </div>
 
                                             <div class="row">
@@ -555,7 +671,7 @@
                                                     <div class="form-group">
                                                         <label for="para_su">
                                                             <i class="fas fa-directions" style="color: #6f42c1;"></i>
-                                                            Para su: <span class="text-danger">*</span>
+                                                            Para su: -- <span class="text-danger">*</span>
                                                         </label>
                                                         <select id="para_su" class="form-control shadow"
                                                             name="para_su">
@@ -602,7 +718,7 @@
                                                     <div class="form-group">
                                                         <label for="archivo_pdf">
                                                             <i class="fas fa-file-pdf text-danger"></i> Subir Documento
-                                                            (PDF):
+                                                            (PDF) ---:
                                                         </label>
                                                         <div class="custom-file">
                                                             <input type="file" class="custom-file-input"
@@ -687,25 +803,29 @@
             <!-- tabla documentos -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card card-danger card-outline">
-                        <div class="card-header" style="background-color: #dddddd">
-                            <h3 class="card-title"><i class="fas fa-list-ol"></i> Tabla documentos ddddd</h3>
+                    <div class="card card-danger card-outline shadow">
+                        <div class="card-header border-0" style="background-color: #dddddd">
+                            <h3 class="card-title">
+                                <i class="fas fa-folder-open mr-2 text-danger"></i>
+                                <strong>Listado de Documentos Emitidos</strong>
+                            </h3>
+
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <table id="datatablesSimple" class="table table-hover">
-                                        <thead>
-                                            <tr style="background-color:#f19e40">
-                                                <th style="text-align: center;">N° Expe.</th>
-                                                <th style="text-align: center;">Contador</th>
-                                                <th style="text-align: center;">Fecha y hora</th>
-                                                <th style="text-align: center;">Asunto</th>
-                                                <th style="text-align: center;">Acciones</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
-                                </div>
+                        <div class="card-body p-3">
+                            <div class="table-responsive">
+                                <table id="datatablesSimple" class="table table-sm table-hover w-100 border-0">
+                                    <thead class="bg-gray-light">
+                                        <tr style="background-color:#f19e40">
+                                            <th class="text-center py-2">N° Expediente</th>
+                                            <th class="text-center py-2">Cont.</th>
+                                            <th class="py-2">Fecha y Hora</th>
+                                            <th class="py-2">Asunto</th>
+                                            <th class="py-2">Dependencia</th>
+                                            <th class="py-2">Persona</th>
+                                            <th class="text-center py-2">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -723,24 +843,24 @@
             cargarTabla_m(1);
             $('.tipo-btn_m[data-tipo_m="1"]').click();
 
-            $('.tipo-btn_m').on('click', function() {
-                let tipo = $(this).data('tipo');
-                if (tipoActivo === tipo) return; // si ya está activo, no hace nada
-                tipoActivo = tipo;
+            // $('.tipo-btn_m').on('click', function() {
+            //     let tipo = $(this).data('tipo');
+            //     if (tipoActivo === tipo) return; // si ya está activo, no hace nada
+            //     tipoActivo = tipo;
 
-                // Resetear todos los botones
-                $('.tipo-btn_m')
-                    .removeClass('bg-gradient-primary')
-                    .addClass('bg-gradient-info')
-                    .removeClass('active');
+            //     // Resetear todos los botones
+            //     $('.tipo-btn_m')
+            //         .removeClass('bg-gradient-primary')
+            //         .addClass('bg-gradient-info')
+            //         .removeClass('active');
 
-                // Activar el botón presionado
-                $(this)
-                    .removeClass('bg-gradient-info')
-                    .addClass('bg-gradient-primary')
-                    .addClass('active');
-                cargarTabla(tipo);
-            });
+            //     // Activar el botón presionado
+            //     $(this)
+            //         .removeClass('bg-gradient-info')
+            //         .addClass('bg-gradient-primary')
+            //         .addClass('active');
+            //     cargarTabla(tipo);
+            // });
 
             // Escuchar el cambio en el tipo de remitente
             $('#tipo_remitente_m').on('change', function() {
@@ -846,16 +966,15 @@
                             return "Quitar todos los elementos";
                         }
                     },
-                    placeholder: 'Seleccione dependencia(s)',
+                    placeholder: 'Seleccione dependencia(s):::',
                     allowClear: true,
                     width: '100%',
                     dropdownParent: $('#exampleModalCenter_m'),
                     ajax: {
-                        url: '{{ route('documentario.traerDepen') }}',
+                        url: '{{ route('documentario.traerDepen_m') }}',
                         dataType: 'json',
                         delay: 250,
                         processResults: function(data) {
-                            // console.log(data)
                             return {
                                 results: data.map(function(depens) {
                                     return {
@@ -890,6 +1009,127 @@
                     }
                 });
             });
+
+            // $('#dependencia_enviar').on('change', function() {
+            //     let data = $(this).select2('data');
+
+            //     let esDocente = data.some(item => item.id.trim() === "2");
+            //     let esEgresado = data.some(item => item.id.trim() === "5");
+
+            //     if (esDocente) {
+            //         // 1. Buscamos el ID exacto que tiene la opción "Docente"
+            //         let objetoDocente = data.find(item => item.text.trim() === 'Docente');
+            //         let idDocenteArea = objetoDocente.id;
+
+            //         if ($('#input_docente_shadow').length === 0) {
+            //             $('#form_regis_doc').append(
+            //                 `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
+            //             );
+            //         }
+
+            //         // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+            //         $(this).val([idDocenteArea]).trigger('change.select2');
+
+            //         // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+            //         $(this).prop('disabled', true);
+
+            //         // 4. Mostramos el buscador de la tabla userprofile
+            //         $('#container_docentes').fadeIn();
+            //         inicializarBusquedaDocentes();
+
+            //         // Agregamos un botón de "X" para resetear si el usuario se equivocó
+            //         if (!$('#btn-reset').length) {
+            //             $(this).closest('.form-group').append(
+            //                 '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+            //             );
+            //         }
+            //     }
+            // });
+
+            $('#dependencia_enviar_m').on('change', function() {
+                let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
+
+                let esDocente = data.some(item => item.id.trim() === "2");
+                let esEgresado = data.some(item => item.id.trim() === "5");
+                let esAlumno = data.some(item => item.id.trim() === "4");
+
+                if (esDocente) {
+                    // 1. Buscamos el ID exacto que tiene la opción "Docente"
+                    let objetoDocente = data.find(item => item.id.trim() === '2');
+                    let idDocenteArea = objetoDocente.id;
+                    console.log('docente 1');
+
+                    if ($('#input_docente_shadow_m').length === 0) {
+                        console.log('docente 2');
+
+                        $('#form_regis_doc_m').append(
+                            `<input type="hidden" id="input_docente_shadow_m" name="dependencia_enviar_m[]" value="${idDocenteArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idDocenteArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_docentes_m').fadeIn();
+                    inicializarBusquedaDocentes_m();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset_m').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                } else if (esEgresado) {
+                    // 1. Buscamos el ID exacto que tiene la opción "egresado"
+                    let objetoEgresado = data.find(item => item.id.trim() === "5");
+                    let idEgresadoArea = objetoEgresado.id;
+                    console.log('egresado 1');
+
+                    if ($('#input_egresado_shadow_m').length === 0) {
+                        console.log('egresado 2');
+
+                        $('#form_regis_doc_m').append(
+                            `<input type="hidden" id="input_egresado_shadow_m" name="dependencia_enviar_m[]" value="${idEgresadoArea}">`
+                        );
+                    }
+
+                    // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
+                    $(this).val([idEgresadoArea]).trigger('change.select2');
+
+                    // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
+                    $(this).prop('disabled', true);
+
+                    // 4. Mostramos el buscador de la tabla userprofile
+                    $('#container_egresados_m').fadeIn();
+                    inicializarBusquedaEgresados_m();
+
+                    // Agregamos un botón de "X" para resetear si el usuario se equivocó
+                    if (!$('#btn-reset-egresados_m').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset-egresados_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia..</button>'
+                        );
+                    }
+                } else if (esAlumno) {
+                    let idAlumnoArea = "4";
+                    if ($('#input_alumno_shadow_m').length === 0) {
+                        $('#form_regis_doc_m').append(
+                            `<input type="hidden" id="input_alumno_shadow_m" name="dependencia_enviar_m[]" value="${idAlumnoArea}">`
+                        );
+                    }
+                    $(this).val([idAlumnoArea]).trigger('change.select2').prop('disabled', true);
+                    $('#container_alumnos_m').fadeIn();
+                    inicializarBusquedaAlumnos_m();
+                    if (!$('#btn-reset-alumnos_m').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset-alumnos_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                }
+            });
         });
 
         // $('#tipo_documento_m').change(traer_num_expe_m);
@@ -913,81 +1153,236 @@
             cargarTabla_m(tipo);
         });
 
-
-        $('#form_regis_doc_m').submit(function(event) {
+        $('#form_regis_doc_m').off('submit').on('submit', function(event) {
             event.preventDefault();
 
-            var butonEnviardatos_m = $('#form_regis_doc_m button[type="submit"]');
-            butonEnviardatos_m.prop('disabled', true);
+            var $form = $(this);
+            var $btn = $form.find('button[type="submit"]');
+
+            if ($btn.prop('disabled')) return;
+
+            // 1. MOSTRAR PANTALLA DE CARGA BLOQUEANTE
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Recepcionando y enviando el documento, por favor espere.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $btn.prop('disabled', true);
             var formData = new FormData(this);
 
             $.ajax({
-                url: $(this).attr('action'),
+                url: $form.attr('action'),
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 success: function(response) {
+                    Swal.close();
+
                     setTimeout(() => {
                         document.activeElement.blur();
                         $('body').trigger('focus');
                         $('#exampleModalCenter_m').modal('hide');
                     }, 50);
 
-                    Swal.fire({
-                        title: "Éxito!",
-                        text: response.success,
-                        icon: "success"
-                    }).then(() => {
+                    // CASO A: Éxito con advertencias (algunas dependencias no tenían jefe)
+                    if (response.warnings && response.warnings.length > 0) {
+                        let warningsHtml =
+                            '<ul style="text-align: left; margin-top: 10px; color: #d97f16; padding-left: 20px;">';
+                        response.warnings.forEach(warning => {
+                            warningsHtml += `<li style="margin-bottom: 5px;">${warning}</li>`;
+                        });
+                        warningsHtml +=
+                            '</ul><p class="mt-3" style="font-size: 0.9em; color: #666;">El documento se registró, pero se omitieron las dependencias mencionadas.</p>';
 
-                        $('#form_regis_doc_m')[0].reset();
-                        $('#datatablesSimple_m').DataTable().ajax.reload();
-                        $('.text-danger_m').text('');
-                        $('#usuario_m').val('0').trigger('change');
-                        $('#num_ex_m').hide();
-                        $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
-                        // 1. Limpiar el valor del input file
-                        $('#archivo_pdf_m').val('');
-
-                        // 2. Resetear el texto del label (importante en AdminLTE)
-                        $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
-
-                        // 3. Limpiar mensajes de error si los hubiera
-                        $('#archivo_pdf_m_error').text('');
-                        $('#dependencia_enviar_m').val(null).trigger('change');
-                    });
-                    butonEnviardatos_m.prop('disabled', false);
+                        Swal.fire({
+                            title: "Recepcionado con Advertencias",
+                            html: warningsHtml,
+                            icon: "warning",
+                            confirmButtonText: "Entendido",
+                            confirmButtonColor: '#f19e40'
+                        }).then(() => {
+                            limpiarFormularioMP();
+                        });
+                    }
+                    // CASO B: Éxito total
+                    else {
+                        Swal.fire({
+                            title: "¡Éxito!",
+                            text: response.success,
+                            icon: "success",
+                            confirmButtonColor: '#28a745'
+                        }).then(() => {
+                            limpiarFormularioMP();
+                        });
+                    }
                 },
                 error: function(xhr) {
-                    var errors = xhr.responseJSON.errors;
+                    Swal.close();
+                    $btn.prop('disabled', false);
 
-                    $('.text-danger_m').text('');
+                    if (xhr.responseJSON) {
+                        // Errores de validación de Laravel
+                        if (xhr.responseJSON.errors) {
+                            let errorMsg =
+                                '<ul style="text-align: left; margin-top: 10px; padding-left: 20px;">';
+                            $.each(xhr.responseJSON.errors, function(key, value) {
+                                errorMsg += '<li style="margin-bottom: 5px;">' + value[0] +
+                                    '</li>';
+                            });
+                            errorMsg += '</ul>';
 
-                    if (errors) {
-                        if (errors.tipo_documento_m) {
-                            $('#tipo_documento_m_error').text(errors.tipo_documento_m[0]);
+                            Swal.fire({
+                                title: "Campos incompletos",
+                                html: errorMsg,
+                                icon: "warning",
+                                confirmButtonColor: '#f19e40'
+                            });
                         }
-                        if (errors.dependencia_enviar_m) {
-                            $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[
-                                0]);
+                        // Error de lógica (ninguna dependencia tenía jefe válido)
+                        else if (xhr.responseJSON.error) {
+                            let htmlContent =
+                                `<p class="mb-2" style="font-weight: 600;">${xhr.responseJSON.error}</p>`;
+                            if (xhr.responseJSON.warnings && xhr.responseJSON.warnings.length > 0) {
+                                htmlContent +=
+                                    '<ul style="text-align: left; margin-top: 10px; color: #dc3545; padding-left: 20px;">';
+                                xhr.responseJSON.warnings.forEach(warning => {
+                                    htmlContent +=
+                                        `<li style="margin-bottom: 5px;">${warning}</li>`;
+                                });
+                                htmlContent += '</ul>';
+                            }
+                            Swal.fire({
+                                title: "Error al procesar",
+                                html: htmlContent,
+                                icon: "error",
+                                confirmButtonColor: '#dc3545'
+                            });
                         }
-                        if (errors.asunto_m) {
-                            $('#asunto_m_error').text(errors.asunto_m[0]);
-                        }
-                        if (errors.para_su_m) {
-                            $('#para_su_m_error').text(errors.para_su_m[0]);
-                        }
-                        if (errors.usuario_m) {
-                            $('#usuario_m_error').text(errors.usuario_m[0]);
-                        }
-                        if (errors.folio_m) {
-                            $('#folio_m_error').text(errors.folio_m[0]);
-                        }
+                    } else {
+                        Swal.fire({
+                            title: "Error Inesperado",
+                            text: "Ocurrió un error de comunicación. Por favor, recarga la página.",
+                            icon: "error",
+                            confirmButtonColor: '#dc3545'
+                        });
+                        // Recargar página en caso de error fatal de red/CSRF
+                        setTimeout(() => location.reload(), 3000);
                     }
-                    butonEnviardatos_m.prop('disabled', false);
                 }
             });
         });
+
+        // $('#form_regis_doc_m').off('submit').on('submit', function(event) {
+        //     event.preventDefault();
+
+        //     var butonEnviardatos_m = $('#form_regis_doc_m button[type="submit"]');
+        //     butonEnviardatos_m.prop('disabled', true);
+        //     var formData = new FormData(this);
+
+        //     $.ajax({
+        //         url: $(this).attr('action'),
+        //         type: 'POST',
+        //         data: formData,
+        //         processData: false,
+        //         contentType: false,
+        //         success: function(response) {
+        //             setTimeout(() => {
+        //                 document.activeElement.blur();
+        //                 $('body').trigger('focus');
+        //                 $('#exampleModalCenter_m').modal('hide');
+        //             }, 50);
+
+        //             Swal.fire({
+        //                 title: "Éxito!",
+        //                 text: response.success,
+        //                 icon: "success"
+        //             }).then(() => {
+
+        //                 $('#form_regis_doc_m')[0].reset();
+        //                 $('#datatablesSimple_m').DataTable().ajax.reload();
+        //                 $('.text-danger_m').text('');
+
+        //                 $('#tipo_documento_m').val('0');
+        //                 $('#para_su_m').val('0').trigger('change');
+        //                 $('#dependencia_enviar_m').val(null).trigger('change');
+        //                 $('#docentes_select_m').val(null).trigger('change');
+        //                 $('#egresados_select_m').val(null).trigger('change');
+        //                 $('#container_docentes_m').hide();
+        //                 $('#container_egresados_m').hide();
+
+        //                 $('#usuario_m').val('0').trigger('change');
+        //                 $('#num_ex_m').hide();
+        //                 $('#num_ex_m').val('');
+        //                 $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
+        //                 // 1. Limpiar el valor del input file
+        //                 $('#archivo_pdf_m').val('');
+
+        //                 // 2. Resetear el texto del label (importante en AdminLTE)
+        //                 $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
+
+        //                 $('#input_docente_shadow_m').remove();
+        //                 $('#input_egresado_shadow_m').remove();
+        //                 $('#btn-reset_m').remove();
+        //                 $('#btn-reset-egresados_m').remove();
+
+        //                 $('span[id$="_error"]').text('');
+
+        //                 // 3. Limpiar mensajes de error si los hubiera
+        //                 $('#archivo_pdf_m_error').text('');
+        //                 $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger(
+        //                     'change');
+
+        //             });
+        //             butonEnviardatos_m.prop('disabled', false);
+        //         },
+        //         error: function(xhr) {
+        //             var errors = xhr.responseJSON.errors;
+
+        //             $('.text-danger_m').text('');
+
+        //             if (errors) {
+        //                 // Limpia los mensajes de error previos
+        //                 $('.error, .invalid-feedback, span[id$="_error"]').text('');
+
+        //                 if (errors.tipo_documento_m) {
+        //                     $('#tipo_documento_m_error').text(errors.tipo_documento_m[0]);
+        //                 }
+        //                 if (errors.dependencia_enviar_m) {
+        //                     $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[0]);
+        //                 }
+        //                 if (errors.asunto_m) {
+        //                     $('#asunto_m_error').text(errors.asunto_m[0]);
+        //                 }
+        //                 if (errors.para_su_m) {
+        //                     $('#para_su_m_error').text(errors.para_su_m[0]);
+        //                 }
+        //                 if (errors.usuario_m) {
+        //                     $('#usuario_m_error').text(errors.usuario_m[0]);
+        //                 }
+        //                 if (errors.folio_m) {
+        //                     $('#folio_m_error').text(errors.folio_m[0]);
+        //                 }
+        //                 if (errors.id_entidad_m_externa) {
+        //                     $('#id_entidad_m_externa_error').text(errors.id_entidad_m_externa[0]);
+        //                 }
+        //                 if (errors.numero_documento_externo_m) {
+        //                     $('#numero_documento_externo_m_error').text(errors
+        //                         .numero_documento_externo_m[0]);
+        //                 }
+        //                 if (errors.archivo_pdf_m) {
+        //                     $('#archivo_pdf_m_error').text(errors.archivo_pdf_m[0]);
+        //                 }
+        //             }
+        //             butonEnviardatos_m.prop('disabled', false);
+        //         }
+        //     });
+        // });
 
         $('#tipo_documento_m').on('change', function() {
             const idTipo = $(this).val();
@@ -1014,11 +1409,11 @@
                     let ultimoNumero = (response && response.numero_de_exp) ? parseInt(response
                         .numero_de_exp) : 0;
                     let proximoNumero = ultimoNumero + 1;
+                    console.log(proximoNumero);
 
                     $('#num_expe_m').val(proximoNumero);
                     $('#num_ex_m').fadeIn();
 
-                    // Opcional: Actualizar fecha automática
                     var fecha_m = new Date();
                     fecha_m.setHours(fecha_m.getHours() - 5);
                     var fecha_hora_actu = fecha_m.toISOString().slice(0, 19);
@@ -1026,44 +1421,6 @@
                 }
             });
         });
-
-        // function traer_num_expe_m() {
-        //     $('#num_expe_m').val('');
-        //     let rutaTipoDocumen =
-        //         "{{ route('documentario.num_tipo_documento_expe_m', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
-        //     let url1 = rutaTipoDocumen.replace(':id', $('#tipo_documento_m').val());
-        //     let url = url1.replace(':emi', $('#emisor').val());
-        //     let formData = $(this).serialize();
-        //     $.ajax({
-        //         type: 'GET',
-        //         url: url,
-        //         data: formData,
-        //         success: function(response) {
-        //             let num_expeRe = response['numero_de_exp'];
-        //             if (num_expeRe === undefined || num_expeRe === null || num_expeRe === '') {
-        //                 num_expeRe = 1;
-        //                 $('#num_expe_m').val(num_expeRe);
-        //                 $('#num_ex_m').show();
-        //             } else {
-        //                 num_expeRe = parseInt(num_expeRe);
-        //                 if (isNaN(num_expeRe)) {
-        //                     $('#num_ex_m').hide();
-        //                 } else {
-        //                     num_expeRe += 1;
-        //                     $('#num_expe_m').val(num_expeRe);
-        //                     $('#num_ex_m').show();
-        //                 }
-        //             }
-        //             var fecha = new Date();
-        //             fecha.setHours(fecha.getHours() - 5);
-        //             var fecha_hora_actu = fecha.toISOString().slice(0, 19);
-        //             $('#fecha_actual_m').val(fecha_hora_actu);
-        //         },
-        //         error: function() {
-        //             console.log('error al traer datos');
-        //         }
-        //     })
-        // }
 
         function cargarTabla_m(tipo) {
 
@@ -1113,8 +1470,8 @@
                         name: 'numero_de_exp',
                         searchable: true,
                         render: function(data, type, row) {
-                            return '<div class=" bg-success-subtle text-dark-emphasis"><p class="fw-semibold text-dark">' +
-                                data + ' - ' + row.nombre_documento + '</p></div>';
+                            return '<div class=""><p class="fw-semibold text-dark" style="text-align: center;">' +
+                                '' + data + '</p></div>';
                         }
                     },
                     {
@@ -1126,8 +1483,24 @@
                         }
                     },
                     {
+                        data: "nombre_documento",
+                        name: 'nombre_documento',
+                        searchable: true,
+                        render: function(data, type, row) {
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                        }
+                    },
+                    {
                         data: "asunto",
                         name: 'asunto',
+                        searchable: true,
+                        render: function(data, type, row) {
+                            return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
+                        }
+                    },
+                    {
+                        data: "nombre_dependencia",
+                        name: 'nombre_dependencia',
                         searchable: true,
                         render: function(data, type, row) {
                             return '<p> <i class="fa-solid fa-calendar-days"></i> ' + data + '</p>';
@@ -1166,6 +1539,13 @@
                     },
                     {
                         targets: 3,
+                        width: "10%",
+                        createdCell: function(td) {
+                            $(td).css('background-color', "#f19e402f");
+                        }
+                    },
+                    {
+                        targets: 4,
                         width: "40%",
                         createdCell: function(td, cellData) {
                             $(td).html(`
@@ -1183,7 +1563,25 @@
                         }
                     },
                     {
-                        targets: 4,
+                        targets: 5,
+                        width: "10%",
+                        createdCell: function(td, cellData) {
+                            $(td).html(`
+                            <div style="
+                                max-width: 500px;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: block;
+                            " title="${cellData}">
+                                ${cellData}
+                            </div>
+                            `);
+                            $(td).css('background-color', '#f19e402f');
+                        }
+                    },
+                    {
+                        targets: 6,
                         width: "8%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
@@ -1192,6 +1590,122 @@
                 ],
                 responsive: true
             });
+        }
+
+        function inicializarBusquedaDocentes_m() {
+            $('#docentes_select_m').select2({
+                placeholder: "Busque y seleccione uno o varios docentes",
+                ajax: {
+                    url: '{{ route('documentario.buscarDocentes') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter_m')
+            });
+        }
+
+        function inicializarBusquedaEgresados_m() {
+            $('#egresados_select_m').select2({
+                placeholder: "Busque por N° DNI O APELLIDOS/NOMBRES y seleccione uno o varios egresados",
+                ajax: {
+                    url: '{{ route('documentario.buscarEgresados') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter_m')
+            });
+        }
+
+        function inicializarBusquedaAlumnos_m() {
+            if ($('#alumnos_select_m').data('select2')) return;
+            $('#alumnos_select_m').select2({
+                placeholder: "Busque por N° DNI o APELLIDOS/NOMBRES y seleccione uno o varios alumnos",
+                ajax: {
+                    url: '{{ route('documentario.buscarAlumnos') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter_m')
+            });
+        }
+
+        // Botón para desbloquear y volver a elegir dependencias normales
+        $(document).on('click', '#btn-reset_m', function() {
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_docentes_m').hide();
+            $('#docentes_select_m').val(null).trigger('change');
+            $('#input_docente_shadow_m').remove();
+            $(this).remove();
+        });
+
+        $(document).on('click', '#btn-reset-egresados_m', function() {
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_egresados_m').hide();
+            $('#egresados_select_m').val(null).trigger('change');
+            $('#input_egresado_shadow_m').remove();
+            $(this).remove();
+        });
+
+        $(document).on('click', '#btn-reset-alumnos_m', function() {
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_alumnos_m').hide();
+            $('#alumnos_select_m').val(null).trigger('change');
+            $('#input_alumno_shadow_m').remove();
+            $(this).remove();
+        });
+
+        function limpiarFormularioMP() {
+            $('#form_regis_doc_m')[0].reset();
+            $('#datatablesSimple_m').DataTable().ajax.reload();
+
+            // Limpiar Select2
+            $('#tipo_documento_m').val('0').trigger('change');
+            $('#para_su_m').val('0').trigger('change');
+            $('#dependencia_enviar_m').val(null).trigger('change').prop('disabled', false);
+            $('#docentes_select_m').val(null).trigger('change');
+            $('#egresados_select_m').val(null).trigger('change');
+            $('#alumnos_select_m').val(null).trigger('change'); // 👈 NUEVO
+            $('#usuario_m').val(null).trigger('change');
+            $('#entidad_m').val(null).trigger('change');
+
+            // Ocultar contenedores
+            $('#container_docentes_m').hide();
+            $('#container_egresados_m').hide();
+            $('#container_alumnos_m').hide(); // 👈 NUEVO
+            $('#div_entidad_m_externa').hide();
+            $('#div_persona_m_natural').show();
+
+            $('#num_expe_m').val('');
+            $('#num_ex_m').hide();
+            $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
+
+            $('#archivo_pdf_m').val('');
+            $('#archivo_pdf_m').next('.custom-file-label').html('Elegir archivo...');
+
+            // Limpiar elementos dinámicos
+            $('#input_docente_shadow_m').remove();
+            $('#input_egresado_shadow_m').remove();
+            $('#input_alumno_shadow_m').remove(); // 👈 NUEVO
+            $('#btn-reset_m').remove();
+            $('#btn-reset-egresados_m').remove();
+            $('#btn-reset-alumnos_m').remove(); // 👈 NUEVO
+
+            $('span[id$="_error"]').text('');
         }
     </script>
 @endpush

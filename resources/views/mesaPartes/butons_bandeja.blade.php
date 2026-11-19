@@ -1,11 +1,11 @@
 @if ($estado === 1)
     <div class="d-grid gap-2 d-md-flex justify-content-md-center" aria-label="Basic mixed styles example">
         <form
-            action="{{ route('documentario.bandeja.recibir', ['idtipo_estado' => 2, 'iddocument' => $iddocument, 'iddependencias_receptor' => $iddependencias_receptor]) }}"
+            action="{{ route('documentario.bandeja.recibir', ['idtipo_estado' => 2, 'iddocument' => $iddocument, 'movimient' => $movimient, 'iddependencias_emior' => $iddependencias_emior]) }}"
             method="get">
             <button type="submit" class="btn btn-block bg-gradient-success btn-sm" data-toggle="modal"
                 data-target="#editardocu">
-                <i class="fas fa-check"></i>
+                <i class="fas fa-check"></i>----ua
             </button>
         </form>
     </div>
@@ -16,7 +16,7 @@
                 <i class="fas fa-cogs"></i> Acciones
             </button>
             <ul class="dropdown-menu">
-                
+
                 @if ($id_depen == 24)
                     {{-- SOLO PARA MESA DE PARTES --}}
                     <li>

@@ -37,7 +37,7 @@
         @endif
         <span class="d-inline-block d-md-inline text-truncate" style="max-width: 100%; max-width: 120px;"
             title="{{ $nom_usu ?? 'Usuario' }}">
-            {{ $nom_usu ?? 'Usuario' }}
+            <i class="fas fa-power-off"></i> - {{ $nom_usu ?? 'Usuario' }}
         </span>
     </a>
 
