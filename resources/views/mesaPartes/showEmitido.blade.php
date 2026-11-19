@@ -66,7 +66,7 @@
                         </ul>
                     </div>
                 </div>
-                gggggggggggggggggggggggggg
+                -----------ed-------------
                 {{-- todo el formulario de editar --}}
                 <div class="card card-{{ $estadoMayor->idestado >= 2 ? 'warning' : 'info' }}">
                     <div class="card-header">

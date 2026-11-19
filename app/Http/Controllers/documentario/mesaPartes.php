@@ -48,54 +48,6 @@ class mesaPartes extends Controller
 
     public function emitidos($idtipo_docu, $emisor)
     {
-        // dd($idtipo_docu);
-        // $query_emitidos = DB::connection('mysql_documentario')->select('SELECT
-        //     MAX(documentos.iddocumentos) AS iddocumentos,
-        //     MAX(documentos.numero_de_exp) AS numero_de_exp,
-        //     MAX(documentos.fecha_ingreso) AS fecha_ingreso,
-        //     MAX(documentos.asunto) AS asunto,
-        //     MAX(userprofilew.nombre) AS nombre,
-        //     MAX(dependencias.nombre_dependencia) AS nombre_dependencia,
-        //     MAX(documentos.folio) AS folio,
-        //     MAX(movi_est.id_estado) AS id_estado,
-        //     MAX(movi_est.id_user_receptor) AS id_user_receptor
-        //     FROM documentos
-        //     INNER JOIN (SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado, movimiento.iddependencias_receptor AS iddependencias_receptor,
-        //         movimiento.id_user_receptor as id_user_receptor
-        //         FROM `movimiento` GROUP BY movi_iddocu, iddependencias_receptor, id_user_receptor)
-        //         AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
-        //     left JOIN gamnielb_sia.userprofile as userprofilew ON movi_est.id_user_receptor = userprofilew.id_users
-        //     left join dependencias ON movi_est.iddependencias_receptor = dependencias.iddependencias
-        //         WHERE idtipo_documento = ? AND emisor = ? AND est_firma = ?
-        //         GROUP BY
-        //         documentos.iddocumentos
-        //         ORDER BY documentos.iddocumentos DESC;', [
-        //     $idtipo_docu,
-        //     $emisor,
-        //     1
-        // ]);
-
-        // $query_emitidos = DB::connection('mysql_documentario')->select('SELECT
-        //     d.iddocumentos,
-        //     d.numero_de_exp,
-        //     d.fecha_ingreso,
-        //     d.asunto,
-        //     userprofilew.nombre AS nombre,
-        //     dependencias.nombre_dependencia AS nombre_dependencia,
-        //     d.folio,
-        //     MAX(m.idestado) OVER (PARTITION BY d.iddocumentos) AS id_estado,
-        //     m.iddependencias_receptor AS id_user_receptor
-        //     FROM movimiento m
-        //         INNER JOIN documentos d ON m.iddocumentos = d.iddocumentos
-        //         left JOIN gamnielb_sia.userprofile as userprofilew ON m.id_user_receptor = userprofilew.id_users
-        //         left join dependencias ON m.iddependencias_receptor = dependencias.iddependencias
-        //         WHERE d.idtipo_documento = ? AND d.emisor = ? AND d.est_firma = ?
-        //         ORDER BY d.numero_de_exp DESC;', [
-        //     $idtipo_docu,
-        //     $emisor,
-        //     1
-        // ]);
-
         $bdPrincipal = DB::connection('mysql')->getDatabaseName();         // donde viven users y postulante
         $bdSia       = DB::connection('mysql_segunda')->getDatabaseName(); // userprofile (gamnielb_sia)
 
@@ -132,34 +84,6 @@ class mesaPartes extends Controller
             $query_emitidos = DB::connection('mysql_documentario')->select($qf1, [$idtipo_docu, $emisor, 1]);
         }
 
-        // $query_emitidos = DB::connection('mysql_documentario')->select("
-        //                                 SELECT
-        //                                     d.iddocumentos,
-        //                                     d.numero_de_exp,
-        //                                     d.fecha_ingreso,
-        //                                     d.asunto,
-        //                                     COALESCE(
-        //                                         userprofilew.nombre,
-        //                                         CONCAT_WS(' ', p.apellidos_pater_postulante, p.apellidos_mater_postulante, p.nombres_postulante)
-        //                                     ) AS nombre,
-        //                                     dependencias.nombre_dependencia AS nombre_dependencia,
-        //                                     d.folio,
-        //                                     MAX(m.idestado) OVER (PARTITION BY d.iddocumentos) AS id_estado,
-        //                                     m.iddependencias_receptor AS id_user_receptor
-        //                                 FROM movimiento m
-        //                                     INNER JOIN documentos d ON m.iddocumentos = d.iddocumentos
-        //                                     LEFT JOIN {$bdSia}.userprofile AS userprofilew ON m.id_user_receptor = userprofilew.id_users
-        //                                     LEFT JOIN {$bdPrincipal}.users u ON m.id_user_receptor = u.id
-        //                                     LEFT JOIN {$bdPrincipal}.postulante p ON u.dni = p.idpostulante
-        //                                     LEFT JOIN dependencias ON m.iddependencias_receptor = dependencias.iddependencias
-        //                                 WHERE d.idtipo_documento = ? AND d.emisor = ? AND d.est_firma = ?
-        //                                 ORDER BY d.numero_de_exp DESC
-        //                             ", [
-        //     $idtipo_docu,
-        //     $emisor,
-        //     1
-        // ]);
-
         if (request()->ajax()) {
             return datatables::of($query_emitidos)->addColumn('btn', 'mesaPartes.butons')->rawColumns(['btn'])->toJson();
         }
@@ -170,68 +94,72 @@ class mesaPartes extends Controller
         $operador = ($idtipo_docu == 1) ? '=' : '>';
         $valorFiltro = 1;
 
-        // $query_emitidos = DB::connection('mysql_documentario')->select("
-        //     SELECT
-        //         documentos.iddocumentos,
-        //         documentos.numero_de_exp,
-        //         documentos.fecha_ingreso,
-        //         documentos.asunto,
-        //         documentos.folio,
-        //         tipo_documento.nombre_documento,
-        //         movi_est.id_estado
-        //     FROM documentos
-        //     INNER JOIN (
-        //         SELECT movimiento.iddocumentos as movi_iddocu, MAX(idestado) AS id_estado
-        //         FROM `movimiento`
-        //         GROUP BY movi_iddocu
-        //     ) AS movi_est ON documentos.iddocumentos = movi_est.movi_iddocu
-        //     INNER JOIN tipo_documento ON documentos.idtipo_documento = tipo_documento.idtipo_documento
-        //     WHERE documentos.idtipo_documento $operador ?
-        //     AND emisor = ? AND est_firma = ?
-        //     GROUP BY
-        //         documentos.iddocumentos,
-        //         documentos.numero_de_exp,
-        //         documentos.fecha_ingreso,
-        //         documentos.asunto,
-        //         documentos.folio,
-        //         tipo_documento.nombre_documento,
-        //         movi_est.id_estado
-        //     ORDER BY documentos.iddocumentos DESC;
-        // ", [
+        // $query_emitidos = DB::connection('mysql_documentario')->select("SELECT
+        //     d.iddocumentos,
+        //     d.numero_de_exp,
+        //     d.fecha_ingreso,
+        //     d.asunto,
+        //     userprofilew.nombre AS nombre,
+        //     dependencias.nombre_dependencia AS nombre_dependencia,
+        //     d.folio,
+        //     tipo_documento.nombre_documento,
+        //     MAX(m.idestado) OVER (PARTITION BY d.iddocumentos) AS id_estado,
+        //     m.iddependencias_receptor AS id_user_receptor
+        //     FROM movimiento m
+        //         INNER JOIN documentos d ON m.iddocumentos = d.iddocumentos
+        //         INNER JOIN tipo_documento ON d.idtipo_documento = tipo_documento.idtipo_documento
+        //         left JOIN gamnielb_sia.userprofile as userprofilew ON m.id_user_receptor = userprofilew.id_users
+        //         left join dependencias ON m.iddependencias_receptor = dependencias.iddependencias
+        //         WHERE d.idtipo_documento $operador ? AND d.emisor = ? AND d.est_firma = ?
+        //         ORDER BY d.numero_de_exp DESC;
+        //     ", [
         //     $valorFiltro, // Siempre evaluamos contra el ID 1 (FUT)
         //     $emisor,
         //     0
         // ]);
 
-        $query_emitidos = DB::connection('mysql_documentario')->select("SELECT
-            d.iddocumentos,
-            d.numero_de_exp,
-            d.fecha_ingreso,
-            d.asunto,
-            userprofilew.nombre AS nombre,
-            dependencias.nombre_dependencia AS nombre_dependencia,
-            d.folio,
-            tipo_documento.nombre_documento,
-            MAX(m.idestado) OVER (PARTITION BY d.iddocumentos) AS id_estado,
-            m.iddependencias_receptor AS id_user_receptor
-            FROM movimiento m
-                INNER JOIN documentos d ON m.iddocumentos = d.iddocumentos
-                INNER JOIN tipo_documento ON d.idtipo_documento = tipo_documento.idtipo_documento
-                left JOIN gamnielb_sia.userprofile as userprofilew ON m.id_user_receptor = userprofilew.id_users
-                left join dependencias ON m.iddependencias_receptor = dependencias.iddependencias
-                WHERE d.idtipo_documento $operador ? AND d.emisor = ? AND d.est_firma = ?
-                ORDER BY d.numero_de_exp DESC;
-            ", [
-            $valorFiltro, // Siempre evaluamos contra el ID 1 (FUT)
-            $emisor,
-            0
-        ]);
+        // if (request()->ajax()) {
+        //     return datatables::of($query_emitidos)
+        //         ->addColumn('btn', 'mesaPartes.butons')
+        //         ->rawColumns(['btn'])
+        //         ->toJson();
+        // }
+
+        ///////////////////////////////////////
+        $bdPrincipal = DB::connection('mysql')->getDatabaseName();         // donde viven users y postulante
+        $bdSia       = DB::connection('mysql_segunda')->getDatabaseName(); // userprofile (gamnielb_sia)
+
+        $q1 = "SELECT
+                    d.iddocumentos,
+                    d.numero_de_exp,
+                    d.fecha_ingreso,
+                    d.asunto,
+                    COALESCE(
+                        userprofilew.nombre,
+                        CONCAT_WS(' ', p.apellidos_pater_postulante, p.apellidos_mater_postulante, p.nombres_postulante)
+                    ) AS nombre,
+                    dependencias.nombre_dependencia AS nombre_dependencia,
+                    d.folio,
+                    tipo_documento.nombre_documento,
+                    MAX(m.idestado) OVER (PARTITION BY d.iddocumentos) AS id_estado,
+                    m.iddependencias_receptor AS iddependencias_receptor,
+                    m.id_user_receptor AS id_user_receptor
+                FROM movimiento m
+                    INNER JOIN documentos d ON m.iddocumentos = d.iddocumentos
+                    INNER JOIN tipo_documento ON d.idtipo_documento = tipo_documento.idtipo_documento
+                    LEFT JOIN {$bdSia}.userprofile AS userprofilew ON m.id_user_receptor = userprofilew.id_users
+                    LEFT JOIN {$bdPrincipal}.users u ON m.id_user_receptor = u.id
+                    LEFT JOIN {$bdPrincipal}.postulante p ON u.dni = p.idpostulante
+                    LEFT JOIN dependencias ON m.iddependencias_receptor = dependencias.iddependencias
+                WHERE d.idtipo_documento $operador ? AND d.emisor = ? AND d.est_firma = ?";
+
+        if (session('dependencia_id') != 2 and session('dependencia_id') != 4) {
+            $qf1 = $q1 . ' ORDER BY d.numero_de_exp DESC';
+            $query_emitidos = DB::connection('mysql_documentario')->select($qf1, [$valorFiltro, $emisor, 0]);
+        }
 
         if (request()->ajax()) {
-            return datatables::of($query_emitidos)
-                ->addColumn('btn', 'mesaPartes.butons')
-                ->rawColumns(['btn'])
-                ->toJson();
+            return datatables::of($query_emitidos)->addColumn('btn', 'mesaPartes.butons')->rawColumns(['btn'])->toJson();
         }
     }
 
