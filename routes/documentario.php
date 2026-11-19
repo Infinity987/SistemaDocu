@@ -22,7 +22,7 @@ Route::resource('users', UserController::class)->names('admin.users');
 route::post('/admin/registerUser', [RegisterController::class, 'register'])->name('admin.registerUser');
 
 route::get('/Docu', [mesaPartes::class, 'index'])->name('mesapar.index');
-route::get('/Docu/num_tipo_documento_expe/{idtipo_docu}/{emisor}', [mesaPartes::class, 'num_tipo_documento_expe'])->name('num_tipo_documento_expe'); //trae el ultimo id del ducu, para sumarlo
+route::get('/Docu/num_tipo_documento_expe/{idtipo_docu}/{emisor}/{iddocumento?}', [mesaPartes::class, 'num_tipo_documento_expe'])->name('num_tipo_documento_expe'); //trae el ultimo id del ducu, para sumarlo
 route::get('/Docu/num_tipo_documento_expe_m/{idtipo_docu}/{emisor}', [mesaPartes::class, 'num_tipo_documento_expe_m'])->name('num_tipo_documento_expe_m'); //trae el ultimo id del ducu, PARA MESA DE PARTES
 route::get('/buscarUsuario', [mesaPartes::class, 'buscarUsuario'])->name('buscarUsuario');
 Route::post('/docu/generar-word', [mesaPartes::class, 'generarWordBorrador'])->name('mesaPartes.word');
@@ -36,6 +36,7 @@ route::get('/traerDepen', [mesaPartes::class, 'traerDepen'])->name('traerDepen')
 route::get('/traerDepen_m', [mesaPartes::class, 'traerDepen_m'])->name('traerDepen_m');
 route::get('/buscarDocentes', [mesaPartes::class, 'buscarDocentes'])->name('buscarDocentes');
 route::get('/buscarEgresados', [mesaPartes::class, 'buscarEgresados'])->name('buscarEgresados');
+Route::get('/documentario/buscar-alumnos', [mesaPartes::class, 'buscarAlumnos'])->name('buscarAlumnos');
 Route::get('/buscar-entidad', [mesaPartes::class, 'buscarEntidad'])->middleware('auth')->name('buscarEntidad');
 route::post('/enviardocumentos/responder', [enviardocumentos::class, 'responder'])->name('enviardocumentos.responder');
 route::post('/enviardocumentos/responderoficinas', [enviardocumentos::class, 'responderoficinas'])->name('enviardocumentos.responderoficinas');
@@ -79,6 +80,6 @@ Route::get('/resoluciones/generar/{id_proyecto}', [resoluciones::class, 'generar
 Route::resource('oficinas', OficinaController::class)->names('admin.oficinas');
 
 Route::get('/admin/usuarios-activos', [ReporteUsuariosController::class, 'index'])->name('usuarios_activos');
-
+// Route::get('/buscarPersonalPorDependencia/{id_dependencia}', [mesaPartes::class, 'buscarPersonalPorDependencia'])->name('documentario.buscarPersonalDependencia');
 
 

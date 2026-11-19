@@ -47,18 +47,26 @@ class UserController extends Controller
             ->first();
 
         $roles = Role::all();
-        return view('admin.users.edit', compact('use', 'roles', 'nom_usu'));
+
+        $tiposUsuario = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('user_id', $user)
+            ->where('estado', 1)
+            ->pluck('tipo_usuario', 'dependencia_id');
+
+        return view('admin.users.edit', compact('use', 'roles', 'nom_usu', 'tiposUsuario'));
     }
 
     public function update(Request $request, User $user)
     {
+        // dd($request);
         $user->roles()->Sync($request->roles);
         $verTodasDepenUsu = DB::connection('mysql_documentario')->table('dependencia_user')
-            ->select('dependencia_id', 'estado')
+            ->select('dependencia_id', 'estado', 'tipo_usuario')
             ->where('user_id', $user->id)
             ->Where('estado', 1)
             ->get();
         $actuales = $verTodasDepenUsu->pluck('dependencia_id')->map(fn($id) => (string) $id)->toArray();
+        // dd($actuales);
 
         if (empty($request->roles)) {
             foreach ($actuales as $actu) {
@@ -107,6 +115,19 @@ class UserController extends Controller
 
             }
         }
+
+        $tipos = $request->input('tipo_usuario', []);
+        foreach ($request->roles ?? [] as $rolId) {
+            DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('user_id', $user->id)
+                ->where('dependencia_id', $rolId)
+                ->where('estado', 1)
+                ->update([
+                    'tipo_usuario' => (int) ($tipos[$rolId] ?? 1),
+                    'updated_at'   => now(),
+                ]);
+        }
+
 
         $user->touch();
         // dump("----------------------------------");

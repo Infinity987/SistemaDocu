@@ -3,14 +3,15 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @canany(['documentario.mesapar.index', 'alumno.matricula.index'])
+    @canany(['documentario.mesapar.index', 'alumno.matricula.index', 'docente.index'])
         <div class="callout callout-danger">
             <section class="content-header p-0">
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-6">
                             <h1><i class="fas fa-sign-in-alt"></i> <i class="fas fa-boxes"></i>
-                                - CREAR DOCUMENTO -- - {{ session('dependencia_id') }} {{ Auth::user()->id }} - {{ session('active_role_name') }}</h1>
+                                - CREAR DOCUMENTO -- - {{ session('dependencia_id') }} {{ Auth::user()->id }} -
+                                {{ session('active_role_name') }}</h1>
                             </h1>
                         </div>
                         <div class="col-sm-6">
@@ -26,7 +27,7 @@
 @stop
 
 @section('content')
-    @canany(['documentario.mesapar.index', 'alumno.matricula.index'])
+    @canany(['documentario.mesapar.index', 'alumno.matricula.index', 'docente.index'])
         {{-- vistas para mesa de partes --}}
         @if ($id_depen == 24)
             @include('mesaPartes.partials.menu_mesa_partes')
@@ -166,18 +167,40 @@
                                                                 añadir otras dependencias.</small>
                                                         </div>
                                                     </div>
-                                                    {{-- <div id="container_usuarios" style="display:none;">
-                                                        <label>Destinatarios</label>
 
-                                                        <select id="usuarios_select" name="docentes_especificos[]" multiple>
-                                                        </select>
+                                                    <div class="col-md-12" id="container_alumnos" style="display: none;">
+                                                        <div class="form-group">
+                                                            <label class="text-primary"><i class="fas fa-book-reader"></i>
+                                                                Seleccionar Alumno(s)</label>
+                                                            <select id="alumnos_select" class="form-control select2"
+                                                                name="alumnos[]" multiple>
+                                                            </select>
+                                                            <small class="text-muted">Nota: Al enviar a alumnos, no se pueden
+                                                                añadir otras dependencias.</small>
+                                                            <span id="alumnos_select_error" class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- <div class="col-md-12" id="container_personal_dependencia"
+                                                        style="display: none;">
+                                                        <div class="form-group">
+                                                            <label class="text-primary"><i class="fas fa-users"></i>
+                                                                Seleccionar Personal de la Dependencia</label>
+                                                            <select id="personal_select" class="form-control select2"
+                                                                name="personal_especifico[]" multiple>
+                                                            </select>
+                                                            <small class="text-muted">Nota: Al seleccionar personal específico,
+                                                                el documento se dirigirá únicamente a ellos dentro de esta
+                                                                dependencia.</small>
+                                                            <span id="personal_select_error" class="text-danger"></span>
+                                                        </div>
                                                     </div> --}}
 
                                                     @if (session('active_role_name') == 'Dirección')
                                                         <div class="col-sm-3 text-center">
                                                             <div class="form-group">
                                                                 <label><i class="fas fa-share-all text-muted"></i> ¿A
-                                                                    todas?</label>
+                                                                    todas?--</label>
                                                                 <div class="d-flex justify-content-center pt-1">
                                                                     <div
                                                                         class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">
@@ -267,13 +290,15 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-sm-12 mt-2">
-                                                        <button type="button" onclick="descargarWordBorrador()"
-                                                            class="btn btn-outline-info btn-block shadow-sm">
-                                                            <i class="fas fa-file-word"></i> GENERAR BORRADOR AUTOMÁTICO
-                                                            PARA FIRMA
-                                                        </button>
-                                                    </div>
+                                                    @if (session('dependencia_id') != 4 && session('dependencia_id') != 5)
+                                                        <div class="col-sm-12 mt-2">
+                                                            <button type="button" onclick="descargarWordBorrador()"
+                                                                class="btn btn-outline-info btn-block shadow-sm">
+                                                                <i class="fas fa-file-word"></i> GENERAR BORRADOR AUTOMÁTICO
+                                                                PARA FIRMA
+                                                            </button>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -359,8 +384,8 @@
                                                     <th style="text-align: center;">Contador</th>
                                                     <th style="text-align: center;">Fecha y hora</th>
                                                     <th style="text-align: center;">Asunto</th>
-                                                    <th style="text-align: center;">Dependencia</th>
-                                                    <th style="text-align: center;">Persona</th>
+                                                    <th style="text-align: center;">Para Oficina:</th>
+                                                    <th style="text-align: center;">Para usuario:</th>
                                                     <th style="text-align: center;">Acciones</th>
                                                 </tr>
                                             </thead>
@@ -537,12 +562,25 @@
 
                 var butonEnviardatos = $('#form_regis_doc button[type="submit"]');
 
-                // Si ya está deshabilitado, evitamos doble envío por pulsaciones rápidas
+                // Si ya está deshabilitado, evitamos doble envío
                 if (butonEnviardatos.prop('disabled')) {
                     return;
                 }
 
+                // 1. MOSTRAR PANTALLA DE CARGA BLOQUEANTE (SweetAlert2)
+                Swal.fire({
+                    title: 'Procesando...',
+                    text: 'Registrando y enviando el documento, por favor espere.',
+                    allowOutsideClick: false, // Evita que cierren la alerta haciendo clic fuera
+                    allowEscapeKey: false, // Evita que la cierren con la tecla ESC
+                    didOpen: () => {
+                        Swal.showLoading(); // Muestra el spinner giratorio
+                    }
+                });
+
+                // Deshabilitar botón para doble protección visual
                 butonEnviardatos.prop('disabled', true);
+
                 var formData = new FormData(this);
 
                 $.ajax({
@@ -552,82 +590,117 @@
                     processData: false,
                     contentType: false,
                     success: function(response) {
+                        Swal.close(); // Ocultar pantalla de carga
+
                         setTimeout(() => {
                             document.activeElement.blur();
                             $('body').trigger('focus');
                             $('#exampleModalCenter').modal('hide');
                         }, 50);
 
-                        Swal.fire({
-                            title: "Éxito!",
-                            text: response.success,
-                            icon: "success"
-                        }).then(() => {
-                            // 1. Resetear formulario HTML estándar
-                            $('#form_regis_doc')[0].reset();
+                        // Verificar si hay advertencias
+                        if (response.warnings && response.warnings.length > 0) {
+                            // Construir una lista HTML con las advertencias
+                            let warningsHtml =
+                                '<ul style="text-align: left; margin-top: 10px;">';
+                            response.warnings.forEach(warning => {
+                                warningsHtml += `<li>${warning}</li>`;
+                            });
+                            warningsHtml +=
+                                '</ul><p class="mt-2" style="font-size: 0.9em; color: #666;">El documento se registró y envió a las dependencias correctas, pero se omitieron las mencionadas arriba.</p>';
 
-                            // 2. Recargar DataTable
-                            $('#datatablesSimple').DataTable().ajax.reload();
-
-                            // 3. Limpiar errores visuales
-                            $('.text-danger').text('');
-
-                            // 4. Limpiar correctamente todos los Select2 del formulario
-                            $('#tipo_documento').val('0');
-                            $('#para_su').val('0').trigger('change');
-                            $('#dependencia_enviar').val(null).trigger('change');
-                            $('#docentes_select').val(null).trigger('change');
-                            $('#egresados_select').val(null).trigger('change');
-
-                            // 5. Ocultar contenedores específicos y resetear estados visuales
-                            $('#container_docentes').hide();
-                            $('#container_egresados').hide();
-                            $('#num_expe').val('');
-                            $('#detalle_fisico').fadeOut().removeAttr('required').val(
-                                '');
-
-                            // 6. Limpiar input file y label de AdminLTE
-                            $('#archivo_pdf').val('');
-                            $('#archivo_pdf').next('.custom-file-label').html(
-                                'Seleccionar PDF...');
-
-                            // 7. Remover elementos dinámicos creados (si aplica)
-                            $('#input_docente_shadow').remove();
-                            $('#input_egresados_shadow').remove();
-                            $('#btn-reset').remove();
-                            $('#btn-reset-egresados').remove();
-
-                            // 8. Asegurar habilitación de dependencias por si quedaron bloqueadas
-                            $('#dependencia_enviar').prop('disabled', false);
-                        });
+                            Swal.fire({
+                                title: "Éxito con Advertencias",
+                                html: warningsHtml,
+                                icon: "warning",
+                                confirmButtonText: "Entendido"
+                            }).then(() => {
+                                limpiarFormularioYRecargar
+                                    (); // Llamamos a una función para no repetir código
+                            });
+                        } else {
+                            // Éxito total, sin advertencias
+                            Swal.fire({
+                                title: "¡Éxito!",
+                                text: response.success,
+                                icon: "success"
+                            }).then(() => {
+                                limpiarFormularioYRecargar();
+                            });
+                        }
 
                         // Reactivar botón
-                        butonEnviardatos.prop('disabled', false);
+                        $('#form_regis_doc button[type="submit"]').prop('disabled', false);
                     },
                     error: function(xhr) {
-                        var errors = xhr.responseJSON.errors;
+                        // 3. OCULTAR PANTALLA DE CARGA EN CASO DE ERROR
+                        Swal.close();
+
+                        // Limpiar errores visuales previos
                         $('.text-danger').text('');
 
-                        if (errors) {
-                            if (errors.tipo_documento) {
-                                $('#tipo_documento_error').text(errors.tipo_documento[0]);
+                        if (xhr.responseJSON) {
+                            // CASO A: Errores de validación de Laravel
+                            if (xhr.responseJSON.errors) {
+                                var errors = xhr.responseJSON.errors;
+                                if (errors.tipo_documento) $('#tipo_documento_error').text(
+                                    errors.tipo_documento[0]);
+                                if (errors.dependencia_enviar) $('#dependencia_enviar_error')
+                                    .text(errors.dependencia_enviar[0]);
+                                if (errors.asunto) $('#asunto_error').text(errors.asunto[0]);
+                                if (errors.para_su) $('#para_su_error').text(errors.para_su[0]);
+                                if (errors.usuario) $('#usuario_error').text(errors.usuario[0]);
+                                if (errors.folio) $('#folio_error').text(errors.folio[0]);
+
+                                Swal.fire({
+                                    title: "Campos incompletos",
+                                    text: "Por favor, revisa los campos marcados en rojo.",
+                                    icon: "warning"
+                                });
                             }
-                            if (errors.dependencia_enviar) {
-                                $('#dependencia_enviar_error').text(errors.dependencia_enviar[
-                                    0]);
+                            // CASO B: Errores atrapados en el try/catch del controlador (clave 'error')
+                            // CASO B: Errores atrapados en el try/catch del controlador (clave 'error')
+                            else if (xhr.responseJSON.error) {
+
+                                // Si el error trae una lista de advertencias (ninguna dependencia sirvió)
+                                if (xhr.responseJSON.warnings && xhr.responseJSON.warnings
+                                    .length > 0) {
+                                    let warningsHtml =
+                                        '<ul style="text-align: left; margin-top: 10px; max-height: 300px; overflow-y: auto;">';
+                                    xhr.responseJSON.warnings.forEach(warning => {
+                                        warningsHtml += `<li>${warning}</li>`;
+                                    });
+                                    warningsHtml += '</ul>';
+
+                                    Swal.fire({
+                                        title: "Error al procesar",
+                                        html: `<p>${xhr.responseJSON.error}</p>${warningsHtml}`,
+                                        icon: "error"
+                                    });
+                                } else {
+                                    // Error normal sin lista de dependencias
+                                    Swal.fire({
+                                        title: "Error al procesar",
+                                        text: xhr.responseJSON.error,
+                                        icon: "error"
+                                    });
+                                }
                             }
-                            if (errors.asunto) {
-                                $('#asunto_error').text(errors.asunto[0]);
+                            // CASO C: Otros mensajes de error de Laravel
+                            else if (xhr.responseJSON.message) {
+                                Swal.fire({
+                                    title: "Error",
+                                    text: xhr.responseJSON.message,
+                                    icon: "error"
+                                });
                             }
-                            if (errors.para_su) {
-                                $('#para_su_error').text(errors.para_su[0]);
-                            }
-                            if (errors.usuario) {
-                                $('#usuario_error').text(errors.usuario[0]);
-                            }
-                            if (errors.folio) {
-                                $('#folio_error').text(errors.folio[0]);
-                            }
+                        } else {
+                            // CASO D: Error de red o CSRF token expirado
+                            Swal.fire({
+                                title: "Error Inesperado",
+                                text: "Ocurrió un error de comunicación con el servidor. Por favor, recarga la página e inténtalo de nuevo.",
+                                icon: "error"
+                            });
                         }
 
                         // Reactivar botón en caso de error
@@ -691,11 +764,11 @@
 
             if (dependenciaId == 24) {
                 $('.tipo-btn[data-tipo="1"]').removeClass('bg-gradient-info').addClass(
-                'bg-gradient-primary active');
+                    'bg-gradient-primary active');
                 cargarTabla(1);
             } else {
                 $('.tipo-btn[data-tipo="2"]').removeClass('bg-gradient-info').addClass(
-                'bg-gradient-primary active');
+                    'bg-gradient-primary active');
                 cargarTabla(2);
             }
 
@@ -704,6 +777,7 @@
 
                 let esDocente = data.some(item => item.id.trim() === "2");
                 let esEgresado = data.some(item => item.id.trim() === "5");
+                let esAlumno = data.some(item => item.id.trim() === "4");
 
 
                 if (esDocente) {
@@ -733,8 +807,7 @@
                             '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
                         );
                     }
-                }
-                if (esEgresado) {
+                } else if (esEgresado) {
                     // 1. Buscamos el ID exacto que tiene la opción "egresado"
                     let objetoEgresado = data.find(item => item.id.trim() === "5");
                     let idEgresadoArea = objetoEgresado.id;
@@ -759,6 +832,29 @@
                     if (!$('#btn-reset-egresados').length) {
                         $(this).closest('.form-group').append(
                             '<button type="button" id="btn-reset-egresados" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                        );
+                    }
+                } else if (esAlumno) {
+                    let idAlumnoArea = data.find(item => String(item.id).trim() === "4").id;
+
+                    // Input shadow porque el select queda disabled y no se envía en el POST
+                    if ($('#input_alumno_shadow').length === 0) {
+                        $('#form_regis_doc').append(
+                            `<input type="hidden" id="input_alumno_shadow" name="dependencia_enviar[]" value="${idAlumnoArea}">`
+                        );
+                    }
+
+                    // Dejamos SOLO "Alumno" y bloqueamos el select
+                    $(this).val([idAlumnoArea]).trigger('change.select2');
+                    $(this).prop('disabled', true);
+
+                    // Mostramos el buscador de alumnos
+                    $('#container_alumnos').fadeIn();
+                    inicializarBusquedaAlumnos();
+
+                    if (!$('#btn-reset-alumnos').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset-alumnos" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
                         );
                     }
                 }
@@ -1021,6 +1117,98 @@
             });
         }
 
+        function inicializarBusquedaAlumnos() {
+            if ($('#alumnos_select').data('select2')) return; // evita reinicializar
+            $('#alumnos_select').select2({
+                placeholder: "Busque por N° DNI o APELLIDOS/NOMBRES y seleccione uno o varios alumnos",
+                ajax: {
+                    url: '{{ route('documentario.buscarAlumnos') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter')
+            });
+        }
+
+        function limpiarFormularioYRecargar() {
+            $('#form_regis_doc')[0].reset();
+
+            if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                $('#datatablesSimple').DataTable().ajax.reload();
+            }
+
+            $('.text-danger').text('');
+
+            $('#tipo_documento').val('0');
+            $('#para_su').val('0').trigger('change');
+            $('#dependencia_enviar').val(null).trigger('change');
+            $('#docentes_select').val(null).trigger('change');
+            $('#egresados_select').val(null).trigger('change');
+            $('#alumnos_select').val(null).trigger('change'); // 👈 nuevo
+
+            $('#container_docentes').hide();
+            $('#container_egresados').hide();
+            $('#container_alumnos').hide(); // 👈 nuevo
+            $('#num_expe').val('');
+            $('#detalle_fisico').fadeOut().removeAttr('required').val('');
+
+            $('#archivo_pdf').val('');
+            $('#archivo_pdf').next('.custom-file-label').html('Seleccionar PDF...');
+
+            $('#input_docente_shadow').remove();
+            $('#input_egresado_shadow').remove(); // 🐛 corregido (antes: egresados_shadow)
+            $('#input_alumno_shadow').remove(); // 👈 nuevo
+            $('#btn-reset').remove();
+            $('#btn-reset-egresados').remove();
+            $('#btn-reset-alumnos').remove(); // 👈 nuevo
+
+            $('#dependencia_enviar').prop('disabled', false);
+        }
+
+        // function limpiarFormularioYRecargar() {
+        //     // 1. Resetear formulario HTML estándar
+        //     $('#form_regis_doc')[0].reset();
+
+        //     // 2. Recargar DataTable
+        //     if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+        //         $('#datatablesSimple').DataTable().ajax.reload();
+        //     }
+
+        //     // 3. Limpiar errores visuales
+        //     $('.text-danger').text('');
+
+        //     // 4. Limpiar correctamente todos los Select2 del formulario
+        //     $('#tipo_documento').val('0');
+        //     $('#para_su').val('0').trigger('change');
+        //     $('#dependencia_enviar').val(null).trigger('change');
+        //     $('#docentes_select').val(null).trigger('change');
+        //     $('#egresados_select').val(null).trigger('change');
+
+        //     // 5. Ocultar contenedores específicos y resetear estados visuales
+        //     $('#container_docentes').hide();
+        //     $('#container_egresados').hide();
+        //     $('#num_expe').val('');
+        //     $('#detalle_fisico').fadeOut().removeAttr('required').val('');
+
+        //     // 6. Limpiar input file y label de AdminLTE
+        //     $('#archivo_pdf').val('');
+        //     $('#archivo_pdf').next('.custom-file-label').html('Seleccionar PDF...');
+
+        //     // 7. Remover elementos dinámicos creados
+        //     $('#input_docente_shadow').remove();
+        //     $('#input_egresados_shadow').remove();
+        //     $('#btn-reset').remove();
+        //     $('#btn-reset-egresados').remove();
+
+        //     // 8. Asegurar habilitación de dependencias
+        //     $('#dependencia_enviar').prop('disabled', false);
+        // }
+
         // Botón para desbloquear y volver a elegir dependencias normales
         $(document).on('click', '#btn-reset', function() {
             $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
@@ -1035,6 +1223,14 @@
             $('#container_egresados').hide();
             $('#egresados_select').val(null).trigger('change');
             $('#input_egresado_shadow').remove();
+            $(this).remove();
+        });
+
+        $(document).on('click', '#btn-reset-alumnos', function() {
+            $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+            $('#container_alumnos').hide();
+            $('#alumnos_select').val(null).trigger('change');
+            $('#input_alumno_shadow').remove();
             $(this).remove();
         });
     </script>

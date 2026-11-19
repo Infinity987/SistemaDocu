@@ -3,7 +3,7 @@
 @section('title', "$rol->nombre_dependencia")
 
 @section('content_header')
-    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index'])
+    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index', 'docente.index'])
         <div class="semaforo-container">
             <div class="semaforo verde">
                 <span id="badgeVerde">{{ $cont_fecha[0]->verde == 0 ? '' : $cont_fecha[0]->verde }}</span>
@@ -45,7 +45,7 @@
 @stop
 
 @section('content')
-    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index'])
+    @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index', 'docente.index'])
         <div class="container-fluid">
             <div class="row">
                 <input type="hidden" id="emisor" name="emisor" value ="{{ $depen }}">
@@ -99,9 +99,10 @@
                                                     RECEP.</th>
                                                 <th class="text-center align-middle"><i class="fas fa-file-alt"></i><br>ASUNTO
                                                 </th>
-                                                <th class="text-center align-middle"><i class="fas fa-id-card"></i><br>N° DNI
+                                                <th class="text-center align-middle"><i class="fas fa-id-card"></i><br>PARA:
                                                 </th>
-                                                <th class="text-center align-middle"><i class="fas fa-user"></i><br>PERSONA</th>
+                                                <th class="text-center align-middle"><i class="fas fa-user"></i><br>DE:</th>
+                                                <th class="text-center align-middle"><i class="fas fa-user"></i><br>RECEPCIONADO POR:</th>
                                                 <th class="text-center align-middle"><i
                                                         class="fas fa-comment-alt"></i><br>MOTIVO</th>
                                                 <th class="text-center align-middle"><i class="fas fa-file-pdf"></i><br>PDF</th>
@@ -280,6 +281,13 @@
 
         .select2-container {
             width: 100% !important;
+        }
+
+        #datatablesS td:nth-child(5) {
+            max-width: 320px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
     <style>
@@ -696,11 +704,15 @@
                         className: "text-left",
                     },
                     {
-                        data: "dni",
+                        data: "nombre_receptor",
                         className: "text-center",
                     },
                     {
                         data: "nombre_doce",
+                        className: "text-left",
+                    },
+                    {
+                        data: "nombre_recep_docu",
                         className: "text-left",
                     },
                     {
@@ -765,8 +777,9 @@
                     {
                         targets: 4,
                         width: "30%",
-                        createdCell: function(td) {
+                        createdCell: function(td, cellData) {
                             $(td).css('background-color', "#f19e402f");
+                            $(td).attr('title', cellData); // 👈 tooltip con el texto completo
                         }
                     },
                     {
@@ -791,7 +804,14 @@
                         }
                     },
                     {
-                        targets: 8, // si PDF es la 7ª columna (índice base 0)
+                        targets: 8,
+                        width: "5%",
+                        createdCell: function(td) {
+                            $(td).css('background-color', "#f19e402f");
+                        }
+                    },
+                    {
+                        targets: 9, // si PDF es la 7ª columna (índice base 0)
                         width: "5%",
                         className: "text-center",
                         createdCell: function(td) {
@@ -799,7 +819,7 @@
                         }
                     },
                     {
-                        targets: 9,
+                        targets: 10,
                         width: "5%",
                         createdCell: function(td) {
                             $(td).css('background-color', "#f19e402f");
@@ -811,6 +831,7 @@
 
             if (tipo == 1) {
                 tabless.column(3).visible(false);
+                tabless.column(7).visible(false);
                 tabless.draw();
             }
         }

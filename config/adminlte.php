@@ -555,6 +555,29 @@ return [
                 ],
             ]
         ],
+        ['header' => 'SECCION DOCUMENTARIO -', 'can' => 'rol-alumno'],
+
+        [
+            'text' => 'Registrar Documentos',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['documentario/Docu*'],
+            'can' => 'rol-alumno'
+        ],
+        [
+            'text' => 'Bandeja -',
+            'route' => 'documentario.mesapar.bandeja',
+            'icon' => 'fas fa-inbox',
+            'active' => ['documentario/recibidos*'],
+            'can' => 'rol-alumno'
+        ],
+        [
+            'text' => 'Buscar',
+            'route' => 'documentario.searchDocu.index',
+            'icon' => 'fas fa-search',
+            'active' => ['documentario/searchDocu*'],
+            'can' => 'rol-alumno'
+        ],
 
         // INICIO ROL DOCENTE
         ['header' => 'DOCENTE', 'can' => 'rol-docente'],
@@ -580,25 +603,47 @@ return [
             'can' => 'rol-docente',
         ],
         ['header' => 'SECCION DOCUMENTARIO', 'can' => 'rol-docente'],
+        // [
+        //     'text' => 'Crear',
+        //     'route' => 'docente.creardocu',
+        //     'icon' => 'fas fa-clipboard',
+        //     'active' => ['docente/Docu-docente*'],
+        //     'can' => 'rol-docente',
+        // ],
+        // [
+        //     'text' => 'Bandeja',
+        //     'route' => 'docente.bandejaDoce',
+        //     'icon' => 'fas fa-inbox',
+        //     'active' => ['docente/Bandeja-docente*'],
+        //     'can' => 'rol-docente',
+        // ],
+        // [
+        //     'text' => 'Buscar',
+        //     'route' => 'documentario.searchDocu.index',
+        //     'icon' => 'fas fa-search',
+        //     'active' => ['docente/searchDocu*'],
+        //     'can' => 'rol-docente'
+        // ],
+
         [
-            'text' => 'Crear',
-            'route' => 'docente.creardocu',
-            'icon' => 'fas fa-clipboard',
-            'active' => ['docente/Docu-docente*'],
-            'can' => 'rol-docente',
+            'text' => 'Registrar Documentos',
+            'route' => 'documentario.mesapar.index',
+            'icon' => 'fas fa-fw fa-user',
+            'active' => ['admin/Docu*'],
+            'can' => 'rol-docente'
         ],
         [
             'text' => 'Bandeja',
-            'route' => 'docente.bandejaDoce',
+            'route' => 'documentario.mesapar.bandeja',
             'icon' => 'fas fa-inbox',
-            'active' => ['docente/Bandeja-docente*'],
-            'can' => 'rol-docente',
+            'active' => ['admin/recibidos*'],
+            'can' => 'rol-docente'
         ],
         [
             'text' => 'Buscar',
             'route' => 'documentario.searchDocu.index',
             'icon' => 'fas fa-search',
-            'active' => ['docente/searchDocu*'],
+            'active' => ['admin/searchDocu*'],
             'can' => 'rol-docente'
         ],
         // FIN ROL DOCENTE
@@ -612,21 +657,21 @@ return [
             'text' => 'Crear',
             'route' => 'documentario.mesapar.index',
             'icon' => 'fas fa-fw fa-user',
-            'active' => ['admin/Docu*'],
+            'active' => ['documentario/Docu*'],
             'can' => 'rol-documentario'
         ],
         [
             'text' => 'Bandeja',
             'route' => 'documentario.mesapar.bandeja',
             'icon' => 'fas fa-inbox',
-            'active' => ['admin/recibidos*'],
+            'active' => ['documentario/recibidos*'],
             'can' => 'rol-documentario'
         ],
         [
             'text' => 'Buscar',
             'route' => 'documentario.searchDocu.index',
             'icon' => 'fas fa-search',
-            'active' => ['admin/searchDocu*'],
+            'active' => ['documentario/searchDocu*'],
             'can' => 'rol-documentario'
         ],
         [

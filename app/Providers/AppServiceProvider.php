@@ -53,6 +53,14 @@ class AppServiceProvider extends ServiceProvider
                 ->where('iddependencias', $id_depen)
                 ->first();
 
+            $tipo = DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('user_id', Auth::user()->id)
+                ->where('dependencia_id', session('dependencia_id'))
+                ->where('estado', 1)
+                ->value('tipo_usuario');
+
+            $tipo_usuario = [1 => 'Asistente', 2 => 'Jefe del área'][(int) $tipo] ?? 'Sin asignar';
+
             if (in_array($activeRole, ['alumno', 'egresado', 'postulante'])) {
                 $nom_usu = DB::table('postulante')
                     ->where('idpostulante', $dni)
@@ -94,7 +102,9 @@ class AppServiceProvider extends ServiceProvider
                 'nom_usu',
                 'id_depen',
                 'rol',
-                'cont_est'
+                'cont_est',
+                'tipo',
+                'tipo_usuario'
             ));
         });
     }

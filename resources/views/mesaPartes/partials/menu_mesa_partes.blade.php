@@ -315,6 +315,19 @@
                                                             añadir otras dependencias.</small>
                                                     </div>
                                                 </div>
+
+                                                <div class="col-md-12" id="container_alumnos_m"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label class="text-primary"><i class="fas fa-book-reader"></i>
+                                                            Seleccionar Alumno(s)</label>
+                                                        <select id="alumnos_select_m" class="form-control select2"
+                                                            name="alumnos_m[]" multiple>
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a alumnos, no se
+                                                            pueden añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div class="row">
@@ -491,7 +504,7 @@
                                     style="background: linear-gradient(135deg, #736001, #e6b884);">
                                     <h5 class="modal-title" id="exampleModalCenterTitle" style="color: white"><i
                                             class="fas fa-sign-in-alt"></i> <i class="fas fa-paste"></i> Nuevo
-                                        registro  - DE LA OFICINA</h5>
+                                        registro - DE LA OFICINA</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -1038,7 +1051,7 @@
 
                 let esDocente = data.some(item => item.id.trim() === "2");
                 let esEgresado = data.some(item => item.id.trim() === "5");
-
+                let esAlumno = data.some(item => item.id.trim() === "4");
 
                 if (esDocente) {
                     // 1. Buscamos el ID exacto que tiene la opción "Docente"
@@ -1047,7 +1060,7 @@
                     console.log('docente 1');
 
                     if ($('#input_docente_shadow_m').length === 0) {
-                    console.log('docente 2');
+                        console.log('docente 2');
 
                         $('#form_regis_doc_m').append(
                             `<input type="hidden" id="input_docente_shadow_m" name="dependencia_enviar_m[]" value="${idDocenteArea}">`
@@ -1070,16 +1083,14 @@
                             '<button type="button" id="btn-reset_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
                         );
                     }
-                }
-
-                if (esEgresado) {
+                } else if (esEgresado) {
                     // 1. Buscamos el ID exacto que tiene la opción "egresado"
                     let objetoEgresado = data.find(item => item.id.trim() === "5");
                     let idEgresadoArea = objetoEgresado.id;
                     console.log('egresado 1');
 
                     if ($('#input_egresado_shadow_m').length === 0) {
-                    console.log('egresado 2');
+                        console.log('egresado 2');
 
                         $('#form_regis_doc_m').append(
                             `<input type="hidden" id="input_egresado_shadow_m" name="dependencia_enviar_m[]" value="${idEgresadoArea}">`
@@ -1100,6 +1111,21 @@
                     if (!$('#btn-reset-egresados_m').length) {
                         $(this).closest('.form-group').append(
                             '<button type="button" id="btn-reset-egresados_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia..</button>'
+                        );
+                    }
+                } else if (esAlumno) {
+                    let idAlumnoArea = "4";
+                    if ($('#input_alumno_shadow_m').length === 0) {
+                        $('#form_regis_doc_m').append(
+                            `<input type="hidden" id="input_alumno_shadow_m" name="dependencia_enviar_m[]" value="${idAlumnoArea}">`
+                        );
+                    }
+                    $(this).val([idAlumnoArea]).trigger('change.select2').prop('disabled', true);
+                    $('#container_alumnos_m').fadeIn();
+                    inicializarBusquedaAlumnos_m();
+                    if (!$('#btn-reset-alumnos_m').length) {
+                        $(this).closest('.form-group').append(
+                            '<button type="button" id="btn-reset-alumnos_m" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
                         );
                     }
                 }
@@ -1127,112 +1153,236 @@
             cargarTabla_m(tipo);
         });
 
-
         $('#form_regis_doc_m').off('submit').on('submit', function(event) {
             event.preventDefault();
 
-            var butonEnviardatos_m = $('#form_regis_doc_m button[type="submit"]');
-            butonEnviardatos_m.prop('disabled', true);
+            var $form = $(this);
+            var $btn = $form.find('button[type="submit"]');
+
+            if ($btn.prop('disabled')) return;
+
+            // 1. MOSTRAR PANTALLA DE CARGA BLOQUEANTE
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Recepcionando y enviando el documento, por favor espere.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $btn.prop('disabled', true);
             var formData = new FormData(this);
 
             $.ajax({
-                url: $(this).attr('action'),
+                url: $form.attr('action'),
                 type: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
                 success: function(response) {
+                    Swal.close();
+
                     setTimeout(() => {
                         document.activeElement.blur();
                         $('body').trigger('focus');
                         $('#exampleModalCenter_m').modal('hide');
                     }, 50);
 
-                    Swal.fire({
-                        title: "Éxito!",
-                        text: response.success,
-                        icon: "success"
-                    }).then(() => {
+                    // CASO A: Éxito con advertencias (algunas dependencias no tenían jefe)
+                    if (response.warnings && response.warnings.length > 0) {
+                        let warningsHtml =
+                            '<ul style="text-align: left; margin-top: 10px; color: #d97f16; padding-left: 20px;">';
+                        response.warnings.forEach(warning => {
+                            warningsHtml += `<li style="margin-bottom: 5px;">${warning}</li>`;
+                        });
+                        warningsHtml +=
+                            '</ul><p class="mt-3" style="font-size: 0.9em; color: #666;">El documento se registró, pero se omitieron las dependencias mencionadas.</p>';
 
-                        $('#form_regis_doc_m')[0].reset();
-                        $('#datatablesSimple_m').DataTable().ajax.reload();
-                        $('.text-danger_m').text('');
-
-                        $('#tipo_documento_m').val('0');
-                        $('#para_su_m').val('0').trigger('change');
-                        $('#dependencia_enviar_m').val(null).trigger('change');
-                        $('#docentes_select_m').val(null).trigger('change');
-                        $('#egresados_select_m').val(null).trigger('change');
-                        $('#container_docentes_m').hide();
-                        $('#container_egresados_m').hide();
-
-                        $('#usuario_m').val('0').trigger('change');
-                        $('#num_ex_m').hide();
-                        $('#num_ex_m').val('');
-                        $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
-                        // 1. Limpiar el valor del input file
-                        $('#archivo_pdf_m').val('');
-
-                        // 2. Resetear el texto del label (importante en AdminLTE)
-                        $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
-
-                        $('#input_docente_shadow_m').remove();
-                        $('#input_egresado_shadow_m').remove();
-                        $('#btn-reset_m').remove();
-                        $('#btn-reset-egresados_m').remove();
-
-                        $('span[id$="_error"]').text('');
-
-                        // 3. Limpiar mensajes de error si los hubiera
-                        $('#archivo_pdf_m_error').text('');
-                        $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger(
-                            'change');
-
-                    });
-                    butonEnviardatos_m.prop('disabled', false);
+                        Swal.fire({
+                            title: "Recepcionado con Advertencias",
+                            html: warningsHtml,
+                            icon: "warning",
+                            confirmButtonText: "Entendido",
+                            confirmButtonColor: '#f19e40'
+                        }).then(() => {
+                            limpiarFormularioMP();
+                        });
+                    }
+                    // CASO B: Éxito total
+                    else {
+                        Swal.fire({
+                            title: "¡Éxito!",
+                            text: response.success,
+                            icon: "success",
+                            confirmButtonColor: '#28a745'
+                        }).then(() => {
+                            limpiarFormularioMP();
+                        });
+                    }
                 },
                 error: function(xhr) {
-                    var errors = xhr.responseJSON.errors;
+                    Swal.close();
+                    $btn.prop('disabled', false);
 
-                    $('.text-danger_m').text('');
+                    if (xhr.responseJSON) {
+                        // Errores de validación de Laravel
+                        if (xhr.responseJSON.errors) {
+                            let errorMsg =
+                                '<ul style="text-align: left; margin-top: 10px; padding-left: 20px;">';
+                            $.each(xhr.responseJSON.errors, function(key, value) {
+                                errorMsg += '<li style="margin-bottom: 5px;">' + value[0] +
+                                    '</li>';
+                            });
+                            errorMsg += '</ul>';
 
-                    if (errors) {
-                        // Limpia los mensajes de error previos
-                        $('.error, .invalid-feedback, span[id$="_error"]').text('');
-
-                        if (errors.tipo_documento_m) {
-                            $('#tipo_documento_m_error').text(errors.tipo_documento_m[0]);
+                            Swal.fire({
+                                title: "Campos incompletos",
+                                html: errorMsg,
+                                icon: "warning",
+                                confirmButtonColor: '#f19e40'
+                            });
                         }
-                        if (errors.dependencia_enviar_m) {
-                            $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[0]);
+                        // Error de lógica (ninguna dependencia tenía jefe válido)
+                        else if (xhr.responseJSON.error) {
+                            let htmlContent =
+                                `<p class="mb-2" style="font-weight: 600;">${xhr.responseJSON.error}</p>`;
+                            if (xhr.responseJSON.warnings && xhr.responseJSON.warnings.length > 0) {
+                                htmlContent +=
+                                    '<ul style="text-align: left; margin-top: 10px; color: #dc3545; padding-left: 20px;">';
+                                xhr.responseJSON.warnings.forEach(warning => {
+                                    htmlContent +=
+                                        `<li style="margin-bottom: 5px;">${warning}</li>`;
+                                });
+                                htmlContent += '</ul>';
+                            }
+                            Swal.fire({
+                                title: "Error al procesar",
+                                html: htmlContent,
+                                icon: "error",
+                                confirmButtonColor: '#dc3545'
+                            });
                         }
-                        if (errors.asunto_m) {
-                            $('#asunto_m_error').text(errors.asunto_m[0]);
-                        }
-                        if (errors.para_su_m) {
-                            $('#para_su_m_error').text(errors.para_su_m[0]);
-                        }
-                        if (errors.usuario_m) {
-                            $('#usuario_m_error').text(errors.usuario_m[0]);
-                        }
-                        if (errors.folio_m) {
-                            $('#folio_m_error').text(errors.folio_m[0]);
-                        }
-                        if (errors.id_entidad_m_externa) {
-                            $('#id_entidad_m_externa_error').text(errors.id_entidad_m_externa[0]);
-                        }
-                        if (errors.numero_documento_externo_m) {
-                            $('#numero_documento_externo_m_error').text(errors
-                                .numero_documento_externo_m[0]);
-                        }
-                        if (errors.archivo_pdf_m) {
-                            $('#archivo_pdf_m_error').text(errors.archivo_pdf_m[0]);
-                        }
+                    } else {
+                        Swal.fire({
+                            title: "Error Inesperado",
+                            text: "Ocurrió un error de comunicación. Por favor, recarga la página.",
+                            icon: "error",
+                            confirmButtonColor: '#dc3545'
+                        });
+                        // Recargar página en caso de error fatal de red/CSRF
+                        setTimeout(() => location.reload(), 3000);
                     }
-                    butonEnviardatos_m.prop('disabled', false);
                 }
             });
         });
+
+        // $('#form_regis_doc_m').off('submit').on('submit', function(event) {
+        //     event.preventDefault();
+
+        //     var butonEnviardatos_m = $('#form_regis_doc_m button[type="submit"]');
+        //     butonEnviardatos_m.prop('disabled', true);
+        //     var formData = new FormData(this);
+
+        //     $.ajax({
+        //         url: $(this).attr('action'),
+        //         type: 'POST',
+        //         data: formData,
+        //         processData: false,
+        //         contentType: false,
+        //         success: function(response) {
+        //             setTimeout(() => {
+        //                 document.activeElement.blur();
+        //                 $('body').trigger('focus');
+        //                 $('#exampleModalCenter_m').modal('hide');
+        //             }, 50);
+
+        //             Swal.fire({
+        //                 title: "Éxito!",
+        //                 text: response.success,
+        //                 icon: "success"
+        //             }).then(() => {
+
+        //                 $('#form_regis_doc_m')[0].reset();
+        //                 $('#datatablesSimple_m').DataTable().ajax.reload();
+        //                 $('.text-danger_m').text('');
+
+        //                 $('#tipo_documento_m').val('0');
+        //                 $('#para_su_m').val('0').trigger('change');
+        //                 $('#dependencia_enviar_m').val(null).trigger('change');
+        //                 $('#docentes_select_m').val(null).trigger('change');
+        //                 $('#egresados_select_m').val(null).trigger('change');
+        //                 $('#container_docentes_m').hide();
+        //                 $('#container_egresados_m').hide();
+
+        //                 $('#usuario_m').val('0').trigger('change');
+        //                 $('#num_ex_m').hide();
+        //                 $('#num_ex_m').val('');
+        //                 $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
+        //                 // 1. Limpiar el valor del input file
+        //                 $('#archivo_pdf_m').val('');
+
+        //                 // 2. Resetear el texto del label (importante en AdminLTE)
+        //                 $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
+
+        //                 $('#input_docente_shadow_m').remove();
+        //                 $('#input_egresado_shadow_m').remove();
+        //                 $('#btn-reset_m').remove();
+        //                 $('#btn-reset-egresados_m').remove();
+
+        //                 $('span[id$="_error"]').text('');
+
+        //                 // 3. Limpiar mensajes de error si los hubiera
+        //                 $('#archivo_pdf_m_error').text('');
+        //                 $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger(
+        //                     'change');
+
+        //             });
+        //             butonEnviardatos_m.prop('disabled', false);
+        //         },
+        //         error: function(xhr) {
+        //             var errors = xhr.responseJSON.errors;
+
+        //             $('.text-danger_m').text('');
+
+        //             if (errors) {
+        //                 // Limpia los mensajes de error previos
+        //                 $('.error, .invalid-feedback, span[id$="_error"]').text('');
+
+        //                 if (errors.tipo_documento_m) {
+        //                     $('#tipo_documento_m_error').text(errors.tipo_documento_m[0]);
+        //                 }
+        //                 if (errors.dependencia_enviar_m) {
+        //                     $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[0]);
+        //                 }
+        //                 if (errors.asunto_m) {
+        //                     $('#asunto_m_error').text(errors.asunto_m[0]);
+        //                 }
+        //                 if (errors.para_su_m) {
+        //                     $('#para_su_m_error').text(errors.para_su_m[0]);
+        //                 }
+        //                 if (errors.usuario_m) {
+        //                     $('#usuario_m_error').text(errors.usuario_m[0]);
+        //                 }
+        //                 if (errors.folio_m) {
+        //                     $('#folio_m_error').text(errors.folio_m[0]);
+        //                 }
+        //                 if (errors.id_entidad_m_externa) {
+        //                     $('#id_entidad_m_externa_error').text(errors.id_entidad_m_externa[0]);
+        //                 }
+        //                 if (errors.numero_documento_externo_m) {
+        //                     $('#numero_documento_externo_m_error').text(errors
+        //                         .numero_documento_externo_m[0]);
+        //                 }
+        //                 if (errors.archivo_pdf_m) {
+        //                     $('#archivo_pdf_m_error').text(errors.archivo_pdf_m[0]);
+        //                 }
+        //             }
+        //             butonEnviardatos_m.prop('disabled', false);
+        //         }
+        //     });
+        // });
 
         $('#tipo_documento_m').on('change', function() {
             const idTipo = $(this).val();
@@ -1476,6 +1626,24 @@
             });
         }
 
+        function inicializarBusquedaAlumnos_m() {
+            if ($('#alumnos_select_m').data('select2')) return;
+            $('#alumnos_select_m').select2({
+                placeholder: "Busque por N° DNI o APELLIDOS/NOMBRES y seleccione uno o varios alumnos",
+                ajax: {
+                    url: '{{ route('documentario.buscarAlumnos') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    }
+                },
+                dropdownParent: $('#exampleModalCenter_m')
+            });
+        }
+
         // Botón para desbloquear y volver a elegir dependencias normales
         $(document).on('click', '#btn-reset_m', function() {
             $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
@@ -1492,5 +1660,52 @@
             $('#input_egresado_shadow_m').remove();
             $(this).remove();
         });
+
+        $(document).on('click', '#btn-reset-alumnos_m', function() {
+            $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger('change');
+            $('#container_alumnos_m').hide();
+            $('#alumnos_select_m').val(null).trigger('change');
+            $('#input_alumno_shadow_m').remove();
+            $(this).remove();
+        });
+
+        function limpiarFormularioMP() {
+            $('#form_regis_doc_m')[0].reset();
+            $('#datatablesSimple_m').DataTable().ajax.reload();
+
+            // Limpiar Select2
+            $('#tipo_documento_m').val('0').trigger('change');
+            $('#para_su_m').val('0').trigger('change');
+            $('#dependencia_enviar_m').val(null).trigger('change').prop('disabled', false);
+            $('#docentes_select_m').val(null).trigger('change');
+            $('#egresados_select_m').val(null).trigger('change');
+            $('#alumnos_select_m').val(null).trigger('change'); // 👈 NUEVO
+            $('#usuario_m').val(null).trigger('change');
+            $('#entidad_m').val(null).trigger('change');
+
+            // Ocultar contenedores
+            $('#container_docentes_m').hide();
+            $('#container_egresados_m').hide();
+            $('#container_alumnos_m').hide(); // 👈 NUEVO
+            $('#div_entidad_m_externa').hide();
+            $('#div_persona_m_natural').show();
+
+            $('#num_expe_m').val('');
+            $('#num_ex_m').hide();
+            $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
+
+            $('#archivo_pdf_m').val('');
+            $('#archivo_pdf_m').next('.custom-file-label').html('Elegir archivo...');
+
+            // Limpiar elementos dinámicos
+            $('#input_docente_shadow_m').remove();
+            $('#input_egresado_shadow_m').remove();
+            $('#input_alumno_shadow_m').remove(); // 👈 NUEVO
+            $('#btn-reset_m').remove();
+            $('#btn-reset-egresados_m').remove();
+            $('#btn-reset-alumnos_m').remove(); // 👈 NUEVO
+
+            $('span[id$="_error"]').text('');
+        }
     </script>
 @endpush

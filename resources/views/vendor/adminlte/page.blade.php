@@ -135,7 +135,7 @@
                 });
             };
 
-            if (["2","4","5"].includes(depenId)) {
+            if (["2", "4", "5"].includes(depenId)) {
                 // Si es Docente (2), Alumno (4) o Egresado (5):
                 // SOLO solicita unirse al canal individual
                 // Echo.private(`App.Models.User.${userId}`)
@@ -191,19 +191,23 @@
 
                 Echo.private('dependencia.' + depenId)
                     .listen('.noEditarDocumento', (e) => {
-                        console.log('aquii 222');
                         const documentoEnEdicionId = $('#current_document_id').val();
 
                         if (documentoEnEdicionId && String(e.iddocument) === String(documentoEnEdicionId)) {
                             console.log('¡El documento actual fue recepcionado por otra dependencia!');
                             // Verificamos si hay DataTable o ejecutamos directamente la alerta
+                                                    console.log('01');
                             if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
+                                                        console.log('02');
                                 $('#datatablesSimple').DataTable().ajax.reload(null, false);
                                 $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+
                             } else {
                                 procesarNotificacionNoEditar(e);
+                                                        console.log('03');
                             }
                         } else {
+                                                    console.log('04');
                             console.log('El evento es para otro documento. Ignorando alerta...');
 
                             // Opcional: Si estás en una lista (DataTable general) y quieres que se actualice la tabla
@@ -211,6 +215,10 @@
                             if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
                                 $('#datatablesSimple').DataTable().ajax.reload(null, false);
                                 $('#datatablesSimple_m').DataTable().ajax.reload(null, false);
+                            }
+                            if ($.fn.DataTable.isDataTable('#datatablesS')) {
+                                window.location.href = window.location.href;
+                                // $('#datatablesS').DataTable().ajax.reload(null, false);
                             }
                         }
                         // if ($.fn.DataTable.isDataTable('#datatablesSimple')) {

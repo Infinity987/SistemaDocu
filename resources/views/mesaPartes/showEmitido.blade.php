@@ -77,15 +77,17 @@
                                 {{ $queryDoc->iddocumentos }}
                             </span>
                         </h3>
-                        <input type="hidden" name="current_document_id" id="current_document_id" value="{{ $queryDoc->iddocumentos }}">
+                        <input type="hidden" name="current_document_id" id="current_document_id"
+                            value="{{ $queryDoc->iddocumentos }}">
                         <input type="hidden" name="emisor" id="emisor" value="{{ $queryDoc->emisor }}">
                         <input type="hidden" name="num_exR" id="num_exR" value="{{ $queryDoc->idtipo_documento }}">
+
                     </div>
 
                     <div class="card-body pb-0">
                         <div class="row">
                             <div class="col-12">
-                                <form
+                                <form id="form_editar_doc"
                                     action="{{ route('documentario.mesapar.updateDocuEmi', ['iddocumentos' => $queryDoc->iddocumentos]) }}"
                                     method="post" enctype="multipart/form-data">
                                     @csrf
@@ -289,6 +291,43 @@
                                                         <small class="text-muted">Nota: Al enviar a docentes, no se pueden
                                                             añadir
                                                             otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_egresados"
+                                                    style="{{ in_array(5, $dependenciasSelect) ? '' : 'display: none;' }}">
+                                                    <div class="form-group">
+                                                        <label class="text-success"><i class="fas fa-user-graduate"></i>
+                                                            Seleccionar Egresado(s)</label>
+                                                        <select id="egresados_select" class="form-control select2"
+                                                            name="egresados[]" multiple
+                                                            {{ $estadoMayor->idestado >= 2 ? 'disabled' : '' }}>
+                                                            @foreach ($egresadosSeleccionados as $egr)
+                                                                <option value="{{ $egr->id }}" selected>
+                                                                    {{ $egr->text }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a egresados, no se pueden
+                                                            añadir otras dependencias.</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12" id="container_alumnos"
+                                                    style="{{ in_array(4, $dependenciasSelect) ? '' : 'display: none;' }}">
+                                                    <div class="form-group">
+                                                        <label class="text-primary"><i class="fas fa-book-reader"></i>
+                                                            Seleccionar Alumno(s)</label>
+                                                        <select id="alumnos_select" class="form-control select2"
+                                                            name="alumnos[]" multiple
+                                                            {{ $estadoMayor->idestado >= 2 ? 'disabled' : '' }}>
+                                                            @foreach ($alumnosSeleccionados as $alu)
+                                                                <option value="{{ $alu->id }}" selected>
+                                                                    {{ $alu->text }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                        <small class="text-muted">Nota: Al enviar a alumnos, no se pueden
+                                                            añadir otras dependencias.</small>
+                                                        <span id="alumnos_select_error" class="text-danger"></span>
                                                     </div>
                                                 </div>
 
@@ -518,66 +557,15 @@
 
 @section('js')
     <script>
-        window.dependenciaId = {{ $id_depen }}; // Esto se usa dentro de app.js
+        window.dependenciaId = {{ $id_depen }};
     </script>
-    {{-- @vite('resources/js/app.js') --}}
 
-    {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
-    {{-- <script src="{{ asset('datatables/jquery.dataTables.min.js') }}"></script>
-  <script src="{{ asset('datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script> --}}
+
     @livewireScripts
-
-    <script>
-        // let dependenciaId = {{ $id_depen }};
-
-        // document.addEventListener("DOMContentLoaded", function() {
-        //     const audio = new Audio('{{ asset('sound/alert.mp3') }}');
-        //     Echo.private('dependencia.' + dependenciaId)
-        //         .listen('.noEditarDocumento', (e) => {
-        //             audio.play().catch(err => console.log("Audio en espera de interacción ..."));
-        //             Swal.fire({
-        //                 title: "ALERTA!",
-        //                 text: "Este documento ya fue recepcionado, no se puede editar ....",
-        //                 icon: "error"
-        //             }).then(() => {
-        //                 window.location.href = window.location.href;
-        //             });
-        //         });
-        // });
-
-        // document.addEventListener("DOMContentLoaded", function() {
-        //     Echo.private('dependencia.' + dependenciaId)
-        //         .listen('.DocumentoRecibido', (e) => {
-        //             const Toast = Swal.mixin({
-        //                 toast: true,
-        //                 position: "top-end",
-        //                 showConfirmButton: false,
-        //                 timer: 3000,
-        //                 timerProgressBar: true,
-        //                 didOpen: (toast) => {
-        //                     toast.onmouseenter = Swal.stopTimer;
-        //                     toast.onmouseleave = Swal.resumeTimer;
-        //                     var audio = new Audio('{{ asset('sound/noti.mp3') }}'); // Ruta sonido
-        //                     audio.play();
-        //                 },
-        //                 didClose: () => {
-        //                     $('#badge-alerts').text(e.cont_estados[0].cont_estado == 0 ? '' : e
-        //                         .cont_estados[0]
-        //                         .cont_estado);
-        //                 }
-        //             });
-
-        //             Toast.fire({
-        //                 icon: "success",
-        //                 title: "Nuevo documento recibido"
-        //             });
-        //         });
-        // });
-    </script>
 
     <script>
         $(document).ready(function() {
@@ -732,41 +720,48 @@
                 }
             });
 
+            // Inicializar los 3 select2 de búsqueda
             inicializarBusquedaDocentes();
+            inicializarBusquedaEgresados();
+            inicializarBusquedaAlumnos();
 
+            // Detectar cuál estaba seleccionado al cargar la página
             let dataInicial = $('#dependencia_enviar').select2('data');
-            let esDocenteInicial = dataInicial.some(item => item.text.trim() === 'Docente' || item.id == "2");
 
-            if (esDocenteInicial) {
+            if (dataInicial.some(item => item.id == "2")) {
                 ejecutarLogicaDocente($('#dependencia_enviar'));
+            } else if (dataInicial.some(item => item.id == "5")) {
+                ejecutarLogicaEgresado($('#dependencia_enviar'));
+            } else if (dataInicial.some(item => item.id == "4")) {
+                ejecutarLogicaAlumno($('#dependencia_enviar'));
             }
 
-            // 4. Tu evento change normal
+            // Evento change del select principal
             $('#dependencia_enviar').on('change', function() {
                 let data = $(this).select2('data');
-                let esDocente = data.some(item => item.text.trim() === 'Docente');
+                let esDocente = data.some(item => item.id == "2");
+                let esEgresado = data.some(item => item.id == "5");
+                let esAlumno = data.some(item => item.id == "4");
 
                 if (esDocente) {
                     ejecutarLogicaDocente($(this));
+                } else if (esEgresado) {
+                    ejecutarLogicaEgresado($(this));
+                } else if (esAlumno) {
+                    ejecutarLogicaAlumno($(this));
                 }
             });
 
-            // Encapsulamos la lógica en una función para no repetir código
+            // --- FUNCIONES DE LÓGICA ---
             function ejecutarLogicaDocente(elemento) {
-                let data = elemento.select2('data');
-                let objetoDocente = data.find(item => item.text.trim() === 'Docente' || item.id == "2");
-                let idDocenteArea = objetoDocente.id;
-
+                let idDocenteArea = "2";
                 if ($('#input_docente_shadow').length === 0) {
-                    $('#form_regis_doc').append(
+                    $('form').append(
                         `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
                     );
                 }
-
-                elemento.val([idDocenteArea]).trigger('change.select2');
-                elemento.prop('disabled', true);
+                elemento.val([idDocenteArea]).trigger('change.select2').prop('disabled', true);
                 $('#container_docentes').fadeIn();
-
                 if (!$('#btn-reset').length) {
                     elemento.closest('.form-group').append(
                         '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
@@ -774,7 +769,39 @@
                 }
             }
 
-            // 2. Función para inicializar el segundo Select2 (Docentes)
+            function ejecutarLogicaEgresado(elemento) {
+                let idEgresadoArea = "5";
+                if ($('#input_egresado_shadow').length === 0) {
+                    $('form').append(
+                        `<input type="hidden" id="input_egresado_shadow" name="dependencia_enviar[]" value="${idEgresadoArea}">`
+                    );
+                }
+                elemento.val([idEgresadoArea]).trigger('change.select2').prop('disabled', true);
+                $('#container_egresados').fadeIn();
+                if (!$('#btn-reset-egresados').length) {
+                    elemento.closest('.form-group').append(
+                        '<button type="button" id="btn-reset-egresados" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                    );
+                }
+            }
+
+            function ejecutarLogicaAlumno(elemento) {
+                let idAlumnoArea = "4";
+                if ($('#input_alumno_shadow').length === 0) {
+                    $('form').append(
+                        `<input type="hidden" id="input_alumno_shadow" name="dependencia_enviar[]" value="${idAlumnoArea}">`
+                    );
+                }
+                elemento.val([idAlumnoArea]).trigger('change.select2').prop('disabled', true);
+                $('#container_alumnos').fadeIn();
+                if (!$('#btn-reset-alumnos').length) {
+                    elemento.closest('.form-group').append(
+                        '<button type="button" id="btn-reset-alumnos" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+                    );
+                }
+            }
+
+            // --- FUNCIONES DE BÚSQUEDA AJAX ---
             function inicializarBusquedaDocentes() {
                 $('#docentes_select').select2({
                     placeholder: "Busque y seleccione uno o varios docentes",
@@ -788,18 +815,147 @@
                                 results: data
                             };
                         }
-                    },
+                    }
+                }); // Ajusta el dropdownParent si es necesario
+            }
+
+            function inicializarBusquedaEgresados() {
+                $('#egresados_select').select2({
+                    placeholder: "Busque por DNI o Nombres...",
+                    width: '100%',
+                    ajax: {
+                        url: '{{ route('documentario.buscarEgresados') }}',
+                        dataType: 'json',
+                        delay: 250,
+                        processResults: function(data) {
+                            return {
+                                results: data
+                            };
+                        }
+                    }
                 });
             }
 
-            // Botón para desbloquear y volver a elegir dependencias normales
+            function inicializarBusquedaAlumnos() {
+                // if ($('#alumnos_select').data('select2')) return;
+                $('#alumnos_select').select2({
+                    placeholder: "Busque por DNI o Nombres...",
+                    width: '100%',
+                    ajax: {
+                        url: '{{ route('documentario.buscarAlumnos') }}',
+                        dataType: 'json',
+                        delay: 250,
+                        processResults: function(data) {
+                            return {
+                                results: data
+                            };
+                        }
+                    }
+                });
+            }
+
+            // --- BOTONES DE RESET ---
+            // Botón para desbloquear Docentes
             $(document).on('click', '#btn-reset', function() {
-                $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+                const $select = $('#dependencia_enviar');
+                $select.prop('disabled', false).val(null).trigger('change');
+                $select.find('option:selected').removeAttr('selected'); // 👈 LIMPIEZA REAL DEL HTML
                 $('#container_docentes').hide();
                 $('#docentes_select').val(null).trigger('change');
                 $('#input_docente_shadow').remove();
                 $(this).remove();
             });
+
+            // Botón para desbloquear Egresados
+            $(document).on('click', '#btn-reset-egresados', function() {
+                const $select = $('#dependencia_enviar');
+                $select.prop('disabled', false).val(null).trigger('change');
+                $select.find('option:selected').removeAttr('selected'); // 👈 LIMPIEZA REAL DEL HTML
+                $('#container_egresados').hide();
+                $('#egresados_select').val(null).trigger('change');
+                $('#input_egresado_shadow').remove();
+                $(this).remove();
+            });
+
+            // Botón para desbloquear Alumnos
+            $(document).on('click', '#btn-reset-alumnos', function() {
+                const $select = $('#dependencia_enviar');
+                $select.prop('disabled', false).val(null).trigger('change');
+                $select.find('option:selected').removeAttr('selected'); // 👈 LIMPIEZA REAL DEL HTML
+                $('#container_alumnos').hide();
+                $('#alumnos_select').val(null).trigger('change');
+                $('#input_alumno_shadow').remove();
+                $(this).remove();
+            });
+
+            // inicializarBusquedaDocentes();
+
+            // let dataInicial = $('#dependencia_enviar').select2('data');
+            // let esDocenteInicial = dataInicial.some(item => item.text.trim() === 'Docente' || item.id == "2");
+
+            // if (esDocenteInicial) {
+            //     ejecutarLogicaDocente($('#dependencia_enviar'));
+            // }
+
+            // // 4. Tu evento change normal
+            // $('#dependencia_enviar').on('change', function() {
+            //     let data = $(this).select2('data');
+            //     let esDocente = data.some(item => item.text.trim() === 'Docente');
+
+            //     if (esDocente) {
+            //         ejecutarLogicaDocente($(this));
+            //     }
+            // });
+
+            // // Encapsulamos la lógica en una función para no repetir código
+            // function ejecutarLogicaDocente(elemento) {
+            //     let data = elemento.select2('data');
+            //     let objetoDocente = data.find(item => item.text.trim() === 'Docente' || item.id == "2");
+            //     let idDocenteArea = objetoDocente.id;
+
+            //     if ($('#input_docente_shadow').length === 0) {
+            //         $('#form_regis_doc').append(
+            //             `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
+            //         );
+            //     }
+
+            //     elemento.val([idDocenteArea]).trigger('change.select2');
+            //     elemento.prop('disabled', true);
+            //     $('#container_docentes').fadeIn();
+
+            //     if (!$('#btn-reset').length) {
+            //         elemento.closest('.form-group').append(
+            //             '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
+            //         );
+            //     }
+            // }
+
+            // // 2. Función para inicializar el segundo Select2 (Docentes)
+            // function inicializarBusquedaDocentes() {
+            //     $('#docentes_select').select2({
+            //         placeholder: "Busque y seleccione uno o varios docentes",
+            //         width: '100%',
+            //         ajax: {
+            //             url: '{{ route('documentario.buscarDocentes') }}',
+            //             dataType: 'json',
+            //             delay: 250,
+            //             processResults: function(data) {
+            //                 return {
+            //                     results: data
+            //                 };
+            //             }
+            //         },
+            //     });
+            // }
+
+            // // Botón para desbloquear y volver a elegir dependencias normales
+            // $(document).on('click', '#btn-reset', function() {
+            //     $('#dependencia_enviar').prop('disabled', false).val(null).trigger('change');
+            //     $('#container_docentes').hide();
+            //     $('#docentes_select').val(null).trigger('change');
+            //     $('#input_docente_shadow').remove();
+            //     $(this).remove();
+            // });
 
             //para el arachivo pdf
             $('.btn-cambiar-pdf').on('click', function() {
@@ -879,9 +1035,11 @@
                 window.location.href = window.location.href;
             } else {
                 let rutaTipoDocumen =
-                    "{{ route('documentario.num_tipo_documento_expe', ['idtipo_docu' => ':id', 'emisor' => ':emi']) }}";
+                    "{{ route('documentario.num_tipo_documento_expe', ['idtipo_docu' => ':id', 'emisor' => ':emi', 'iddocumento' => ':iddoct']) }}";
                 let url1 = rutaTipoDocumen.replace(':id', $('#tipo_documento').val());
-                let url = url1.replace(':emi', $('#emisor').val());
+                let url2 = url1.replace(':iddoct', $('#current_document_id').val());
+                let url = url2.replace(':emi', $('#emisor').val());
+
                 let formData = $(this).serialize();
                 $.ajax({
                     type: 'GET',
@@ -910,6 +1068,147 @@
                 });
             }
         }
+
+        // ==========================================
+        // ENVÍO AJAX CON BLOQUEO SWEETALERT2 (EDITAR)
+        // ==========================================
+        $('#form_editar_doc').off('submit').on('submit', function(event) {
+            event.preventDefault(); // Evita el envío tradicional
+
+            var $form = $(this);
+            var $btn = $form.find('button[type="submit"]');
+
+            // Evitar doble clic
+            if ($btn.prop('disabled')) {
+                return;
+            }
+
+            // 1. MOSTRAR PANTALLA DE CARGA BLOQUEANTE
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Actualizando el documento, por favor espere.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Deshabilitar botón
+            $btn.prop('disabled', true);
+
+            // Capturar todos los datos, incluidos los archivos PDF
+            var formData = new FormData(this);
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    Swal.close();
+
+                    if (response.success) {
+                        // CASO A: Éxito, pero con advertencias (algunas dependencias sí se enviaron, otras no)
+                        if (response.warnings && response.warnings.length > 0) {
+                            let warningsHtml =
+                                '<ul style="text-align: left; margin-top: 10px; color: #d97f16; padding-left: 20px;">';
+                            response.warnings.forEach(warning => {
+                                warningsHtml +=
+                                    `<li style="margin-bottom: 5px;">${warning}</li>`;
+                            });
+                            warningsHtml +=
+                                '</ul><p class="mt-3" style="font-size: 0.9em; color: #666; border-top: 1px solid #eee; padding-top: 10px;">El documento se actualizó para las dependencias correctas, pero se omitieron las mencionadas arriba.</p>';
+
+                            Swal.fire({
+                                title: "Actualizado con Advertencias",
+                                html: warningsHtml,
+                                icon: "warning",
+                                confirmButtonText: "Entendido",
+                                confirmButtonColor: '#f19e40'
+                            }).then(() => {
+                                window.location.href =
+                                    "{{ route('documentario.mesapar.index') }}";
+                            });
+                        }
+                        // CASO B: Éxito total, sin advertencias
+                        else {
+                            Swal.fire({
+                                title: "¡Éxito!",
+                                text: response.success,
+                                icon: "success",
+                                confirmButtonColor: '#28a745'
+                            }).then(() => {
+                                window.location.href =
+                                    "{{ route('documentario.mesapar.index') }}";
+                            });
+                        }
+                    }
+                    // Fallback por si el controlador devolvió HTML en lugar de JSON
+                    else if (typeof response === 'string' && response.includes('<!DOCTYPE html>')) {
+                        document.open();
+                        document.write(response);
+                        document.close();
+                    }
+                },
+                error: function(xhr) {
+                    Swal.close();
+                    $btn.prop('disabled', false); // Reactivar botón
+
+                    if (xhr.responseJSON) {
+                        // CASO 1: Errores de validación de Laravel (campos vacíos, etc.)
+                        if (xhr.responseJSON.errors) {
+                            let errorMsg =
+                                '<ul style="text-align: left; margin-top: 10px; padding-left: 20px;">';
+                            $.each(xhr.responseJSON.errors, function(key, value) {
+                                errorMsg += '<li style="margin-bottom: 5px;">' + value[0] +
+                                    '</li>';
+                            });
+                            errorMsg += '</ul>';
+
+                            Swal.fire({
+                                title: "Campos incompletos",
+                                html: errorMsg,
+                                icon: "warning",
+                                confirmButtonColor: '#f19e40'
+                            });
+                        }
+                        // CASO 2: Error de lógica (ej. NINGUNA dependencia tenía un jefe válido)
+                        else if (xhr.responseJSON.error) {
+                            let htmlContent =
+                                `<p class="mb-2" style="font-weight: 600;">${xhr.responseJSON.error}</p>`;
+
+                            // Si trae la lista de dependencias problemáticas, la pintamos en rojo
+                            if (xhr.responseJSON.warnings && xhr.responseJSON.warnings.length > 0) {
+                                htmlContent +=
+                                    '<ul style="text-align: left; margin-top: 10px; color: #dc3545; padding-left: 20px;">';
+                                xhr.responseJSON.warnings.forEach(warning => {
+                                    htmlContent +=
+                                        `<li style="margin-bottom: 5px;">${warning}</li>`;
+                                });
+                                htmlContent += '</ul>';
+                            }
+
+                            Swal.fire({
+                                title: "Error al procesar",
+                                html: htmlContent,
+                                icon: "error",
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                    } else {
+                        // CASO 3: Error de red o servidor
+                        Swal.fire({
+                            title: "Error Inesperado",
+                            text: "Ocurrió un error de comunicación. Por favor, recarga la página.",
+                            icon: "error",
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                }
+            });
+        });
 
         @if (session('error'))
             Swal.fire({
