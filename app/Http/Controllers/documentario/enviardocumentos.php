@@ -311,34 +311,63 @@ return view('mesaPartes.responderdocumento', compact(
 public function derivarDirector($id)
 {
     try {
-        DB::connection('mysql_documentario')->beginTransaction();
-
-        $idDirector = 7;
+        // 1. Constantes del sistema
+        $idDependenciaDirector = 7; // ID de la dependencia del Director
         $idMesaPartes = 24;
         $idTipoFUT = 1;
 
-
+        // 2. Obtener documento original
         $docOriginal = DB::connection('mysql_documentario')->table('documentos')
             ->where('iddocumentos', $id)
             ->first();
 
+        if (!$docOriginal) {
+            return back()->with('error', 'El documento no existe o ya fue procesado.');
+        }
 
+        // =================================================================
+        // 🛡️ 3. VALIDACIÓN DE SEGURIDAD: ¿El Director tiene exactamente 1 jefe activo?
+        // =================================================================
+        $jefesCount = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('dependencia_id', $idDependenciaDirector)
+            ->where('tipo_usuario', 2) // 2 = Jefe
+            ->where('estado', 1)       // 1 = Activo
+            ->count();
+
+        if ($jefesCount === 0) {
+            return back()->with('error', "No se puede derivar: La dependencia del Director no tiene un jefe activo asignado. Regularice esto en el módulo de usuarios.");
+        }
+
+        if ($jefesCount > 1) {
+            return back()->with('error', "No se puede derivar: La dependencia del Director tiene MÚLTIPLES jefes activos. Por seguridad, el sistema bloquea la derivación hasta que se regularice.");
+        }
+
+        // Si llegamos aquí, obtenemos el ID del usuario (jefe) para registrar a quién se le envía realmente
+        $id_user_receptor_director = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('dependencia_id', $idDependenciaDirector)
+            ->where('tipo_usuario', 2)
+            ->where('estado', 1)
+            ->value('user_id');
+
+        // =================================================================
+        // 4. INICIO DE TRANSACCIÓN
+        // =================================================================
+        DB::connection('mysql_documentario')->beginTransaction();
+
+        // Lógica de correlativo (se mantiene tu lógica original de FUT vs General)
         $queryUltimo = DB::connection('mysql_documentario')->table('documentos')
             ->where('emisor', $idMesaPartes)
             ->where('est_firma', 0);
 
         if ($docOriginal->idtipo_documento == $idTipoFUT) {
-
-            $ultimoExpediente = $queryUltimo->where('idtipo_documento', $idTipoFUT)
-                ->max('numero_de_exp');
+            $ultimoExpediente = $queryUltimo->where('idtipo_documento', $idTipoFUT)->max('numero_de_exp');
         } else {
-
-            $ultimoExpediente = $queryUltimo->where('idtipo_documento', '!=', $idTipoFUT)
-                ->max('numero_de_exp');
+            $ultimoExpediente = $queryUltimo->where('idtipo_documento', '!=', $idTipoFUT)->max('numero_de_exp');
         }
 
         $nuevoExpediente = $ultimoExpediente ? (int)$ultimoExpediente + 1 : 1;
 
+        // Insertar nuevo documento (La derivación)
         $nuevoIdDoc = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
             'numero_de_exp'           => $nuevoExpediente,
             'fecha_ingreso'           => now(),
@@ -353,40 +382,56 @@ public function derivarDirector($id)
             'est_firma'               => 0,
         ]);
 
-
+        // =================================================================
+        // 🕵️ 5. TRAZABILIDAD: Actualizar movimiento original con usuario y fecha
+        // =================================================================
         DB::connection('mysql_documentario')->table('movimiento')
             ->where('iddocumentos', $id)
             ->where('iddependencias_receptor', $idMesaPartes)
-            ->where('idestado', 2)
+            ->where('idestado', 2) // Asumiendo que 2 es "En Proceso" o "Recibido"
             ->update([
-                'idestado' => 3,
-                'fecha_finalizacion' => now()
+                'idestado'           => 3, // 3 = Finalizado / Derivado
+                'fecha_finalizacion' => now(),
+                'id_user_finali'     => Auth::id() // 👈 ¡AQUÍ QUEDA REGISTRADO QUIÉN DERIVÓ!
             ]);
 
-
+        // =================================================================
+        // 6. Crear nuevo movimiento hacia el Director
+        // =================================================================
         DB::connection('mysql_documentario')->table('movimiento')->insert([
             'iddocumentos'            => $nuevoIdDoc,
             'iddependencias_emior'    => $idMesaPartes,
-            'iddependencias_receptor' => $idDirector,
+            'iddependencias_receptor' => $idDependenciaDirector,
+            'id_user_receptor'        => $id_user_receptor_director, // 👈 ¡MEJORA! Ahora sabemos a qué usuario específico llegó
             'fecha_de_envio'          => now(),
             'idestado'                => 1
         ]);
 
-         $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-                                        FROM estado
-                                        LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-                                        AND movimiento.iddependencias_receptor = ?
-                                        WHERE estado.idestado IN (1,2,3)
-                                        GROUP BY estado.idestado;', [$idDirector]);
+        // Obtener conteos para el evento Real-Time
+        $cont_estados = DB::connection('mysql_documentario')->select('
+            SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
+            FROM estado
+            LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+            AND movimiento.iddependencias_receptor = ?
+            WHERE estado.idestado IN (1,2,3)
+            GROUP BY estado.idestado
+        ', [$idDependenciaDirector]);
 
         DB::connection('mysql_documentario')->commit();
 
         $tipoMsj = ($docOriginal->idtipo_documento == $idTipoFUT) ? "FUT" : "General";
-        event(new DocumentoRecibido($idDirector, $cont_estados,'dependencia'));
-        return back()->with('success', "Derivado con éxito. Nuevo Exp. $tipoMsj: $nuevoExpediente");
+        
+        // Disparamos el evento (usando el ID de la dependencia para consistencia)
+        event(new DocumentoRecibido($idDependenciaDirector, $cont_estados, 'dependencia'));
+
+        return back()->with('success', "Derivado al Director con éxito. Nuevo Exp. $tipoMsj: $nuevoExpediente");
 
     } catch (\Exception $e) {
         DB::connection('mysql_documentario')->rollBack();
+        
+        // Es buena práctica registrar el error en los logs de Laravel para auditoría técnica
+        \Illuminate\Support\Facades\Log::error('Error al derivar al Director (Doc ID: ' . $id . '): ' . $e->getMessage());
+        
         return back()->with('error', 'Error al derivar: ' . $e->getMessage());
     }
 }
