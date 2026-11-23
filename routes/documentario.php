@@ -80,6 +80,8 @@ Route::get('/resoluciones/generar/{id_proyecto}', [resoluciones::class, 'generar
 Route::resource('oficinas', OficinaController::class)->names('admin.oficinas');
 
 Route::get('/admin/usuarios-activos', [ReporteUsuariosController::class, 'index'])->name('usuarios_activos');
+Route::get('/datos', [mesaPartes::class, 'datos'])->name('datos.docu');
+Route::post('/usuario/toggle-permiso-asistentes', [mesaPartes::class, 'togglePermisoAsistentes'])->name('usuario.togglePermiso');
 // Route::get('/buscarPersonalPorDependencia/{id_dependencia}', [mesaPartes::class, 'buscarPersonalPorDependencia'])->name('documentario.buscarPersonalDependencia');
 
 

@@ -263,7 +263,7 @@
                                                                     id="check_fisico" name="con_anexos_fisicos">
                                                                 <label for="check_fisico" class="custom-control-label">
                                                                     <i class="fas fa-archive text-warning"></i> ¿Contiene
-                                                                    anexos físicos?
+                                                                    anexos físicos? (Opcional):
                                                                 </label>
                                                             </div>
                                                             <input type="text" id="detalle_fisico"
@@ -287,6 +287,11 @@
                                                                     PDF...</label>
                                                             </div>
                                                             <span id="archivo_pdf_error" class="text-danger"></span>
+                                                            <button type="button" id="btn_ver_pdf"
+                                                                class="btn btn-sm btn-outline-primary mt-2"
+                                                                style="display: none;">
+                                                                <i class="fas fa-eye mr-1"></i> Ver PDF seleccionado
+                                                            </button>
                                                         </div>
                                                     </div>
 
@@ -379,14 +384,28 @@
                                     <div class="col-sm-12">
                                         <table id="datatablesSimple" class="table table-hover">
                                             <thead>
-                                                <tr style="background-color:#f19e40">
-                                                    <th style="text-align: center;">N° Expe.</th>
-                                                    <th style="text-align: center;">Contador</th>
-                                                    <th style="text-align: center;">Fecha y hora</th>
-                                                    <th style="text-align: center;">Asunto</th>
-                                                    <th style="text-align: center;">Para Oficina:</th>
-                                                    <th style="text-align: center;">Para usuario:</th>
-                                                    <th style="text-align: center;">Acciones</th>
+                                                <tr style="background: linear-gradient(90deg, #f19e40, #fddd98);">
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-folder-open"></i> N° Expe.
+                                                    </th>
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-file-alt"></i> Contador
+                                                    </th>
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-calendar-alt"></i> Fecha y hora
+                                                    </th>
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-align-left"></i> Asunto
+                                                    </th>
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-building"></i> Para Oficina
+                                                    </th>
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-user"></i> Para usuario
+                                                    </th>
+                                                    <th style="text-align: center;">
+                                                        <i class="fas fa-cogs"></i> Acciones
+                                                    </th>
                                                 </tr>
                                             </thead>
                                         </table>
@@ -397,7 +416,34 @@
                     </div>
                 </div>
             </div>
+            {{-- ========================================== --}}
+            {{-- MODAL PARA PREVISUALIZAR PDF              --}}
+            {{-- ========================================== --}}
+            <div class="modal fade" id="modalPreviewPdf" tabindex="-1" role="dialog"
+                aria-labelledby="modalPreviewPdfLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary">
+                            <h5 class="modal-title text-white" id="modalPreviewPdfLabel">
+                                <i class="fas fa-file-pdf mr-2"></i> Vista Previa del Documento
+                            </h5>
+                            <button type="button" class="close text-white" id="btnCerrarPreviewPdf" data-dismiss="modal"
+                                aria-label="Close">
+                                <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body p-0" style="height: 80vh; background-color: #525659;">
+                            <iframe id="iframePreviewPdf" src=""
+                                style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
         @endif
+        <br>
+        <br>
+        <br>
+        <br>
     @endcanany
 @stop
 {{-- @vite(['resources/js/app.js']) --}}
@@ -554,8 +600,6 @@
                 });
             });
 
-            // $('#tipo_documento').change(traer_num_expe);
-
             // Usamos .off('submit') para evitar que el evento se duplique si el script se ejecuta de nuevo
             $('#form_regis_doc').off('submit').on('submit', function(event) {
                 event.preventDefault();
@@ -633,65 +677,100 @@
                         $('#form_regis_doc button[type="submit"]').prop('disabled', false);
                     },
                     error: function(xhr) {
-                        // 3. OCULTAR PANTALLA DE CARGA EN CASO DE ERROR
+                        // 1. Ocultar pantalla de carga
                         Swal.close();
 
-                        // Limpiar errores visuales previos
+                        // 2. Limpiar mensajes de error visuales previos
                         $('.text-danger').text('');
 
                         if (xhr.responseJSON) {
-                            // CASO A: Errores de validación de Laravel
+                            // CASO A: Errores de validación de Laravel (Campos faltantes/inválidos)
                             if (xhr.responseJSON.errors) {
                                 var errors = xhr.responseJSON.errors;
-                                if (errors.tipo_documento) $('#tipo_documento_error').text(
-                                    errors.tipo_documento[0]);
-                                if (errors.dependencia_enviar) $('#dependencia_enviar_error')
-                                    .text(errors.dependencia_enviar[0]);
-                                if (errors.asunto) $('#asunto_error').text(errors.asunto[0]);
-                                if (errors.para_su) $('#para_su_error').text(errors.para_su[0]);
-                                if (errors.usuario) $('#usuario_error').text(errors.usuario[0]);
-                                if (errors.folio) $('#folio_error').text(errors.folio[0]);
+                                let errorMsg =
+                                    '<ul style="text-align: left; margin-top: 10px; padding-left: 20px;">';
 
+                                // Mapear errores a los spans del formulario Y construir la lista para el modal
+                                if (errors.tipo_documento) {
+                                    $('#tipo_documento_error').text(errors.tipo_documento[0]);
+                                    errorMsg += `<li>${errors.tipo_documento[0]}</li>`;
+                                }
+                                if (errors.folio) {
+                                    $('#folio_error').text(errors.folio[0]);
+                                    errorMsg += `<li>${errors.folio[0]}</li>`;
+                                }
+                                if (errors.asunto) {
+                                    $('#asunto_error').text(errors.asunto[0]);
+                                    errorMsg += `<li>${errors.asunto[0]}</li>`;
+                                }
+                                if (errors.para_su) {
+                                    $('#para_su_error').text(errors.para_su[0]);
+                                    errorMsg += `<li>${errors.para_su[0]}</li>`;
+                                }
+                                if (errors.dependencia_enviar) {
+                                    $('#dependencia_enviar_error').text(errors
+                                        .dependencia_enviar[0]);
+                                    errorMsg += `<li>${errors.dependencia_enviar[0]}</li>`;
+                                }
+                                if (errors.docentes_especificos) {
+                                    errorMsg += `<li>${errors.docentes_especificos[0]}</li>`;
+                                }
+                                if (errors.egresados) {
+                                    errorMsg += `<li>${errors.egresados[0]}</li>`;
+                                }
+                                if (errors.alumnos) {
+                                    $('#alumnos_select_error').text(errors.alumnos[0]);
+                                    errorMsg += `<li>${errors.alumnos[0]}</li>`;
+                                }
+                                if (errors.archivo_pdf) {
+                                    $('#archivo_pdf_error').text(errors.archivo_pdf[0]);
+                                    errorMsg += `<li>${errors.archivo_pdf[0]}</li>`;
+                                }
+                                if (errors.detalle_anexos_fisicos) {
+                                    errorMsg += `<li>${errors.detalle_anexos_fisicos[0]}</li>`;
+                                }
+
+                                errorMsg += '</ul>';
+
+                                // Mostrar el modal con la lista de errores
                                 Swal.fire({
-                                    title: "Campos incompletos",
-                                    text: "Por favor, revisa los campos marcados en rojo.",
-                                    icon: "warning"
+                                    title: "Campos incompletos o inválidos",
+                                    html: errorMsg,
+                                    icon: "warning",
+                                    confirmButtonText: "Entendido",
+                                    confirmButtonColor: '#f19e40'
                                 });
                             }
-                            // CASO B: Errores atrapados en el try/catch del controlador (clave 'error')
-                            // CASO B: Errores atrapados en el try/catch del controlador (clave 'error')
+                            // CASO B: Errores de lógica del controlador (ej. Asistente sin permiso, o dependencias sin jefe)
                             else if (xhr.responseJSON.error) {
+                                let htmlContent =
+                                    `<p class="mb-2" style="font-weight: 600;">${xhr.responseJSON.error}</p>`;
 
-                                // Si el error trae una lista de advertencias (ninguna dependencia sirvió)
                                 if (xhr.responseJSON.warnings && xhr.responseJSON.warnings
                                     .length > 0) {
-                                    let warningsHtml =
-                                        '<ul style="text-align: left; margin-top: 10px; max-height: 300px; overflow-y: auto;">';
+                                    htmlContent +=
+                                        '<ul style="text-align: left; margin-top: 10px; color: #dc3545; padding-left: 20px;">';
                                     xhr.responseJSON.warnings.forEach(warning => {
-                                        warningsHtml += `<li>${warning}</li>`;
+                                        htmlContent +=
+                                            `<li style="margin-bottom: 5px;">${warning}</li>`;
                                     });
-                                    warningsHtml += '</ul>';
-
-                                    Swal.fire({
-                                        title: "Error al procesar",
-                                        html: `<p>${xhr.responseJSON.error}</p>${warningsHtml}`,
-                                        icon: "error"
-                                    });
-                                } else {
-                                    // Error normal sin lista de dependencias
-                                    Swal.fire({
-                                        title: "Error al procesar",
-                                        text: xhr.responseJSON.error,
-                                        icon: "error"
-                                    });
+                                    htmlContent += '</ul>';
                                 }
+
+                                Swal.fire({
+                                    title: "Error al procesar",
+                                    html: htmlContent,
+                                    icon: "error",
+                                    confirmButtonColor: '#dc3545'
+                                });
                             }
                             // CASO C: Otros mensajes de error de Laravel
                             else if (xhr.responseJSON.message) {
                                 Swal.fire({
                                     title: "Error",
                                     text: xhr.responseJSON.message,
-                                    icon: "error"
+                                    icon: "error",
+                                    confirmButtonColor: '#dc3545'
                                 });
                             }
                         } else {
@@ -699,12 +778,13 @@
                             Swal.fire({
                                 title: "Error Inesperado",
                                 text: "Ocurrió un error de comunicación con el servidor. Por favor, recarga la página e inténtalo de nuevo.",
-                                icon: "error"
+                                icon: "error",
+                                confirmButtonColor: '#dc3545'
                             });
                         }
 
-                        // Reactivar botón en caso de error
-                        butonEnviardatos.prop('disabled', false);
+                        // 3. Reactivar el botón de envío para que el usuario pueda corregir y reintentar
+                        $('#form_regis_doc button[type="submit"]').prop('disabled', false);
                     }
                 });
             });
@@ -1031,7 +1111,8 @@
                                 'background-color': "#f19e40",
                                 'white-space': 'nowrap',
                                 'overflow': 'hidden',
-                                'text-overflow': 'ellipsis'
+                                'text-overflow': 'ellipsis',
+                                'font-weight': 'bold'
                             });
                         }
                     },
@@ -1039,7 +1120,10 @@
                         targets: 1,
                         width: "5%",
                         createdCell: function(td) {
-                            $(td).css('background-color', "#f19e407f");
+                            $(td).css({
+                                'background-color': "#f19e407f",
+                                'font-weight': 'bold'
+                            });
                         }
                     },
                     {
@@ -1160,6 +1244,14 @@
             $('#archivo_pdf').val('');
             $('#archivo_pdf').next('.custom-file-label').html('Seleccionar PDF...');
 
+            $('#btn_ver_pdf').hide();
+            $('#iframePreviewPdf').attr('src', '');
+
+            if (pdfObjectUrl) {
+                URL.revokeObjectURL(pdfObjectUrl);
+                pdfObjectUrl = null;
+            }
+
             $('#input_docente_shadow').remove();
             $('#input_egresado_shadow').remove(); // 🐛 corregido (antes: egresados_shadow)
             $('#input_alumno_shadow').remove(); // 👈 nuevo
@@ -1170,44 +1262,57 @@
             $('#dependencia_enviar').prop('disabled', false);
         }
 
-        // function limpiarFormularioYRecargar() {
-        //     // 1. Resetear formulario HTML estándar
-        //     $('#form_regis_doc')[0].reset();
+        // ==========================================
+        // LÓGICA DE PREVISUALIZACIÓN DE PDF
+        // ==========================================
+        let pdfObjectUrl = null;
 
-        //     // 2. Recargar DataTable
-        //     if ($.fn.DataTable.isDataTable('#datatablesSimple')) {
-        //         $('#datatablesSimple').DataTable().ajax.reload();
-        //     }
+        // 1. Detectar cuando se selecciona un archivo
+        $('#archivo_pdf').on('change', function(e) {
+            var file = e.target.files[0];
+            var nextSibling = $(this).next('.custom-file-label');
+            var btnVerPdf = $('#btn_ver_pdf');
 
-        //     // 3. Limpiar errores visuales
-        //     $('.text-danger').text('');
+            if (file && file.type === 'application/pdf') {
+                nextSibling.text(file.name);
+                if (pdfObjectUrl) {
+                    URL.revokeObjectURL(pdfObjectUrl);
+                }
+                pdfObjectUrl = URL.createObjectURL(file);
+                btnVerPdf.show();
+            } else {
+                nextSibling.text('Elegir archivo...');
+                btnVerPdf.hide();
+                if (pdfObjectUrl) {
+                    URL.revokeObjectURL(pdfObjectUrl);
+                    pdfObjectUrl = null;
+                }
+            }
+        });
 
-        //     // 4. Limpiar correctamente todos los Select2 del formulario
-        //     $('#tipo_documento').val('0');
-        //     $('#para_su').val('0').trigger('change');
-        //     $('#dependencia_enviar').val(null).trigger('change');
-        //     $('#docentes_select').val(null).trigger('change');
-        //     $('#egresados_select').val(null).trigger('change');
+        // 2. Al hacer clic en el botón, cargar la URL y abrir el modal
+        $('#btn_ver_pdf').on('click', function() {
+            if (pdfObjectUrl) {
+                $('#iframePreviewPdf').attr('src', pdfObjectUrl);
+                $('#modalPreviewPdf').modal('show');
+            }
+        });
 
-        //     // 5. Ocultar contenedores específicos y resetear estados visuales
-        //     $('#container_docentes').hide();
-        //     $('#container_egresados').hide();
-        //     $('#num_expe').val('');
-        //     $('#detalle_fisico').fadeOut().removeAttr('required').val('');
+        // 3. Al cerrar el modal, limpiar el iframe para liberar memoria
+        $('#modalPreviewPdf').on('hidden.bs.modal', function() {
+            $('#iframePreviewPdf').attr('src', '');
+        });
 
-        //     // 6. Limpiar input file y label de AdminLTE
-        //     $('#archivo_pdf').val('');
-        //     $('#archivo_pdf').next('.custom-file-label').html('Seleccionar PDF...');
+        $(document).on('click', '#btnCerrarPreviewPdf', function(e) {
+            e.preventDefault(); // Evita comportamientos por defecto
+            $('#modalPreviewPdf').modal('hide'); // Fuerza el cierre del modal
+            $('#iframePreviewPdf').attr('src', ''); // Limpia el iframe para detener la carga/audio
+        });
 
-        //     // 7. Remover elementos dinámicos creados
-        //     $('#input_docente_shadow').remove();
-        //     $('#input_egresados_shadow').remove();
-        //     $('#btn-reset').remove();
-        //     $('#btn-reset-egresados').remove();
-
-        //     // 8. Asegurar habilitación de dependencias
-        //     $('#dependencia_enviar').prop('disabled', false);
-        // }
+        // También aseguramos que se limpie si se cierra haciendo clic fuera del modal
+        $('#modalPreviewPdf').on('hidden.bs.modal', function() {
+            $('#iframePreviewPdf').attr('src', '');
+        });
 
         // Botón para desbloquear y volver a elegir dependencias normales
         $(document).on('click', '#btn-reset', function() {
