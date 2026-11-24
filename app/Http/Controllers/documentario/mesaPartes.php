@@ -570,8 +570,6 @@ class mesaPartes extends Controller
                 ->where('dar_permiso', 1)
                 ->where('estado', 1)
                 ->exists();
-            // dd($jefeDioPermiso);
-
 
             if (!$jefeDioPermiso) {
                 // Bloquear la acción
@@ -704,10 +702,10 @@ class mesaPartes extends Controller
                     $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
                                         FROM estado
                                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
+                                        AND movimiento.iddependencias_receptor = ?
                                         AND movimiento.id_user_receptor = ?
                                         WHERE estado.idestado IN (1,2,3)
-                                        GROUP BY estado.idestado;', [$id_user_docente]);
-
+                                        GROUP BY estado.idestado;', [2, $id_user_docente]);
                     //aqui el evento para docentes.
                     event(new DocumentoRecibido($id_user_docente, $cont_estados, 'personal'));
                 }
@@ -892,8 +890,6 @@ class mesaPartes extends Controller
                 ->where('dar_permiso', 1)
                 ->where('estado', 1)
                 ->exists();
-            // dd($jefeDioPermiso);
-
 
             if (!$jefeDioPermiso) {
                 // Bloquear la acción
@@ -946,6 +942,8 @@ class mesaPartes extends Controller
         } elseif ($request->tipo_remitente_m === 'juridica') {
             $reglas['id_entidad_m_externa'] = 'required|exists:mysql_documentario.entidades_externas,id';
             $reglas['numero_documento_externo_m'] = 'required|string|max:255';
+            $reglas['correo_entidad_m'] = 'required|email|max:100';
+            $reglas['celular_entidad_m'] = ['required', 'regex:/^9[0-9]{8}$/'];
         }
 
 
@@ -977,6 +975,8 @@ class mesaPartes extends Controller
             'nuevo_correo_m.email'           => 'El formato del correo no es válido.',
             'id_entidad_m_externa.exists'    => 'La entidad seleccionada no es válida.',
             'numero_documento_externo_m.required' => 'El N° de documento externo es obligatorio.',
+            'correo_entidad_m.email'   => 'El formato del correo electrónico no es válido.',
+            'celular_entidad_m.regex'  => 'El celular debe tener 9 dígitos y comenzar con 9.',
             // 'doc_referencia_m.required' => 'La referencia del oficio es obligatoria.'
         ];
 
@@ -1017,6 +1017,8 @@ class mesaPartes extends Controller
                 'recomendacion'            => $request->Recomendaciones_m,
                 'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->id_entidad_m_externa : null,
                 'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->numero_documento_externo_m : null,
+                'correo'           => $request->correo_entidad_m,
+                'celular'          => $request->celular_entidad_m,
                 'anexos_fisicos'           => $request->detalle_anexos_fisicos_m,
                 'estado_actu'              => 1,
                 'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
@@ -1385,6 +1387,8 @@ class mesaPartes extends Controller
         $idusuario = null;
         $id_entidad_externa = null;
         $numero_documento_externo = null;
+        $correo = null;
+        $celular = null;
 
         if (session('dependencia_id') == 24) {
             if ($request->tipo_remitente_m === 'natural') {
@@ -1392,6 +1396,8 @@ class mesaPartes extends Controller
             } elseif ($request->tipo_remitente_m === 'juridica') {
                 $id_entidad_externa = $request->id_entidad_m_externa;
                 $numero_documento_externo = $request->numero_documento_externo_m;
+                $correo = $request->correo_entidad_m;
+                $celular = $request->celular_entidad_m;
             }
         }
 
@@ -1416,6 +1422,8 @@ class mesaPartes extends Controller
                     'idusuario'                => $idusuario,
                     'id_entidad_externa'       => $id_entidad_externa,
                     'numero_documento_externo' => $numero_documento_externo,
+                    'correo'           => $correo,
+                    'celular'          => $celular,
                 ]);
 
             // 2. Lógica de Movimientos
