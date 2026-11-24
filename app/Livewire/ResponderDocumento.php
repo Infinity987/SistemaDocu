@@ -214,7 +214,7 @@ public function buscarDocentes()
         $rules = [
             'folio' => 'required|numeric',
             'asunto' => 'required|string|min:5',
-            'recomendaciones' => 'required|string|min:5',
+            // 'recomendaciones' => 'required|string|min:5',
             'entregaOpciones' => 'required|integer',
             'archivo_virtual' => 'nullable|file|mimes:pdf|max:2048',
             'idTipoDocumento' => 'required|integer',
