@@ -36,7 +36,8 @@ class UserSeeder extends Seeder
             'user_id' => $id_admin->id,
             'dependencia_id' => 1,
             'created_at' => $fechayhora,
-            'estado' => 1
+            'estado' => 1,
+            'dar_permiso' => 0
         ]);
     }
 }

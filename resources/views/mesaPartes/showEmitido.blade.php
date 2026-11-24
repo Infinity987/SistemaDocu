@@ -32,7 +32,7 @@
 @section('content')
     @canany(['documentario.mesapar.showEmitido', 'alumno.matricula.index'])
         <section class="content">
-            <div class="container-fluid">
+            <div class="container">
                 {{-- ver si las oficinas respondieron --}}
                 <div class="card collapsed-card card-{{ $estadoMayor->idestado >= 2 ? 'success' : 'danger' }}">
                     <div class="card-header">
@@ -66,9 +66,10 @@
                         </ul>
                     </div>
                 </div>
+                <br>
                 -----------ed-------------
                 {{-- todo el formulario de editar --}}
-                <div class="card card-{{ $estadoMayor->idestado >= 2 ? 'warning' : 'info' }}">
+                <div class="card card-{{ $estadoMayor->idestado >= 2 ? 'warning' : 'info' }} shadow">
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="{{ $estadoMayor->idestado >= 2 ? 'fas fa-eye' : 'fas fa-pencil-alt' }}"></i>
@@ -423,7 +424,7 @@
                                                         <label for="archivo_pdf">
                                                             <i class="fas fa-file-pdf text-danger"></i> ver / Reemplazar
                                                             Documento
-                                                            (PDF):
+                                                            (PDF)-:
                                                         </label>
                                                         @if ($pdfdocumento->isNotEmpty())
                                                             @foreach ($pdfdocumento as $pdf)
@@ -471,7 +472,7 @@
                                                     </div>
                                                 </div>
 
-                                                @if ($estadoMayor->idestado == 1)
+                                                @if ($estadoMayor->idestado == 1 && $queryDoc->est_firma == 1)
                                                     <div class="col-sm-12 mt-2">
                                                         <button type="button" onclick="descargarWordBorrador()"
                                                             class="btn btn-outline-info btn-block shadow-sm">

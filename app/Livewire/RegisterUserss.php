@@ -80,7 +80,8 @@ class RegisterUserss extends Component
                 'created_at' => $fechaHoraPeru,
                 'estado' => 1,
                 'tipo_usuario' => $this->tipo_usuario,
-                'token' => Str::uuid()
+                'token' => Str::uuid(),
+                'dar_permiso' => 0
             ]);
 
             // Caso especial: docentes

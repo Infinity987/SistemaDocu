@@ -654,9 +654,16 @@ return [
             'can' => 'rol-documentario',
         ],
         [
+            'text' => 'Datos / Permisos',
+            'route' => 'documentario.datos.docu',
+            'icon' => 'fas fa-user',
+            'active' => ['docente/Datos*'],
+            'can' => 'rol-documentario',
+        ],
+        [
             'text' => 'Crear',
             'route' => 'documentario.mesapar.index',
-            'icon' => 'fas fa-fw fa-user',
+            'icon' => 'fas fa-fw fa-plus',
             'active' => ['documentario/Docu*'],
             'can' => 'rol-documentario'
         ],

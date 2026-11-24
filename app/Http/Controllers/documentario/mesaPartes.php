@@ -299,7 +299,7 @@ class mesaPartes extends Controller
         if (session('dependencia_id') == 24) {
             $depens = DB::connection('mysql_documentario')->table('dependencias')
                 ->where('nombre_dependencia', 'like', "%{$busqueda}%")
-                ->whereNotIn('iddependencias', [1, 3, 4, 5])
+                ->whereNotIn('iddependencias', [1, 3, 4, 5, 6])
                 ->get();
             return response()->json($depens);
         }
@@ -326,7 +326,7 @@ class mesaPartes extends Controller
         if (session('dependencia_id') == 5) {
             $depens = DB::connection('mysql_documentario')->table('dependencias')
                 ->where('nombre_dependencia', 'like', "%{$busqueda}%")
-                ->whereNotIn('iddependencias', [1, 3, 4])
+                ->whereNotIn('iddependencias', [1, 3, 4, 6])
                 ->get();
             return response()->json($depens);
         }
@@ -335,7 +335,7 @@ class mesaPartes extends Controller
         $id_depen = session('dependencia_id');
         $depens = DB::connection('mysql_documentario')->table('dependencias')
             ->where('nombre_dependencia', 'like', "%{$busqueda}%")
-            ->whereNotIn('iddependencias', [1, 3, $id_depen])
+            ->whereNotIn('iddependencias', [1, 3, $id_depen, 6])
             ->get();
         return response()->json($depens);
     }
@@ -553,42 +553,110 @@ class mesaPartes extends Controller
 
     public function registrarDocu(Request $request)
     {
-        // dd($request);
+        // 1. Verificar si el que intenta enviar es Asistente (tipo_usuario = 1)
+        $es_jefe_o_usuario = 0;
+        $esAsistente = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('user_id', Auth::id())
+            ->where('dependencia_id', session('dependencia_id'))
+            ->where('tipo_usuario', 1)
+            ->where('estado', 1)
+            ->exists();
+
+        if ($esAsistente) {
+            // 2. Si es asistente, verificar si el JEFE de esta dependencia tiene dar_permiso = 1
+            $jefeDioPermiso = DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('dependencia_id', session('dependencia_id'))
+                ->where('tipo_usuario', 2) // Buscamos al Jefe
+                ->where('dar_permiso', 1)
+                ->where('estado', 1)
+                ->exists();
+            // dd($jefeDioPermiso);
+
+
+            if (!$jefeDioPermiso) {
+                // Bloquear la acción
+                return response()->json(['error' => 'Acción denegada: El Jefe del Área no ha habilitado el permiso para que los asistentes envíen documentos.'], 500);
+            } else {
+                $es_jefe_o_usuario = 1;
+                $idJefe = DB::connection('mysql_documentario')
+                    ->table('dependencia_user')
+                    ->where('dependencia_id', session('dependencia_id'))
+                    ->where('tipo_usuario', 2)
+                    ->where('estado', 1)
+                    ->value('user_id');
+            }
+        }
+
         $reglas = [
-            'tipo_documento'   => 'required|not_in:0',
-            'asunto'           => 'required|string',
-            'folio'            => 'required|integer|min:1',
+            'tipo_documento' => 'required|integer|not_in:0',
+            'folio'          => 'required|integer|min:1',
+            'asunto'         => 'required|string|min:5|max:1000', // Mínimo 5 caracteres para evitar "hola"
+            'para_su'        => 'required|integer|not_in:0',
+            'archivo_pdf'    => 'required|file|mimes:pdf|max:10240', // Obligatorio, solo PDF, máx 10MB
         ];
 
-        // Validación específica para Mesa de Partes (ID 19)
-        if ($request->emisor == 19) {
-            if ($request->tipo_remitente == 'natural') {
-                // Si es persona natural, SOLO validamos el usuario
-                $reglas['usuario'] = 'required|not_in:0';
-            } else {
-                // Si es entidad, SOLO validamos los campos de entidad
-                $reglas['id_entidad_externa'] = 'required|exists:entidades_externas,id';
-                $reglas['numero_documento_externo'] = 'required|string|max:255';
+        // Lógica condicional para el DESTINO del documento
+        $tienePersonasEspecificas = $request->filled('docentes_especificos') ||
+            $request->filled('egresados') ||
+            $request->filled('alumnos');
+
+        if ($tienePersonasEspecificas) {
+            if ($request->filled('docentes_especificos')) {
+                $reglas['docentes_especificos'] = 'required|array|min:1';
+                $reglas['docentes_especificos.*'] = 'required|integer';
             }
+            if ($request->filled('egresados')) {
+                $reglas['egresados'] = 'required|array|min:1';
+                $reglas['egresados.*'] = 'required|integer';
+            }
+            if ($request->filled('alumnos')) {
+                $reglas['alumnos'] = 'required|array|min:1';
+                $reglas['alumnos.*'] = 'required|integer';
+            }
+        } else {
+            // Si NO hay personas específicas, la dependencia genérica es OBLIGATORIA
+            $reglas['dependencia_enviar'] = 'required|array|min:1';
+            $reglas['dependencia_enviar.*'] = 'required|integer';
+        }
+
+        // Lógica condicional para ANEXOS FÍSICOS
+        // Si el checkbox está marcado, el detalle es obligatorio
+        if ($request->has('con_anexos_fisicos')) {
+            $reglas['detalle_anexos_fisicos'] = 'required|string|max:255';
         }
 
         // Mensajes personalizados
         $mensajes = [
-            'tipo_documento.required' => 'El campo tipo de documento es obligatorio.',
-            'tipo_documento.not_in' => 'Debes seleccionar un tipo de documento...',
-
-            'asunto.required' => 'El campo asunto es obligatorio.',
-            'folio.required' => 'Es obligatorio.',
-            'folio.not_in' => 'Debe ser diferente de 0.',
-
-            'dependencia_enviar.required' => 'La dependencia de envío es obligatoria.',
-            'dependencia_enviar.not_in' => 'Debes seleccionar una dependencia.',
+            'tipo_documento.required'      => 'Debe seleccionar un tipo de documento.',
+            'tipo_documento.not_in'        => 'El tipo de documento seleccionado no es válido.',
+            'folio.required'               => 'El folio es obligatorio.',
+            'folio.min'                    => 'El folio debe ser mayor a 0.',
+            'asunto.required'              => 'El asunto del documento es obligatorio.',
+            'asunto.min'                   => 'El asunto debe tener al menos 5 caracteres.',
+            'para_su.required'             => 'Debe seleccionar la acción a realizar (Para su).',
+            'para_su.not_in'               => 'La acción seleccionada no es válida.',
+            'archivo_pdf.required'         => 'El documento digital (PDF) es obligatorio.',
+            'archivo_pdf.file'             => 'El archivo debe ser un archivo válido.',
+            'archivo_pdf.mimes'            => 'El archivo debe ser exclusivamente formato PDF.',
+            'archivo_pdf.max'              => 'El archivo PDF no debe superar los 10 MB.',
+            'dependencia_enviar.required'  => 'Debe seleccionar al menos una dependencia de envío.',
+            'dependencia_enviar.array'     => 'El formato de las dependencias no es válido.',
+            'dependencia_enviar.min'       => 'Debe seleccionar al menos una dependencia.',
+            'docentes_especificos.required' => 'Debe seleccionar al menos un docente.',
+            'egresados.required'           => 'Debe seleccionar al menos un egresado.',
+            'alumnos.required'             => 'Debe seleccionar al menos un alumno.',
+            'detalle_anexos_fisicos.required' => 'Debe especificar qué anexos físicos contiene.',
         ];
 
         $request->validate($reglas, $mensajes);
 
         // 1. Datos base
-        $usuario_id_sistema = Auth::user()->id;
+        if ($es_jefe_o_usuario == 1) {
+            # code...
+            $usuario_id_sistema = $idJefe;
+        } else {
+            $usuario_id_sistema = Auth::user()->id;
+        }
         $emisor_id = $request->emisor;
         $fecha_actual = $request->fecha_actual;
 
@@ -781,7 +849,7 @@ class mesaPartes extends Controller
                     'iddocumentos'         => $iddocumento,
                     'token_pdf'            => Str::uuid(),
                     'tipo_pdf'             => 1, // 1 para virtual
-                    'usuario_id'           => $usuario_id_sistema
+                    'usuario_id'           => Auth::user()->id
                 ]);
             }
 
@@ -807,39 +875,109 @@ class mesaPartes extends Controller
     public function registrarDocu_m(Request $request)
     {
         // dd($request);
-        $usuario_id_sistema = Auth::user()->id;
-        $emisor_id = $request->emisor;
-        $fecha_actual = $request->fecha_actual_m;
+        // 1. Verificar si el que intenta enviar es Asistente (tipo_usuario = 1)
+        $es_jefe_o_usuario = 0;
+        $esAsistente = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('user_id', Auth::id())
+            ->where('dependencia_id', session('dependencia_id'))
+            ->where('tipo_usuario', 1)
+            ->where('estado', 1)
+            ->exists();
 
-        $reglas = [
-            'tipo_documento_m' => 'required|not_in:0',
-            'asunto_m'         => 'required|string',
-            'folio_m'          => 'required|integer|min:1',
-            'para_su_m'        => 'required|not_in:0',
-            'archivo_pdf_m'    => 'required|file|mimes:pdf|max:10240',
-        ];
+        if ($esAsistente) {
+            // 2. Si es asistente, verificar si el JEFE de esta dependencia tiene dar_permiso = 1
+            $jefeDioPermiso = DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('dependencia_id', session('dependencia_id'))
+                ->where('tipo_usuario', 2) // Buscamos al Jefe
+                ->where('dar_permiso', 1)
+                ->where('estado', 1)
+                ->exists();
+            // dd($jefeDioPermiso);
 
-        // Validación condicional: Si NO hay personas específicas, la dependencia es obligatoria
-        if (!$request->filled('docentes_especificos_m') && !$request->filled('egresados_m') && !$request->filled('alumnos_m')) {
-            $reglas['dependencia_enviar_m'] = 'required|array|min:1';
-        }
 
-        if ($request->emisor == 24) {
-            if ($request->tipo_remitente_m == 'natural') {
-                $reglas['usuario_m'] = 'required|not_in:0';
+            if (!$jefeDioPermiso) {
+                // Bloquear la acción
+                return response()->json(['error' => 'Acción denegada: El Jefe del Área no ha habilitado el permiso para que los asistentes envíen documentos.'], 500);
             } else {
-                $reglas['id_entidad_m_externa'] = 'required|not_in:0|exists:mysql_documentario.entidades_externas,id';
-                $reglas['numero_documento_externo_m'] = 'required|string|max:255';
+                $es_jefe_o_usuario = 1;
+                $idJefe = DB::connection('mysql_documentario')
+                    ->table('dependencia_user')
+                    ->where('dependencia_id', session('dependencia_id'))
+                    ->where('tipo_usuario', 2)
+                    ->where('estado', 1)
+                    ->value('user_id');
             }
         }
 
+        if ($es_jefe_o_usuario == 1) {
+            # code...
+            $usuario_id_sistema = $idJefe;
+        } else {
+            $usuario_id_sistema = Auth::user()->id;
+        }
+
+        $emisor_id = $request->emisor;
+        $fecha_actual = $request->fecha_actual_m;
+
+        // 1. Definir las reglas de validación base (Campos obligatorios con *)
+        $reglas = [
+            'tipo_documento_m'     => 'required|not_in:0',
+            'folio_m'              => 'required|integer|min:1',
+            'tipo_remitente_m'     => 'required|in:natural,nuevo_natural,juridica',
+            'dependencia_enviar_m' => 'required|array|min:1',
+            'dependencia_enviar_m.*' => 'required|integer', // Asegura que sean IDs numéricos
+            'asunto_m'             => 'required|string|min:5',
+            'para_su_m'            => 'required|not_in:0',
+            'archivo_pdf_m'        => 'required|file|mimes:pdf|max:10240', // Max 10MB
+        ];
+
+        // if ($request->tipo_documento_m == 2) {
+        //     $reglas['doc_referencia_m'] = 'required|string|max:255';
+        // }
+
+        // 2. Reglas condicionales según el Tipo de Remitente seleccionado
+        if ($request->tipo_remitente_m === 'natural') {
+            $reglas['usuario_m'] = 'required|not_in:0';
+        } elseif ($request->tipo_remitente_m === 'nuevo_natural') {
+            $reglas['nuevo_dni_m'] = 'required|digits:8|unique:mysql_documentario.usuario,dniusuario';
+            $reglas['nuevo_nombres_m'] = 'required|string|max:100';
+            $reglas['nuevo_apellidos_m'] = 'required|string|max:100';
+            $reglas['nuevo_correo_m'] = 'nullable|email|max:100';
+        } elseif ($request->tipo_remitente_m === 'juridica') {
+            $reglas['id_entidad_m_externa'] = 'required|exists:mysql_documentario.entidades_externas,id';
+            $reglas['numero_documento_externo_m'] = 'required|string|max:255';
+        }
+
+
+        // 3. Mensajes de error personalizados (para que coincidan con tu UI)
         $mensajes = [
-            'tipo_documento_m.required' => 'El campo tipo de documento es obligatorio.',
-            'asunto_m.required'         => 'El campo asunto es obligatorio.',
-            'folio_m.required'          => 'El folio es obligatorio.',
-            'para_su_m.required'        => 'Debe seleccionar la acción a realizar.',
-            'dependencia_enviar_m.required' => 'Debe seleccionar al menos una dependencia si no hay personas específicas.',
-            'archivo_pdf_m.required'    => 'El documento PDF es obligatorio.',
+            'tipo_documento_m.required'      => 'El tipo de documento es obligatorio.',
+            'tipo_documento_m.not_in'        => 'Debe seleccionar un tipo de documento válido.',
+            'folio_m.required'               => 'El folio es obligatorio.',
+            'folio_m.min'                    => 'El folio debe ser mayor a 0.',
+            'tipo_remitente_m.required'      => 'Debe seleccionar el tipo de remitente.',
+            'dependencia_enviar_m.required'  => 'Debe seleccionar al menos una dependencia de envío.',
+            'dependencia_enviar_m.array'     => 'El campo dependencia debe ser una lista válida.',
+            'dependencia_enviar_m.min'       => 'Debe seleccionar al menos una dependencia.',
+            'asunto_m.required'              => 'El asunto del documento es obligatorio.',
+            'asunto_m.min'                   => 'El asunto debe tener al menos 5 caracteres.',
+            'para_su_m.required'             => 'La acción a realizar (Para su) es obligatoria.',
+            'para_su_m.not_in'               => 'Debe seleccionar una acción válida.',
+            'archivo_pdf_m.required'         => 'El documento digital (PDF) es obligatorio.',
+            'archivo_pdf_m.mimes'            => 'El archivo debe ser exclusivamente formato PDF.',
+            'archivo_pdf_m.max'              => 'El archivo PDF no debe superar los 10 MB.',
+
+            // Mensajes condicionales
+            'usuario_m.required'             => 'Debe seleccionar un usuario existente.',
+            'nuevo_dni_m.required'           => 'El DNI es obligatorio para registrar una nueva persona.',
+            'nuevo_dni_m.digits'             => 'El DNI debe tener exactamente 8 dígitos.',
+            'nuevo_dni_m.unique'             => 'Este DNI ya está registrado. Por favor, busque al usuario en "Persona Natural (Existente)".',
+            'nuevo_nombres_m.required'       => 'Los nombres son obligatorios.',
+            'nuevo_apellidos_m.required'     => 'Los apellidos son obligatorios.',
+            'nuevo_correo_m.email'           => 'El formato del correo no es válido.',
+            'id_entidad_m_externa.exists'    => 'La entidad seleccionada no es válida.',
+            'numero_documento_externo_m.required' => 'El N° de documento externo es obligatorio.',
+            // 'doc_referencia_m.required' => 'La referencia del oficio es obligatoria.'
         ];
 
         $request->validate($reglas, $mensajes);
@@ -847,23 +985,43 @@ class mesaPartes extends Controller
         try {
             DB::connection('mysql_documentario')->beginTransaction();
 
+            $idusuario_para_doc = null;
+
+            // 3. PROCESAR REMITENTE: Si es nuevo, crearlo en las 3 tablas
+            if ($request->tipo_remitente_m == 'nuevo_natural') {
+                $nombreCompleto = trim($request->nuevo_nombres_m . ' ' . $request->nuevo_apellidos_m);
+                $emailTemp = $request->nuevo_correo_m ?: $request->nuevo_dni_m . '@temp.local';
+
+                // C) Tabla usuario (mysql_documentario)
+                $idusuario_para_doc = DB::connection('mysql_documentario')->table('usuario')->insertGetId([
+                    'dniusuario' => $request->nuevo_dni_m,
+                    'nombres' => $nombreCompleto,
+
+                    // 'created_at' => now(),
+                    // 'updated_at' => now(),
+                ]);
+            } elseif ($request->tipo_remitente_m == 'natural') {
+                $idusuario_para_doc = $request->usuario_m;
+            }
+
             $iddocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
                 'numero_de_exp'            => $request->num_expe_m,
-                'fecha_ingreso'            => $fecha_actual,
+                'fecha_ingreso'            => now(),
                 'asunto'                   => $request->asunto_m,
                 'folio'                    => $request->folio_m,
                 'idtipo_documento'         => $request->tipo_documento_m,
                 'emisor'                   => $emisor_id,
                 'id_user'                  => $usuario_id_sistema,
                 'iddetalle_tramite'        => $request->para_su_m,
-                'idusuario'                => ($emisor_id == 24 && $request->tipo_remitente_m == 'natural') ? $request->usuario_m : null,
+                'idusuario'                => $idusuario_para_doc,
                 'recomendacion'            => $request->Recomendaciones_m,
                 'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->id_entidad_m_externa : null,
                 'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->numero_documento_externo_m : null,
                 'anexos_fisicos'           => $request->detalle_anexos_fisicos_m,
                 'estado_actu'              => 1,
                 'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
-                'est_firma'                => $request->est_firma
+                'est_firma'                => $request->est_firma,
+                'doc_referencia'           => ($request->tipo_documento_m == 2) ? $request->doc_referencia_m : null,
             ]);
 
             $advertencias = [];
@@ -877,7 +1035,7 @@ class mesaPartes extends Controller
                         'iddependencias_emior' => $emisor_id,
                         'iddependencias_receptor' => 2,
                         'id_user_receptor' => $id_user_docente,
-                        'fecha_de_envio' => $fecha_actual,
+                        'fecha_de_envio' => now(),
                         'idestado' => 1
                     ]);
                     $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [$id_user_docente]);
@@ -892,7 +1050,7 @@ class mesaPartes extends Controller
                         'iddependencias_emior' => $emisor_id,
                         'iddependencias_receptor' => 5,
                         'id_user_receptor' => $id_user_egresado,
-                        'fecha_de_envio' => $fecha_actual,
+                        'fecha_de_envio' => now(),
                         'idestado' => 1
                     ]);
                     $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [$id_user_egresado]);
@@ -905,7 +1063,7 @@ class mesaPartes extends Controller
                         'iddependencias_emior'    => $emisor_id,
                         'iddependencias_receptor' => 4, // ID de la dependencia Alumno
                         'id_user_receptor'        => $id_user_alumno,
-                        'fecha_de_envio'          => $fecha_actual,
+                        'fecha_de_envio'          => now(),
                         'idestado'                => 1
                     ]);
 
@@ -937,7 +1095,7 @@ class mesaPartes extends Controller
                             'iddependencias_emior' => $emisor_id,
                             'iddependencias_receptor' => $id_receptor,
                             'id_user_receptor' => $id_user_receptor,
-                            'fecha_de_envio' => $fecha_actual,
+                            'fecha_de_envio' => now(),
                             'idestado' => 1
                         ]);
                         $movimientos_insertados++;
@@ -973,7 +1131,7 @@ class mesaPartes extends Controller
                     'iddocumentos' => $iddocumento,
                     'token_pdf' => Str::uuid(),
                     'tipo_pdf' => 1,
-                    'usuario_id' => $usuario_id_sistema
+                    'usuario_id' =>  Auth::user()->id
                 ]);
             }
 
@@ -995,191 +1153,48 @@ class mesaPartes extends Controller
         }
     }
 
-    // public function registrarDocu_m(Request $request)
-    // {
-    //     // 1. Datos base
-    //     $usuario_id_sistema = Auth::user()->id;
-    //     $emisor_id = $request->emisor;
-    //     $fecha_actual = $request->fecha_actual_m;
+    public function datos()
+    {
+        $nom_usu = DB::connection('mysql_segunda')->table('userprofile')->where('id_users', '=', Auth::user()->id)->pluck('nombre')->first();
+        $datos = DB::connection('mysql_segunda')->table('userprofile')
+            ->where('id_users', '=', Auth::user()->id)->first();
+        $dni = DB::table('users')->where('id', '=', Auth::user()->id)->pluck('dni')->first();
 
-    //     $reglas = [
-    //         'tipo_documento_m'     => 'required|not_in:0',
-    //         'asunto_m'             => 'required|string',
-    //         'folio_m'              => 'required|integer|min:1',
-    //         'para_su_m'            => 'required|not_in:0',
-    //         'dependencia_enviar_m' => 'required|array|min:1',
-    //         'archivo_pdf_m'        => 'required|file|mimes:pdf|max:10240', // Obligatorio PDF hasta 10MB
-    //     ];
+        return view('mesaPartes.datos', compact('nom_usu', 'datos', 'dni'));
+    }
 
-    //     // Validación específica para Mesa de Partes (ID 19)
-    //     if ($request->emisor == 24) {
-    //         if ($request->tipo_remitente_m == 'natural') {
-    //             $reglas['usuario_m'] = 'required|not_in:0';
-    //         } else {
-    //             $reglas['id_entidad_m_externa']     = 'required|not_in:0|exists:mysql_documentario.entidades_externas,id';
-    //             $reglas['numero_documento_externo_m'] = 'required|string|max:255';
-    //         }
-    //     }
+    public function togglePermisoAsistentes(Request $request)
+    {
+        $request->validate([
+            'status' => 'required|in:0,1',
+        ]);
 
-    //     // Mensajes personalizados
-    //     $mensajes = [
-    //         'tipo_documento_m.required'          => 'El campo tipo de documento es obligatorio.',
-    //         'tipo_documento_m.not_in'            => 'Debes seleccionar un tipo de documento.___',
-    //         'asunto_m.required'                  => 'El campo asunto es obligatorio.',
-    //         'folio_m.required'                   => 'El folio es obligatorio.___',
-    //         'folio_m.min'                        => 'El folio debe ser mayor a 0.',
-    //         'para_su_m.required'                 => 'Debe seleccionar la acción a realizar.',
-    //         'para_su_m.not_in'                   => 'Debe seleccionar una acción válida.',
-    //         'dependencia_enviar_m.required'      => 'La dependencia de envío es obligatoria.',
-    //         'dependencia_enviar_m.min'           => 'Debes seleccionar al menos una dependencia.',
-    //         'usuario_m.required'                 => 'Debes seleccionar un usuario o persona natural.',
-    //         'usuario_m.not_in'                   => 'Debes seleccionar un usuario válido.',
-    //         'id_entidad_m_externa.required'      => 'Debes seleccionar una entidad remitente.',
-    //         'id_entidad_m_externa.not_in'        => 'Selecciona una entidad válida.',
-    //         'id_entidad_m_externa.exists'        => 'La entidad seleccionada no existe.',
-    //         'numero_documento_externo_m.required' => 'El N° de documento externo es obligatorio.',
-    //         'archivo_pdf_m.required'             => 'El documento PDF es obligatorio.',
-    //         'archivo_pdf_m.mimes'                => 'El archivo debe estar en formato PDF.',
-    //         'archivo_pdf_m.max'                  => 'El archivo no debe pesar más de 10 MB.',
-    //     ];
+        try {
+            // Actualizamos SOLO si es el jefe de la dependencia actual
+            $affected = DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('user_id', Auth::id())
+                ->where('dependencia_id', session('dependencia_id'))
+                ->where('estado', 1)
+                ->where('tipo_usuario', 2) // Solo afecta a registros de Jefe
+                ->update([
+                    'dar_permiso' => $request->status,
+                    'fecha_permiso' => now()
+                ]);
 
-    //     $request->validate($reglas, $mensajes);
+            if ($affected > 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $request->status == 1
+                        ? '¡Permiso otorgado! Ahora sus asistentes pueden enviar documentos.'
+                        : 'Permiso revocado. Solo usted puede enviar documentos.'
+                ]);
+            }
 
-    //     try {
-    //         DB::beginTransaction();
-
-    //         // 3. Insertar Documento Principal
-    //         $iddocumento = DB::connection('mysql_documentario')->table('documentos')->insertGetId([
-    //             'numero_de_exp'            => $request->num_expe_m,
-    //             'fecha_ingreso'            => $fecha_actual,
-    //             'asunto'                   => $request->asunto_m,
-    //             'folio'                    => $request->folio_m,
-    //             'idtipo_documento'         => $request->tipo_documento_m,
-    //             'emisor'                   => $emisor_id,
-    //             'id_user'                  => $usuario_id_sistema,
-    //             'iddetalle_tramite'        => $request->para_su_m,
-    //             'idusuario'                => ($emisor_id == 24 && $request->tipo_remitente_m == 'natural') ? $request->usuario_m : null,
-    //             'recomendacion'            => $request->Recomendaciones_m,
-    //             'id_entidad_externa'       => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->id_entidad_m_externa : null,
-    //             'numero_documento_externo' => ($emisor_id == 24 && $request->tipo_remitente_m == 'juridica') ? $request->numero_documento_externo_m : null,
-
-    //             'anexos_fisicos'           => $request->detalle_anexos_fisicos_m,
-    //             'estado_actu'              => 1,
-    //             'token'                    => ($emisor_id == 24) ? Str::uuid() : null,
-    //             'est_firma'                => $request->est_firma
-    //         ]);
-
-    //         // 4. Determinar Receptores (Todas o Selección)
-    //         ////////////////////////////// En caso envia a docentes, egresados, alumnos
-    //         if ($request->has('docentes_especificos_m')) {
-    //             $tot_docentes = $request->docentes_especificos_m;
-    //             // dd($tot_docentes);
-    //             foreach ($tot_docentes as $id_user_docente) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->insert([
-    //                     'iddocumentos'            => $iddocumento,
-    //                     'iddependencias_emior'    => $emisor_id,
-    //                     'iddependencias_receptor' => 2, //solo docente id 2
-    //                     'id_user_receptor'        => $id_user_docente,
-    //                     'fecha_de_envio'          => $fecha_actual,
-    //                     'idestado'                => 1
-    //                 ]);
-
-    //                 // Obtener conteos para el evento Real-Time
-    //                 $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                                     FROM estado
-    //                                     LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                                     AND movimiento.id_user_receptor = ?
-    //                                     WHERE estado.idestado IN (1,2,3)
-    //                                     GROUP BY estado.idestado;', [$id_user_docente]);
-
-    //                 //aqui el evento para docentes.
-    //                 event(new DocumentoRecibido($id_user_docente, $cont_estados, 'personal'));
-    //             }
-    //         } elseif ($request->has('egresados_m')) {
-    //             $tot_egresados = $request->egresados_m;
-    //             // dd($request);
-    //             foreach ($tot_egresados as $id_user_egresado) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->insert([
-    //                     'iddocumentos'            => $iddocumento,
-    //                     'iddependencias_emior'    => $emisor_id,
-    //                     'iddependencias_receptor' => 5, //solo egresado id 5
-    //                     'id_user_receptor'        => $id_user_egresado,
-    //                     'fecha_de_envio'          => $fecha_actual,
-    //                     'idestado'                => 1
-    //                 ]);
-
-    //                 // Obtener conteos para el evento Real-Time
-    //                 $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                                     FROM estado
-    //                                     LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                                     AND movimiento.id_user_receptor = ?
-    //                                     WHERE estado.idestado IN (1,2,3)
-    //                                     GROUP BY estado.idestado;', [$id_user_egresado]);
-
-    //                 //aqui el evento para docentes.
-    //                 event(new DocumentoRecibido($id_user_egresado, $cont_estados, 'personal'));
-    //             }
-    //         } else {
-    //             // 4. Determinar Receptores
-    //             $receptores = [];
-    //             if ($request->has('todasDepenSelects_m')) {
-    //                 $receptores = DB::connection('mysql_documentario')->table('dependencias')
-    //                     ->where('iddependencias', '!=', 1)
-    //                     ->where('iddependencias', '!=', $emisor_id)
-    //                     ->pluck('iddependencias')
-    //                     ->toArray();
-    //             } else {
-    //                 $receptores = $request->dependencia_enviar_m;
-    //             }
-
-    //             // 5. Insertar Movimientos y Emitir Eventos
-    //             foreach ($receptores as $id_receptor) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->insert([
-    //                     'iddocumentos'            => $iddocumento,
-    //                     'iddependencias_emior'    => $emisor_id,
-    //                     'iddependencias_receptor' => $id_receptor,
-    //                     'fecha_de_envio'          => $fecha_actual,
-    //                     'idestado'                => 1
-    //                 ]);
-
-    //                 // Obtener conteos para el evento Real-Time
-    //                 $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                                     FROM estado
-    //                                     LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                                     AND movimiento.iddependencias_receptor = ?
-    //                                     WHERE estado.idestado IN (1,2,3)
-    //                                     GROUP BY estado.idestado;', [$id_receptor]);
-
-    //                 event(new DocumentoRecibido($id_receptor, $cont_estados, 'dependencia'));
-    //             }
-    //         }
-    //         ////////////////////////////// fin en caso envia a docentes
-
-    //         // 6. Gestión de Archivo PDF (Sin Firma Digital)
-    //         if ($request->hasFile('archivo_pdf_m')) {
-    //             $archivo = $request->file('archivo_pdf_m');
-    //             $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-    //             $archivo->move(public_path('documentos/documentos_director_pdf'), $nombreArchivo);
-
-    //             DB::connection('mysql_documentario')->table('documenpdf')->insert([
-    //                 'nombre_del_documento' => $nombreArchivo,
-    //                 'fecha_subida'         => now(),
-    //                 'iddocumentos'         => $iddocumento,
-    //                 'token_pdf'            => Str::uuid(),
-    //                 'tipo_pdf'             => 1, // 1 para virtual
-    //                 'usuario_id'           => $usuario_id_sistema
-    //             ]);
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json(['success' => '¡Documento registrado y enviado con éxito!']);
-    //     } catch (\Throwable $th) {
-    //         DB::rollBack();
-    //         Log::error("Error en registro: " . $th->getMessage());
-    //         return response()->json(['error' => 'Error al registrar: ' . $th->getMessage()], 500);
-    //     }
-    // }
+            return response()->json(['success' => false, 'message' => 'No se pudo actualizar el estado.'], 400);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'message' => 'Error del servidor: ' . $th->getMessage()], 500);
+        }
+    }
 
     public function showEmitido($id)
     {
@@ -1304,6 +1319,39 @@ class mesaPartes extends Controller
 
     public function updateDocuEmi(Request $request, $iddocumentos)
     {
+        // 1. Verificar si el que intenta enviar es Asistente (tipo_usuario = 1)
+        $es_jefe_o_usuario = 0;
+        $esAsistente = DB::connection('mysql_documentario')->table('dependencia_user')
+            ->where('user_id', Auth::id())
+            ->where('dependencia_id', session('dependencia_id'))
+            ->where('tipo_usuario', 1)
+            ->where('estado', 1)
+            ->exists();
+
+        if ($esAsistente) {
+            // 2. Si es asistente, verificar si el JEFE de esta dependencia tiene dar_permiso = 1
+            $jefeDioPermiso = DB::connection('mysql_documentario')->table('dependencia_user')
+                ->where('dependencia_id', session('dependencia_id'))
+                ->where('tipo_usuario', 2) // Buscamos al Jefe
+                ->where('dar_permiso', 1)
+                ->where('estado', 1)
+                ->exists();
+            // dd($jefeDioPermiso);
+
+
+            if (!$jefeDioPermiso) {
+                // Bloquear la acción
+                return response()->json(['error' => 'Acción denegada: El Jefe del Área no ha habilitado el permiso para que los asistentes envíen documentos.'], 500);
+            } else {
+                $es_jefe_o_usuario = 1;
+                $idJefe = DB::connection('mysql_documentario')
+                    ->table('dependencia_user')
+                    ->where('dependencia_id', session('dependencia_id'))
+                    ->where('tipo_usuario', 2)
+                    ->where('estado', 1)
+                    ->value('user_id');
+            }
+        }
 
         // dd($request);
         $rules = [
@@ -1328,7 +1376,12 @@ class mesaPartes extends Controller
 
         $request->validate($rules, $messages);
 
-        $id_users = Auth::user()->id;
+        if ($es_jefe_o_usuario == 1) {
+            # code...
+            $id_users = $idJefe;
+        } else {
+            $id_users = Auth::user()->id;
+        }
         $idusuario = null;
         $id_entidad_externa = null;
         $numero_documento_externo = null;
@@ -1392,6 +1445,12 @@ class mesaPartes extends Controller
                     $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [2, $depa]);
                     event(new DocumentoRecibido($depa, $cont, 'personal'));
                 }
+
+                $seMantienenDoc = array_intersect($actuales, $request->docentes_especificos);
+                foreach ($seMantienenDoc as $depe) {
+                    $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [2, $depe]);
+                    event(new editarDocumento($depe, $cont, 'personal'));
+                }
             } elseif ($request->filled('egresados')) {
                 // Limpiar lo que NO sea egresado
                 $movs_eliminar = DB::connection('mysql_documentario')->table('movimiento')
@@ -1417,6 +1476,11 @@ class mesaPartes extends Controller
                     $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [5, $depa]); // 👈 CORREGIDO: era 2
                     event(new DocumentoRecibido($depa, $cont, 'personal'));
                 }
+                $seMantienenEgr = array_intersect($actuales, $request->egresados);
+                foreach ($seMantienenEgr as $depe) {
+                    $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [5, $depe]);
+                    event(new editarDocumento($depe, $cont, 'personal'));
+                }
             } elseif ($request->filled('alumnos')) {
                 // Limpiar lo que NO sea alumno
                 $movs_eliminar = DB::connection('mysql_documentario')->table('movimiento')
@@ -1441,6 +1505,11 @@ class mesaPartes extends Controller
                     DB::connection('mysql_documentario')->table('movimiento')->insert(['iddocumentos' => $iddocumentos, 'iddependencias_emior' => $request->emisor, 'iddependencias_receptor' => 4, 'id_user_receptor' => $depa, 'fecha_de_envio' => now(), 'idestado' => 1]);
                     $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [4, $depa]); // 👈 CORREGIDO: era 2
                     event(new DocumentoRecibido($depa, $cont, 'personal'));
+                }
+                $seMantienenAlu = array_intersect($actuales, $request->alumnos);
+                foreach ($seMantienenAlu as $depe) {
+                    $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? AND movimiento.id_user_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [4, $depe]);
+                    event(new editarDocumento($depe, $cont, 'personal'));
                 }
             } else {
                 // ==========================================
@@ -1508,6 +1577,11 @@ class mesaPartes extends Controller
                         $advertencias[] = "La dependencia '<b>{$nombre_dep}</b>' tiene múltiples jefes activos. Por seguridad, no se realizó el envío.";
                     }
                 }
+                $seMantienenDep = array_intersect($moviConEseDoc, $requestDependencias);
+                foreach ($seMantienenDep as $depa) {
+                    $cont = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado FROM estado LEFT JOIN movimiento ON movimiento.idestado = estado.idestado AND movimiento.iddependencias_receptor = ? WHERE estado.idestado IN (1,2,3) GROUP BY estado.idestado;', [$depa]);
+                    event(new editarDocumento($depa, $cont, 'dependencia'));
+                }
             }
 
             // 3. Actualización de PDFs
@@ -1526,14 +1600,13 @@ class mesaPartes extends Controller
                             DB::connection('mysql_documentario')->table('documenpdf')->where('iddocumenpdf', $idPdf)->update([
                                 'nombre_del_documento' => $nuevoNombre,
                                 'fecha_actualizacion' => now(),
+                                'usuario_id' => $id_users
                             ]);
                         }
                     }
                 }
             }
 
-            // 4. EVALUACIÓN FINAL DE ADVERTENCIAS (ANTES DEL COMMIT)
-            // 4. EVALUACIÓN FINAL DE ADVERTENCIAS (ANTES DEL COMMIT)
             if ($movimientos_insertados === 0 && count($advertencias) > 0) {
                 DB::connection('mysql_documentario')->rollBack();
 
@@ -1576,604 +1649,4 @@ class mesaPartes extends Controller
             return redirect()->back()->with('error', 'Error al actualizar los datos');
         }
     }
-
-    // public function updateDocuEmi(Request $request, $iddocumentos)
-    // {
-    //     $rules = [
-    //         'tipo_documento' => 'required|not_in:0',
-    //         'folio'          => 'required|numeric|min:1',
-    //         'asunto'         => 'required|string|min:1',
-    //         'para_su'        => 'required|not_in:0',
-    //         'reemplazar_pdf.*' => 'nullable|file|mimes:pdf|max:5120',
-    //     ];
-
-    //     if (!$request->filled('docentes_especificos')) {
-    //         $rules['dependencia_enviar'] = 'required|array|min:1';
-    //     }
-
-    //     $messages = [
-    //         'tipo_documento.not_in' => 'Debe seleccionar un tipo de documento válido.',
-    //         'para_su.not_in'        => 'Debe seleccionar una opción en "Para su".',
-    //         'dependencia_enviar.required' => 'Debe seleccionar al menos una dependencia si no hay docentes seleccionados.',
-    //         'reemplazar_pdf.*.mimes' => 'El archivo debe ser un formato PDF válido.',
-    //     ];
-
-    //     $request->validate($rules, $messages);
-
-    //     $id_users = Auth::user()->id;
-
-    //     // Valores por defecto (para otras oficinas)
-    //     $idusuario = null;
-    //     $id_entidad_externa = null;
-    //     $numero_documento_externo = null;
-
-    //     // Solo si es Mesa de Partes evaluamos el formulario especial
-    //     if (session('dependencia_id') == 24) {
-    //         if ($request->tipo_remitente_m === 'natural') {
-    //             $idusuario = $request->usuario_m;
-    //         } elseif ($request->tipo_remitente_m === 'juridica') {
-    //             $id_entidad_externa = $request->id_entidad_m_externa;
-    //             $numero_documento_externo = $request->numero_documento_externo_m;
-    //         }
-    //     }
-
-    //     try {
-    //         DB::connection('mysql_documentario')->beginTransaction();
-    //         $updateDocuEmi = DB::connection('mysql_documentario')
-    //             ->update('UPDATE documentos SET numero_de_exp = ?, asunto = ?, folio = ?, idtipo_documento = ?, iddetalle_tramite = ?, recomendacion = ?, anexos_fisicos = ?, idusuario = ?,id_entidad_externa = ?,numero_documento_externo = ? WHERE iddocumentos  = ?', [
-    //                 $request->num_expe,
-    //                 $request->asunto,
-    //                 $request->folio,
-    //                 $request->tipo_documento,
-    //                 $request->para_su,
-    //                 $request->Recomendaciones,
-    //                 $request->detalle_anexos_fisicos,
-    //                 $idusuario,
-    //                 $id_entidad_externa,
-    //                 $numero_documento_externo,
-    //                 $iddocumentos
-    //             ]);
-    //         if ($request->filled('docentes_especificos')) {
-    //             // para eliminar en caso ague el cambio de dependencia a docentes
-    //             $verificar = DB::connection('mysql_documentario')->table('movimiento')
-    //                 ->where('iddocumentos', $iddocumentos)
-    //                 ->where('iddependencias_receptor', '!=', 2)
-    //                 ->exists();
-
-    //             if ($verificar) {
-    //                 $dependencias_eliminar = DB::connection('mysql_documentario')->table('movimiento')
-    //                     ->where('iddocumentos', $iddocumentos)
-    //                     ->where('iddependencias_receptor', '!=', 2)
-    //                     ->select('idmovimiento', 'iddependencias_receptor')
-    //                     ->get()
-    //                     ->toArray();
-
-    //                 foreach ($dependencias_eliminar as $id_depen) {
-    //                     $movimientos_doce = DB::connection('mysql_documentario')->table('movimiento')
-    //                         ->where('idmovimiento', $id_depen->idmovimiento)
-    //                         ->delete();
-
-    //                     $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                             FROM estado
-    //                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                             AND movimiento.iddependencias_receptor = ?
-    //                             WHERE estado.idestado IN (1,2,3)
-    //                             GROUP BY estado.idestado;', [$id_depen->iddependencias_receptor]);
-
-    //                     event(new editarDocumento($id_depen->iddependencias_receptor, $cont_estadosre, 'dependencia'));
-    //                 }
-    //             }
-
-    //             // 2. Diff para docentes
-    //             $docentesActuales = DB::connection('mysql_documentario')->table('movimiento')
-    //                 ->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', 2)->where('idestado', 1)
-    //                 ->pluck('id_user_receptor')->toArray();
-
-    //             $quitoDoc = array_diff($docentesActuales, $request->docentes_especificos);
-    //             $agregoDoc = array_diff($request->docentes_especificos, $docentesActuales);
-
-    //             foreach ($quitoDoc as $depe) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')
-    //                     ->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', 2)->where('id_user_receptor', $depe)->where('idestado', 1)->delete();
-
-    //                 $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                         FROM estado
-    //                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                         AND movimiento.iddependencias_receptor = ?
-    //                         AND movimiento.id_user_receptor = ?
-    //                         WHERE estado.idestado IN (1,2,3)
-    //                         GROUP BY estado.idestado;', [2, $depe]);
-
-    //                 event(new editarDocumento($depe, $cont_estadosre, 'personal'));
-    //             }
-
-    //             foreach ($agregoDoc as $depa) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->insert([
-    //                     'iddocumentos' => $iddocumentos,
-    //                     'iddependencias_emior' => $request->emisor,
-    //                     'iddependencias_receptor' => 2,
-    //                     'id_user_receptor' => $depa,
-    //                     'fecha_de_envio' => now(),
-    //                     'idestado' => 1
-    //                 ]);
-    //                 $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                             FROM estado
-    //                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                             AND movimiento.iddependencias_receptor = ?
-    //                             AND movimiento.id_user_receptor = ?
-    //                             WHERE estado.idestado IN (1,2,3)
-    //                             GROUP BY estado.idestado;', [2, $depa]);
-
-    //                 event(new DocumentoRecibido($depa, $cont_estados, 'personal'));
-    //             }
-    //         } elseif ($request->filled('egresados')) {
-    //             $verificar = DB::connection('mysql_documentario')->table('movimiento')
-    //                 ->where('iddocumentos', $iddocumentos)
-    //                 ->where('iddependencias_receptor', '!=', 5)
-    //                 ->exists();
-
-    //             if ($verificar) {
-    //                 $dependencias_eliminar = DB::connection('mysql_documentario')->table('movimiento')
-    //                     ->where('iddocumentos', $iddocumentos)
-    //                     ->where('iddependencias_receptor', '!=', 5)
-    //                     ->select('idmovimiento', 'iddependencias_receptor')
-    //                     ->get()
-    //                     ->toArray();
-
-    //                 foreach ($dependencias_eliminar as $id_depen) {
-    //                     $movimientos_doce = DB::connection('mysql_documentario')->table('movimiento')
-    //                         ->where('idmovimiento', $id_depen->idmovimiento)
-    //                         ->delete();
-
-    //                     $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                             FROM estado
-    //                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                             AND movimiento.iddependencias_receptor = ?
-    //                             WHERE estado.idestado IN (1,2,3)
-    //                             GROUP BY estado.idestado;', [$id_depen->iddependencias_receptor]);
-
-    //                     event(new editarDocumento($id_depen->iddependencias_receptor, $cont_estadosre, 'dependencia'));
-    //                 }
-    //             }
-
-    //             $egresadosActuales = DB::connection('mysql_documentario')->table('movimiento')->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', 5)->where('idestado', 1)->pluck('id_user_receptor')->toArray();
-    //             $quitoEgr = array_diff($egresadosActuales, $request->egresados);
-    //             $agregoEgr = array_diff($request->egresados, $egresadosActuales);
-
-    //             foreach ($quitoEgr as $depe) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', 5)->where('id_user_receptor', $depe)->where('idestado', 1)->delete();
-    //                 $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                         FROM estado
-    //                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                         AND movimiento.iddependencias_receptor = ?
-    //                         AND movimiento.id_user_receptor = ?
-    //                         WHERE estado.idestado IN (1,2,3)
-    //                         GROUP BY estado.idestado;', [2, $depe]);
-
-    //                 event(new editarDocumento($depe, $cont_estadosre, 'personal'));
-    //             }
-    //             foreach ($agregoEgr as $depa) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->insert(['iddocumentos' => $iddocumentos, 'iddependencias_emior' => $request->emisor, 'iddependencias_receptor' => 5, 'id_user_receptor' => $depa, 'fecha_de_envio' => now(), 'idestado' => 1]);
-    //                 $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                             FROM estado
-    //                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                             AND movimiento.iddependencias_receptor = ?
-    //                             AND movimiento.id_user_receptor = ?
-    //                             WHERE estado.idestado IN (1,2,3)
-    //                             GROUP BY estado.idestado;', [2, $depa]);
-
-    //                 event(new DocumentoRecibido($depa, $cont_estados, 'personal'));
-    //             }
-    //         } elseif ($request->filled('alumnos')) {
-    //             $verificar = DB::connection('mysql_documentario')->table('movimiento')
-    //                 ->where('iddocumentos', $iddocumentos)
-    //                 ->where('iddependencias_receptor', '!=', 4)
-    //                 ->exists();
-
-    //             if ($verificar) {
-    //                 $dependencias_eliminar = DB::connection('mysql_documentario')->table('movimiento')
-    //                     ->where('iddocumentos', $iddocumentos)
-    //                     ->where('iddependencias_receptor', '!=', 4)
-    //                     ->select('idmovimiento', 'iddependencias_receptor')
-    //                     ->get()
-    //                     ->toArray();
-
-    //                 foreach ($dependencias_eliminar as $id_depen) {
-    //                     $movimientos_doce = DB::connection('mysql_documentario')->table('movimiento')
-    //                         ->where('idmovimiento', $id_depen->idmovimiento)
-    //                         ->delete();
-
-    //                     $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                             FROM estado
-    //                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                             AND movimiento.iddependencias_receptor = ?
-    //                             WHERE estado.idestado IN (1,2,3)
-    //                             GROUP BY estado.idestado;', [$id_depen->iddependencias_receptor]);
-
-    //                     event(new editarDocumento($id_depen->iddependencias_receptor, $cont_estadosre, 'dependencia'));
-    //                 }
-    //             }
-
-    //             $alumnosActuales = DB::connection('mysql_documentario')->table('movimiento')->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', 4)->where('idestado', 1)->pluck('id_user_receptor')->toArray();
-    //             $quitoAlu = array_diff($alumnosActuales, $request->alumnos);
-    //             $agregoAlu = array_diff($request->alumnos, $alumnosActuales);
-
-    //             foreach ($quitoAlu as $depe) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', 4)->where('id_user_receptor', $depe)->where('idestado', 1)->delete();
-    //                 $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                         FROM estado
-    //                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                         AND movimiento.iddependencias_receptor = ?
-    //                         AND movimiento.id_user_receptor = ?
-    //                         WHERE estado.idestado IN (1,2,3)
-    //                         GROUP BY estado.idestado;', [2, $depe]);
-
-    //                 event(new editarDocumento($depe, $cont_estadosre, 'personal'));
-    //             }
-    //             foreach ($agregoAlu as $depa) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')->insert(['iddocumentos' => $iddocumentos, 'iddependencias_emior' => $request->emisor, 'iddependencias_receptor' => 4, 'id_user_receptor' => $depa, 'fecha_de_envio' => now(), 'idestado' => 1]);
-    //                 $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                             FROM estado
-    //                             LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                             AND movimiento.iddependencias_receptor = ?
-    //                             AND movimiento.id_user_receptor = ?
-    //                             WHERE estado.idestado IN (1,2,3)
-    //                             GROUP BY estado.idestado;', [2, $depa]);
-
-    //                 event(new DocumentoRecibido($depa, $cont_estados, 'personal'));
-    //             }
-    //         } else {
-    //             // ==========================================
-    //             // DEPENDENCIAS GENÉRICAS (CON VALIDACIÓN DE JEFE)
-    //             // ==========================================
-    //             // 1. Limpiar movimientos de personas específicas si cambió a dependencia genérica
-    //             $verificar = DB::connection('mysql_documentario')->table('movimiento')
-    //                 ->where('iddocumentos', $iddocumentos)
-    //                 ->whereIn('iddependencias_receptor', [2, 4, 5])
-    //                 ->exists();
-
-    //             if ($verificar) {
-    //                 $dea_eliminar = DB::connection('mysql_documentario')->table('movimiento')
-    //                     ->where('iddocumentos', $iddocumentos)
-    //                     ->whereIn('iddependencias_receptor', [2, 4, 5])
-    //                     ->select('idmovimiento', 'id_user_receptor')
-    //                     ->get()
-    //                     ->toArray();
-
-    //                 foreach ($dea_eliminar as $id_user) {
-    //                     $movimientos_doce = DB::connection('mysql_documentario')->table('movimiento')
-    //                         ->where('idmovimiento', $id_user->idmovimiento)
-    //                         ->delete();
-
-    //                     $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                         FROM estado
-    //                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                         AND movimiento.iddependencias_receptor = ?
-    //                         AND movimiento.id_user_receptor = ?
-    //                         WHERE estado.idestado IN (1,2,3)
-    //                         GROUP BY estado.idestado;', [2, $id_user->id_user_receptor]);
-
-    //                     event(new editarDocumento($id_user->id_user_receptor, $cont_estadosre, 'personal'));
-    //                 }
-    //             }
-
-    //             $moviConEseDoc = DB::connection('mysql_documentario')->table('movimiento')
-    //                 ->where('iddocumentos', $iddocumentos)->where('idestado', 1)
-    //                 ->pluck('iddependencias_receptor')->toArray();
-
-    //             $quitoDep = array_diff($moviConEseDoc, $request->dependencia_enviar);
-    //             $agregoDep = array_diff($request->dependencia_enviar, $moviConEseDoc);
-
-    //             foreach ($quitoDep as $depe) {
-    //                 DB::connection('mysql_documentario')->table('movimiento')
-    //                     ->where('iddocumentos', $iddocumentos)->where('iddependencias_receptor', $depe)->where('idestado', 1)->delete();
-
-    //                 $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                         FROM estado
-    //                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                         AND movimiento.iddependencias_receptor = ?
-    //                         WHERE estado.idestado IN (1,2,3)
-    //                         GROUP BY estado.idestado;', [$depe]);
-
-    //                 event(new editarDocumento($depe, $cont_estadosre, 'dependencia'));
-    //             }
-
-    //             foreach ($agregoDep as $depa) {
-    //                 // 👉 AQUÍ ESTÁ LA VALIDACIÓN DEL JEFE QUE FALTABA EN TU UPDATE
-    //                 $jefes_count = DB::connection('mysql_documentario')->table('dependencia_user')
-    //                     ->where('dependencia_id', $depa)->where('tipo_usuario', 2)->where('estado', 1)->count();
-
-    //                 if ($jefes_count === 1) {
-    //                     $id_user_receptor = DB::connection('mysql_documentario')->table('dependencia_user')
-    //                         ->where('dependencia_id', $depa)->where('tipo_usuario', 2)->where('estado', 1)->value('user_id');
-
-    //                     DB::connection('mysql_documentario')->table('movimiento')->insert([
-    //                         'iddocumentos' => $iddocumentos,
-    //                         'iddependencias_emior' => $request->emisor,
-    //                         'iddependencias_receptor' => $depa,
-    //                         'id_user_receptor' => $id_user_receptor,
-    //                         'fecha_de_envio' => now(),
-    //                         'idestado' => 1
-    //                     ]);
-
-    //                     $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //                         FROM estado
-    //                         LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //                         AND movimiento.iddependencias_receptor = ?
-    //                         WHERE estado.idestado IN (1,2,3)
-    //                         GROUP BY estado.idestado;', [$depa]);
-
-    //                     event(new DocumentoRecibido($depa, $cont_estados, 'dependencia'));
-    //                 } else {
-    //                     // Opcional: podrías agregar esto a un array de advertencias como en registrarDocu
-    //                     // Por ahora, simplemente no lo insertamos si no hay exactamente 1 jefe.
-    //                 }
-    //             }
-    //         }
-
-    //         // if ($request->filled('docentes_especificos')) {
-
-    //         //     // para eliminar en caso ague el cambio de dependencia a docentes
-    //         //     $verificar = DB::connection('mysql_documentario')->table('movimiento')
-    //         //         ->where('iddocumentos', $iddocumentos)
-    //         //         ->where('iddependencias_receptor', '>=', 6)
-    //         //         ->exists();
-
-    //         //     if ($verificar) {
-    //         //         $dependencias_eliminar = DB::connection('mysql_documentario')->table('movimiento')
-    //         //             ->where('iddocumentos', $iddocumentos)
-    //         //             ->where('iddependencias_receptor', '>=', 6)
-    //         //             ->select('idmovimiento', 'iddependencias_receptor')
-    //         //             ->get()
-    //         //             ->toArray();
-
-    //         //         foreach ($dependencias_eliminar as $id_depen) {
-    //         //             $movimientos_doce = DB::connection('mysql_documentario')->table('movimiento')
-    //         //                 ->where('idmovimiento', $id_depen->idmovimiento)
-    //         //                 ->delete();
-
-    //         //             $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [$id_depen->iddependencias_receptor]);
-
-    //         //             event(new editarDocumento($id_depen->iddependencias_receptor, $cont_estadosre, 'dependencia'));
-    //         //         }
-    //         //     }
-
-    //         //     // para docentes
-    //         //     $docenteMovi = DB::connection('mysql_documentario')->table('movimiento')
-    //         //         ->where('iddocumentos', $request->iddocumentos)
-    //         //         ->where('iddependencias_receptor', 2)
-    //         //         ->pluck('id_user_receptor')
-    //         //         ->toArray();
-
-    //         //     $quito = array_diff($docenteMovi, $request->docentes_especificos);
-    //         //     $agrego = array_diff($request->docentes_especificos, $docenteMovi);
-
-    //         //     if (!empty($quito)) {
-    //         //         foreach ($quito as $depe) {
-    //         //             DB::connection('mysql_documentario')->delete('DELETE FROM movimiento WHERE iddocumentos = ? AND iddependencias_receptor = ? AND id_user_receptor = ? AND idestado = ?', [$request->iddocumentos, 2, $depe, 1]);
-
-    //         //             $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 AND movimiento.id_user_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [2, $depe]);
-
-    //         //             event(new editarDocumento($depe, $cont_estadosre, 'personal'));
-    //         //         }
-    //         //     }
-
-    //         //     if (!empty($agrego)) {
-    //         //         foreach ($agrego as $depa) {
-    //         //             DB::connection('mysql_documentario')->insert('INSERT INTO movimiento (iddocumentos, iddependencias_emior, iddependencias_receptor, id_user_receptor, fecha_de_envio, idestado) values (?, ?, ?, ?, ?, ?)', [$request->iddocumentos, $request->emisor, 2, $depa, now(), 1]);
-
-    //         //             $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 AND movimiento.id_user_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [2, $depa]);
-
-    //         //             event(new DocumentoRecibido($depa, $cont_estados, 'personal'));
-    //         //         }
-    //         //     }
-
-    //         //     if (empty($agrego) && empty($quito)) {
-    //         //         foreach ($docenteMovi as $depa) {
-    //         //             $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 AND movimiento.id_user_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [2, $depa]);
-
-    //         //             event(new DocumentoRecibido($depa, $cont_estados, 'personal'));
-    //         //         }
-    //         //     }
-    //         // } elseif ($request->filled('dependencia_enviar')) {
-
-    //         //     // para eliminar en caso ague el cambio de docentes a dependencias
-    //         //     $verificar = DB::connection('mysql_documentario')->table('movimiento')
-    //         //         ->where('iddocumentos', $iddocumentos)
-    //         //         ->where('iddependencias_receptor', 2)
-    //         //         ->exists();
-
-    //         //     if ($verificar) {
-    //         //         $docentes_eliminar = DB::connection('mysql_documentario')->table('movimiento')
-    //         //             ->where('iddocumentos', $iddocumentos)
-    //         //             ->where('iddependencias_receptor', 2)
-    //         //             ->select('idmovimiento', 'id_user_receptor')
-    //         //             ->get()
-    //         //             ->toArray();
-
-    //         //         foreach ($docentes_eliminar as $id_user) {
-    //         //             $movimientos_doce = DB::connection('mysql_documentario')->table('movimiento')
-    //         //                 ->where('idmovimiento', $id_user->idmovimiento)
-    //         //                 ->delete();
-
-    //         //             $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 AND movimiento.id_user_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [2, $id_user->id_user_receptor]);
-
-    //         //             event(new editarDocumento($id_user->id_user_receptor, $cont_estadosre, 'personal'));
-    //         //         }
-    //         //     }
-
-    //         //     // para dependencias
-    //         //     $moviConEseDoc = DB::connection('mysql_documentario')->table('movimiento')
-    //         //         ->where('iddocumentos', $request->iddocumentos)
-    //         //         ->pluck('iddependencias_receptor')
-    //         //         ->toArray();
-
-    //         //     // Caso 2: Se seleccionó dependencia
-    //         //     $quito = array_diff($moviConEseDoc, $request->dependencia_enviar);
-    //         //     $agrego = array_diff($request->dependencia_enviar, $moviConEseDoc);
-
-    //         //     if (!empty($quito)) {
-    //         //         foreach ($quito as $depe) {
-    //         //             DB::connection('mysql_documentario')->delete('DELETE FROM movimiento WHERE iddocumentos = ? AND iddependencias_receptor = ? AND idestado = ?', [$request->iddocumentos, $depe, 1]);
-
-    //         //             $cont_estadosre = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [$depe]);
-
-    //         //             event(new editarDocumento($depe, $cont_estadosre, 'dependencia')); //lo q tenia
-    //         //         }
-    //         //     }
-
-    //         //     if (!empty($agrego)) {
-    //         //         foreach ($agrego as $depa) {
-    //         //             DB::connection('mysql_documentario')->insert('INSERT INTO movimiento (iddocumentos, iddependencias_emior, iddependencias_receptor, fecha_de_envio, idestado) values (?, ?, ?, ?, ?)', [$request->iddocumentos, $request->emisor, $depa, now(), 1]);
-
-    //         //             $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [$depa]);
-
-    //         //             event(new DocumentoRecibido($depa, $cont_estados, 'dependencia')); //lo q va tener
-    //         //         }
-    //         //     }
-
-    //         //     if (empty($agrego) && empty($quito)) {
-    //         //         foreach ($moviConEseDoc as $depa) {
-    //         //             $cont_estados = DB::connection('mysql_documentario')->select('SELECT estado.idestado, COALESCE(COUNT(movimiento.iddocumentos), 0) as cont_estado
-    //         //                 FROM estado
-    //         //                 LEFT JOIN movimiento ON movimiento.idestado = estado.idestado
-    //         //                 AND movimiento.iddependencias_receptor = ?
-    //         //                 WHERE estado.idestado IN (1,2,3)
-    //         //                 GROUP BY estado.idestado;', [$depa]);
-
-    //         //             event(new DocumentoRecibido($depa, $cont_estados, 'dependencia')); //lo q va tener
-    //         //         }
-    //         //     }
-    //         // }
-
-    //         //para pdf actualizar
-    //         // Verificamos si se enviaron archivos para reemplazar
-    //         if ($request->hasFile('reemplazar_pdf')) {
-
-    //             foreach ($request->file('reemplazar_pdf') as $idPdf => $nuevoArchivo) {
-
-    //                 if ($nuevoArchivo->isValid()) {
-
-    //                     // 1. Buscamos los datos del PDF actual en la BD para saber el nombre del archivo viejo
-    //                     $pdfActual = DB::connection('mysql_documentario')
-    //                         ->table('documenpdf')
-    //                         ->where('iddocumenpdf', $idPdf)
-    //                         ->first();
-
-    //                     if ($pdfActual) {
-    //                         $rutaCarpeta = public_path('documentos/documentos_director_pdf/');
-    //                         $nombreArchivoViejo = $pdfActual->nombre_del_documento;
-
-    //                         // 2. Borramos el archivo físico antiguo si existe
-    //                         if (file_exists($rutaCarpeta . $nombreArchivoViejo)) {
-    //                             unlink($rutaCarpeta . $nombreArchivoViejo);
-    //                         }
-
-    //                         // 3. Preparamos el nuevo nombre (evitamos duplicados con time())
-    //                         $extension = $nuevoArchivo->getClientOriginalExtension();
-    //                         $nuevoNombre = $id_users . '_' . session('dependencia_id') . '_' . time() . '_' . uniqid() . '.' . $extension;
-
-
-    //                         // 4. Movemos el archivo a la carpeta del servidor
-    //                         $nuevoArchivo->move($rutaCarpeta, $nuevoNombre);
-
-    //                         // 5. Actualizamos el nombre en la base de datos
-    //                         DB::connection('mysql_documentario')
-    //                             ->table('documenpdf')
-    //                             ->where('iddocumenpdf', $idPdf)
-    //                             ->update([
-    //                                 'nombre_del_documento' => $nuevoNombre,
-    //                                 'fecha_actualizacion' => now(),
-    //                             ]);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         DB::connection('mysql_documentario')->commit();
-    //         if ($request->ajax()) {
-    //             return response()->json(['success' => 'Documento actualizado con éxito']);
-    //         }
-
-    //         return redirect()->back()->with('success', 'Actualizado con éxito');
-    //     } catch (\Throwable $th) {
-    //         DB::connection('mysql_documentario')->rollBack();
-    //         Log::error("Error en actualización: " . $th->getMessage());
-
-    //         // 👇 AGREGA ESTE BLOQUE: Si es petición AJAX, responde el error en JSON
-    //         if ($request->ajax()) {
-    //             return response()->json(['error' => 'Error al actualizar: ' . $th->getMessage()], 500);
-    //         }
-
-    //         return redirect()->back()->with('error', 'Error al actualizar los datos');
-    //     }
-    // }
-
-    // public function buscarPersonalPorDependencia(Request $request, $id_dependencia)
-    // {
-    //     $busqueda = $request->get('q');
-
-    //     $personal = DB::table('users')
-    //         ->leftJoin('gamnielb_sia.userprofile', 'users.id', '=', 'gamnielb_sia.userprofile.id_users')
-    //         // Usamos join con una función para aplicar las condiciones específicas de la tabla pivote
-    //         ->join('gamnielb_docum.dependencia_user', function ($join) use ($id_dependencia) {
-    //             $join->on('users.id', '=', 'gamnielb_docum.dependencia_user.user_id')
-    //                 // ⚠️ IMPORTANTE: Cambia 'dependencia_id' por el nombre real de la columna
-    //                 // en tu tabla 'dependencia_user' que guarda el ID de la dependencia.
-    //                 ->where('gamnielb_docum.dependencia_user.dependencia_id', '=', $id_dependencia)
-    //                 ->where('gamnielb_docum.dependencia_user.estado', '=', 1); // Solo activos
-    //         })
-    //         ->where(function ($query) use ($busqueda) {
-    //             $query->where('users.name', 'like', "%{$busqueda}%")
-    //                 ->orWhere('users.dni', 'like', "%{$busqueda}%")
-    //                 ->orWhere('gamnielb_sia.userprofile.nombre', 'like', "%{$busqueda}%");
-    //         })
-    //         ->select(
-    //             'users.id as id',
-    //             DB::raw("CONCAT(COALESCE(users.dni, ''), ' - ', COALESCE(gamnielb_sia.userprofile.nombre, users.name)) as text")
-    //         )
-    //         ->distinct() // Evita duplicados por si acaso
-    //         ->limit(15)
-    //         ->get();
-
-    //     return response()->json($personal);
-    // }
 }

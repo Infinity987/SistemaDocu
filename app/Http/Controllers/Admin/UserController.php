@@ -83,7 +83,8 @@ class UserController extends Controller
                         'user_id' => $user->id,
                         'dependencia_id' => $agrega_depen,
                         'created_at' => now(),
-                        'estado' => 1
+                        'estado' => 1,
+                        'dar_permiso' => 0
                     ]);
                 }
 
@@ -104,7 +105,8 @@ class UserController extends Controller
                             'user_id' => $user->id,
                             'dependencia_id' => $agrega_depen,
                             'created_at' => now(),
-                            'estado' => 1
+                            'estado' => 1,
+                            'dar_permiso' => 0
                         ]);
                     }
                 }

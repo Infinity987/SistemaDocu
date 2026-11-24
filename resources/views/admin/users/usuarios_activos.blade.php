@@ -90,7 +90,7 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <a href="#" class="btn btn-xs btn-default" title="Ver perfil">
+                                <a href="{{ route('admin.users.edit', $usuario['user_id']) }}" class="btn btn-xs btn-default" title="Ver perfil">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>

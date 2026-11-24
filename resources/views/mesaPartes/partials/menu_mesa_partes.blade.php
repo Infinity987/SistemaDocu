@@ -127,7 +127,8 @@
                                 <form action="{{ route('documentario.registrarDocu_m') }}" method="post"
                                     id="form_regis_doc_m" enctype="multipart/form-data">
                                     @csrf
-                                    <div class="modal-body" style="background: linear-gradient(135deg, #c4ffff, #f2f2f2); ">
+                                    <div class="modal-body"
+                                        style="background: linear-gradient(135deg, #c4ffff, #f2f2f2); ">
                                         <input type="hidden" name="est_firma" value="0">
                                         <div class="container-fluid">
                                             <div class="row">
@@ -198,6 +199,24 @@
                                                 </div>
                                             </div>
 
+                                            {{-- <div class="row">
+                                                <!-- CAMPO DE REFERENCIA (Oculto por defecto) -->
+                                                <div class="col-sm-12" id="container_doc_referencia"
+                                                    style="display: none;">
+                                                    <div class="form-group">
+                                                        <label for="doc_referencia_m">
+                                                            <i class="fas fa-link text-info mr-1"></i> Documento de
+                                                            Referencia:
+                                                        </label>
+                                                        <input type="text" id="doc_referencia_m"
+                                                            name="doc_referencia_m" class="form-control"
+                                                            placeholder="Ej: Oficio N° 123-2024-MINEDU, Carta N° 456, etc.">
+                                                        <small class="text-muted">Ingrese el número o dato del
+                                                            documento que motiva este oficio.</small>
+                                                    </div>
+                                                </div>
+                                            </div> --}}
+
                                             <div class="row mb-3"
                                                 style="background: linear-gradient(90deg, #31b6f453, #31b6f415);">
                                                 <div class="col-sm-4">
@@ -207,17 +226,24 @@
                                                                 class="text-danger">*</span></label>
                                                         <select id="tipo_remitente_m" name="tipo_remitente_m"
                                                             class="form-control">
-                                                            <option value="natural">Persona Natural</option>
+                                                            <option value="">seleccionar...
+                                                            </option>
+                                                            <option value="natural">Persona Natural (Existente)
+                                                            </option>
+                                                            <option value="nuevo_natural">Registrar Nueva Persona
+                                                                Natural</option>
                                                             <option value="juridica">Entidad Externa (Jurídica)
                                                             </option>
                                                         </select>
                                                     </div>
                                                 </div>
 
-                                                <div class="col-sm-8" id="div_persona_m_natural">
+                                                <!-- OPCIÓN 1: Persona Natural Existente (Select2) -->
+                                                <div class="col-sm-8" id="div_persona_m_natural"
+                                                    style="display: none;">
                                                     <div class="form-group">
                                                         <label><i class="fas fa-user-circle text-olive mr-1"></i>
-                                                            Usuario / Persona Natural: <span
+                                                            Buscar Usuario / Persona Natural: <span
                                                                 class="text-danger">*</span></label>
                                                         <select id="usuario_m" class="form-control select2"
                                                             name="usuario_m" style="width: 100%;"></select>
@@ -225,6 +251,61 @@
                                                     </div>
                                                 </div>
 
+                                                <!-- OPCIÓN 2: Registrar Nueva Persona Natural (Inputs) -->
+                                                <div class="col-sm-12" id="div_nuevo_persona_m_natural"
+                                                    style="display: none;">
+
+                                                    <div class="card card-outline card-success shadow-sm">
+                                                        <div class="card-body p-3"
+                                                            style="background: linear-gradient(90deg, #c1fbb079, #fafff917);">
+                                                            <div class="row">
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-id-card text-success mr-1"></i>
+                                                                            DNI (8 dígitos): <span
+                                                                                class="text-danger">*</span></label>
+                                                                        <input type="text" id="nuevo_dni_m"
+                                                                            name="nuevo_dni_m" class="form-control"
+                                                                            maxlength="8" placeholder="Ej: 12345678">
+                                                                        <span id="nuevo_dni_m_error"
+                                                                            class="text-danger small"></span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-user text-success mr-1"></i>
+                                                                            Nombres: <span
+                                                                                class="text-danger">*</span></label>
+                                                                        <input type="text" id="nuevo_nombres_m"
+                                                                            name="nuevo_nombres_m"
+                                                                            class="form-control"
+                                                                            placeholder="Ej: Juan Carlos">
+                                                                        <span id="nuevo_nombres_m_error"
+                                                                            class="text-danger small"></span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-user-tag text-success mr-1"></i>
+                                                                            Apellidos: <span
+                                                                                class="text-danger">*</span></label>
+                                                                        <input type="text" id="nuevo_apellidos_m"
+                                                                            name="nuevo_apellidos_m"
+                                                                            class="form-control"
+                                                                            placeholder="Ej: Pérez López">
+                                                                        <span id="nuevo_apellidos_m_error"
+                                                                            class="text-danger small"></span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- OPCIÓN 3: Entidad Jurídica -->
                                                 <div id="div_entidad_m_externa" class="col-sm-12"
                                                     style="display:none;">
                                                     <div class="card card-outline card-info shadow-sm">
@@ -376,7 +457,7 @@
                                                                 id="check_fisico_m" name="con_anexos_fisicos_m">
                                                             <label for="check_fisico_m" class="custom-control-label">
                                                                 <i class="fas fa-box-open text-brown mr-1"></i>
-                                                                ¿Contiene anexos físicos?
+                                                                ¿Contiene anexos físicos? (Opcional):
                                                             </label>
                                                         </div>
                                                         <input type="text" id="detalle_fisico_m"
@@ -400,6 +481,11 @@
                                                         </div>
                                                         <span id="archivo_pdf_m_error"
                                                             class="text-danger small"></span>
+                                                        <button type="button" id="btn_ver_pdf_m"
+                                                            class="btn btn-sm btn-outline-primary mt-2"
+                                                            style="display: none;">
+                                                            <i class="fas fa-eye mr-1"></i> Ver PDF seleccionado
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -415,21 +501,6 @@
                                         </button>
                                     </div>
                                 </form>
-
-                                <script>
-                                    // Script para que se vea el nombre del archivo PDF en AdminLTE/Bootstrap
-                                    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-                                        var fileName = document.getElementById("archivo_pdf_m").files[0].name;
-                                        var nextSibling = e.target.nextElementSibling;
-                                        nextSibling.innerText = fileName;
-                                    });
-
-                                    // Toggle para el detalle físico
-                                    document.getElementById('check_fisico_m').addEventListener('change', function() {
-                                        const detailInput = document.getElementById('detalle_fisico_m');
-                                        detailInput.style.display = this.checked ? 'block' : 'none';
-                                    });
-                                </script>
                             </div>
                         </div>
                     </div>
@@ -464,15 +535,31 @@
                                     {{-- <div class="table-responsive"> --}}
                                     <table id="datatablesSimple_m" class="table table-hover" style="width: 100%;">
                                         <thead>
-                                            <tr style="background-color:#f19e40">
-                                                <th style="width: 5%; text-align: center;">N° Expe.</th>
-                                                <th style="width: 5%; text-align: center;">Cont.</th>
-                                                <th style="width: 10%; text-align: center;">Fecha y hora</th>
-                                                <th style="width: 5%; text-align: center;">Tipo</th>
-                                                <th style="width: 40%; text-align: center;">Asunto</th>
-                                                <th style="width: 10%; text-align: center;">Para Dependencia</th>
-                                                <th style="width: 10%; text-align: center;">Para Usuario</th>
-                                                <th style="width: 8%; text-align: center;">Acciones</th>
+                                            <tr style="background: linear-gradient(90deg, #f4b0315a, #de9e12);">
+                                                <th style="width: 5%; text-align: center;">
+                                                    <i class="fas fa-folder-open"></i> N° Expe.
+                                                </th>
+                                                <th style="width: 5%; text-align: center;">
+                                                    <i class="fas fa-file-alt"></i> Cont.
+                                                </th>
+                                                <th style="width: 10%; text-align: center;">
+                                                    <i class="fas fa-calendar-alt"></i> Fecha y hora
+                                                </th>
+                                                <th style="width: 5%; text-align: center;">
+                                                    <i class="fas fa-tag"></i> Tipo
+                                                </th>
+                                                <th style="width: 40%; text-align: center;">
+                                                    <i class="fas fa-align-left"></i> Asunto
+                                                </th>
+                                                <th style="width: 10%; text-align: center;">
+                                                    <i class="fas fa-building"></i> Para Dependencia
+                                                </th>
+                                                <th style="width: 10%; text-align: center;">
+                                                    <i class="fas fa-user"></i> Para Usuario
+                                                </th>
+                                                <th style="width: 8%; text-align: center;">
+                                                    <i class="fas fa-cogs"></i> Acciones
+                                                </th>
                                             </tr>
                                         </thead>
                                     </table>
@@ -705,7 +792,7 @@
                                                                 id="check_fisico" name="con_anexos_fisicos">
                                                             <label for="check_fisico" class="custom-control-label">
                                                                 <i class="fas fa-archive text-warning"></i> ¿Contiene
-                                                                anexos físicos?
+                                                                anexos físicos? (Opcional):
                                                             </label>
                                                         </div>
                                                         <input type="text" id="detalle_fisico"
@@ -730,6 +817,11 @@
                                                                 PDF...</label>
                                                         </div>
                                                         <span id="archivo_pdf_error" class="text-danger"></span>
+                                                        <button type="button" id="btn_ver_pdf"
+                                                            class="btn btn-sm btn-outline-primary mt-2"
+                                                            style="display: none;">
+                                                            <i class="fas fa-eye mr-1"></i> Ver PDF seleccionado
+                                                        </button>
                                                     </div>
                                                 </div>
 
@@ -808,7 +900,7 @@
                         <div class="card-header border-0" style="background-color: #e3efdf">
                             <h3 class="card-title">
                                 <i class="fas fa-folder-open mr-2 text-danger"></i>
-                                <strong>Listado de Documentos Emitidos</strong>
+                                <strong>Listado de Documentos Emitidos --</strong>
                             </h3>
 
                         </div>
@@ -816,19 +908,56 @@
                             <div class="table-responsive">
                                 <table id="datatablesSimple" class="table table-sm table-hover w-100 border-0">
                                     <thead class="bg-gray-light">
-                                        <tr style="background-color:#f19e40">
-                                            <th class="text-center py-2">N° Expediente</th>
-                                            <th class="text-center py-2">Cont.</th>
-                                            <th class="py-2">Fecha y Hora</th>
-                                            <th class="py-2">Asunto</th>
-                                            <th class="py-2">Para Dependencia:</th>
-                                            <th class="py-2">Para usuario:</th>
-                                            <th class="text-center py-2">Acciones</th>
-                                        </tr>
+                                        <tr style="background: linear-gradient(90deg, #f19e40, #fddd98);">
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-folder-open"></i> N° Expe.
+                                            </th>
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-file-alt"></i> Cont.
+                                            </th>
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-calendar-alt"></i> Fecha y hora
+                                            </th>
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-align-left"></i> Asunto
+                                            </th>
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-building"></i> Para Oficina
+                                            </th>
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-user"></i> Para usuario
+                                            </th>
+                                            <th style="text-align: center;">
+                                                <i class="fas fa-cogs"></i> Acciones
+                                            </th>
                                     </thead>
                                 </table>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ========================================== --}}
+        {{-- MODAL PARA PREVISUALIZAR PDF              --}}
+        {{-- ========================================== --}}
+        <div class="modal fade" id="modalPreviewPdf" tabindex="-1" role="dialog"
+            aria-labelledby="modalPreviewPdfLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title text-white" id="modalPreviewPdfLabel">
+                            <i class="fas fa-file-pdf mr-2"></i> Vista Previa del Documento
+                        </h5>
+                        <button type="button" class="close text-white" id="btnCerrarPreviewPdf"
+                            data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body p-0" style="height: 80vh; background-color: #525659;">
+                        <iframe id="iframePreviewPdf" src=""
+                            style="width: 100%; height: 100%; border: none;"></iframe>
                     </div>
                 </div>
             </div>
@@ -845,29 +974,44 @@
             $('.tipo-btn_m[data-tipo_m="1"]').click();
 
             // Escuchar el cambio en el tipo de remitente
+            // Escuchar el cambio en el tipo de remitente
             $('#tipo_remitente_m').on('change', function() {
                 let valor = $(this).val();
 
-                if (valor === 'natural') {
-                    // Mostrar usuario, ocultar entidad
+                // 1. Ocultar TODOS los contenedores primero
+                $('#div_persona_m_natural').hide();
+                $('#div_nuevo_persona_m_natural').hide();
+                $('#div_entidad_m_externa').hide();
+
+                // 2. Mostrar solo el correspondiente y limpiar los demás
+                if (valor === '') {
+                    // No hacer nada, todo queda oculto y limpio
+                } else if (valor === 'natural') {
                     $('#div_persona_m_natural').fadeIn();
-                    $('#div_entidad_m_externa').hide();
-
-                    // Limpiar los valores del que se oculta para evitar envíos cruzados
+                    $('#nuevo_dni_m, #nuevo_nombres_m, #nuevo_apellidos_m, #nuevo_correo_m').val('');
                     $('#entidad_m').val(null).trigger('change');
-                } else {
-                    // Mostrar entidad, ocultar usuario
-                    $('#div_entidad_m_externa').fadeIn();
-                    $('#div_persona_m_natural').hide();
-
-                    // Limpiar los valores del que se oculta
+                } else if (valor === 'nuevo_natural') {
+                    $('#div_nuevo_persona_m_natural').fadeIn();
                     $('#usuario_m').val(null).trigger('change');
+                    $('#entidad_m').val(null).trigger('change');
+                } else if (valor === 'juridica') {
+                    $('#div_entidad_m_externa').fadeIn();
+                    $('#usuario_m').val(null).trigger('change');
+                    $('#nuevo_dni_m, #nuevo_nombres_m, #nuevo_apellidos_m, #nuevo_correo_m').val('');
                 }
             });
 
+            // Solo permitir números en el DNI nuevo
+            $('#nuevo_dni_m').on('keypress', function(e) {
+                if (e.which < 48 || e.which > 57) e.preventDefault();
+            });
+
             // Resetear al cerrar el modal para que siempre inicie en Persona Natural
+            // Resetear TODO al cerrar el modal para que siempre inicie limpio
             $('#exampleModalCenter_m').on('hidden.bs.modal', function() {
-                $('#tipo_remitente_m').val('natural').trigger('change');
+                $('#tipo_remitente_m').val('').trigger(
+                    'change'); // 👈 Esto fuerza a "seleccionar..." y oculta todo
+                $('#nuevo_dni_m, #nuevo_nombres_m, #nuevo_apellidos_m, #nuevo_correo_m').val('');
             });
 
             $('#entidad_m').select2({
@@ -991,42 +1135,6 @@
                     }
                 });
             });
-
-            // $('#dependencia_enviar').on('change', function() {
-            //     let data = $(this).select2('data');
-
-            //     let esDocente = data.some(item => item.id.trim() === "2");
-            //     let esEgresado = data.some(item => item.id.trim() === "5");
-
-            //     if (esDocente) {
-            //         // 1. Buscamos el ID exacto que tiene la opción "Docente"
-            //         let objetoDocente = data.find(item => item.text.trim() === 'Docente');
-            //         let idDocenteArea = objetoDocente.id;
-
-            //         if ($('#input_docente_shadow').length === 0) {
-            //             $('#form_regis_doc').append(
-            //                 `<input type="hidden" id="input_docente_shadow" name="dependencia_enviar[]" value="${idDocenteArea}">`
-            //             );
-            //         }
-
-            //         // 2. Limpiamos cualquier otra dependencia que se haya colado y dejamos SOLO "Docente"
-            //         $(this).val([idDocenteArea]).trigger('change.select2');
-
-            //         // 3. Bloqueamos para que no pueda borrar "Docente" ni agregar "Director"
-            //         $(this).prop('disabled', true);
-
-            //         // 4. Mostramos el buscador de la tabla userprofile
-            //         $('#container_docentes').fadeIn();
-            //         inicializarBusquedaDocentes();
-
-            //         // Agregamos un botón de "X" para resetear si el usuario se equivocó
-            //         if (!$('#btn-reset').length) {
-            //             $(this).closest('.form-group').append(
-            //                 '<button type="button" id="btn-reset" class="btn btn-xs btn-outline-danger mt-1">Cambiar a otra dependencia</button>'
-            //             );
-            //         }
-            //     }
-            // });
 
             $('#dependencia_enviar_m').on('change', function() {
                 let data = $(this).select2('data'); // Obtenemos los objetos seleccionados
@@ -1252,121 +1360,23 @@
                             confirmButtonColor: '#dc3545'
                         });
                         // Recargar página en caso de error fatal de red/CSRF
-                        setTimeout(() => location.reload(), 3000);
+                        // setTimeout(() => location.reload(), 3000);
                     }
                 }
             });
         });
 
-        // $('#form_regis_doc_m').off('submit').on('submit', function(event) {
-        //     event.preventDefault();
-
-        //     var butonEnviardatos_m = $('#form_regis_doc_m button[type="submit"]');
-        //     butonEnviardatos_m.prop('disabled', true);
-        //     var formData = new FormData(this);
-
-        //     $.ajax({
-        //         url: $(this).attr('action'),
-        //         type: 'POST',
-        //         data: formData,
-        //         processData: false,
-        //         contentType: false,
-        //         success: function(response) {
-        //             setTimeout(() => {
-        //                 document.activeElement.blur();
-        //                 $('body').trigger('focus');
-        //                 $('#exampleModalCenter_m').modal('hide');
-        //             }, 50);
-
-        //             Swal.fire({
-        //                 title: "Éxito!",
-        //                 text: response.success,
-        //                 icon: "success"
-        //             }).then(() => {
-
-        //                 $('#form_regis_doc_m')[0].reset();
-        //                 $('#datatablesSimple_m').DataTable().ajax.reload();
-        //                 $('.text-danger_m').text('');
-
-        //                 $('#tipo_documento_m').val('0');
-        //                 $('#para_su_m').val('0').trigger('change');
-        //                 $('#dependencia_enviar_m').val(null).trigger('change');
-        //                 $('#docentes_select_m').val(null).trigger('change');
-        //                 $('#egresados_select_m').val(null).trigger('change');
-        //                 $('#container_docentes_m').hide();
-        //                 $('#container_egresados_m').hide();
-
-        //                 $('#usuario_m').val('0').trigger('change');
-        //                 $('#num_ex_m').hide();
-        //                 $('#num_ex_m').val('');
-        //                 $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
-        //                 // 1. Limpiar el valor del input file
-        //                 $('#archivo_pdf_m').val('');
-
-        //                 // 2. Resetear el texto del label (importante en AdminLTE)
-        //                 $('#archivo_pdf_m').next('.custom-file-label').html('Seleccionar PDF');
-
-        //                 $('#input_docente_shadow_m').remove();
-        //                 $('#input_egresado_shadow_m').remove();
-        //                 $('#btn-reset_m').remove();
-        //                 $('#btn-reset-egresados_m').remove();
-
-        //                 $('span[id$="_error"]').text('');
-
-        //                 // 3. Limpiar mensajes de error si los hubiera
-        //                 $('#archivo_pdf_m_error').text('');
-        //                 $('#dependencia_enviar_m').prop('disabled', false).val(null).trigger(
-        //                     'change');
-
-        //             });
-        //             butonEnviardatos_m.prop('disabled', false);
-        //         },
-        //         error: function(xhr) {
-        //             var errors = xhr.responseJSON.errors;
-
-        //             $('.text-danger_m').text('');
-
-        //             if (errors) {
-        //                 // Limpia los mensajes de error previos
-        //                 $('.error, .invalid-feedback, span[id$="_error"]').text('');
-
-        //                 if (errors.tipo_documento_m) {
-        //                     $('#tipo_documento_m_error').text(errors.tipo_documento_m[0]);
-        //                 }
-        //                 if (errors.dependencia_enviar_m) {
-        //                     $('#dependencia_enviar_m_error').text(errors.dependencia_enviar_m[0]);
-        //                 }
-        //                 if (errors.asunto_m) {
-        //                     $('#asunto_m_error').text(errors.asunto_m[0]);
-        //                 }
-        //                 if (errors.para_su_m) {
-        //                     $('#para_su_m_error').text(errors.para_su_m[0]);
-        //                 }
-        //                 if (errors.usuario_m) {
-        //                     $('#usuario_m_error').text(errors.usuario_m[0]);
-        //                 }
-        //                 if (errors.folio_m) {
-        //                     $('#folio_m_error').text(errors.folio_m[0]);
-        //                 }
-        //                 if (errors.id_entidad_m_externa) {
-        //                     $('#id_entidad_m_externa_error').text(errors.id_entidad_m_externa[0]);
-        //                 }
-        //                 if (errors.numero_documento_externo_m) {
-        //                     $('#numero_documento_externo_m_error').text(errors
-        //                         .numero_documento_externo_m[0]);
-        //                 }
-        //                 if (errors.archivo_pdf_m) {
-        //                     $('#archivo_pdf_m_error').text(errors.archivo_pdf_m[0]);
-        //                 }
-        //             }
-        //             butonEnviardatos_m.prop('disabled', false);
-        //         }
-        //     });
-        // });
 
         $('#tipo_documento_m').on('change', function() {
             const idTipo = $(this).val();
             const emisor = $('#emisor').val(); // Asegúrate de tener este ID en tu vista
+
+            if (idTipo == '2') { // 2 = Oficios
+                $('#container_doc_referencia').fadeIn();
+            } else {
+                $('#container_doc_referencia').fadeOut();
+                $('#doc_referencia_m').val(''); // Limpiar el campo si cambia a otro tipo
+            }
 
             if (!idTipo) {
                 $('#num_ex_m').hide();
@@ -1507,10 +1517,11 @@
                         width: "5%",
                         createdCell: function(td) {
                             $(td).css({
-                                'background-color': "#f19e40",
+                                'background-color': "#f4b0315a",
                                 'white-space': 'nowrap',
                                 'overflow': 'hidden',
-                                'text-overflow': 'ellipsis'
+                                'text-overflow': 'ellipsis',
+                                'font-weight': 'bold'
                             });
                         }
                     },
@@ -1518,7 +1529,10 @@
                         targets: 1,
                         width: "5%",
                         createdCell: function(td) {
-                            $(td).css('background-color', "#f19e407f");
+                            $(td).css({
+                                'background-color': "#EBB15B",
+                                'font-weight': 'bold'
+                            });
                         }
                     },
                     {
@@ -1667,44 +1681,113 @@
             $(this).remove();
         });
 
+        // ==========================================
+        // LÓGICA DE PREVISUALIZACIÓN DE PDF
+        // ==========================================
+        let pdfObjectUrl_m = null;
+
+        // 1. Detectar cuando se selecciona un archivo
+        $('#archivo_pdf_m').on('change', function(e) {
+            var file = e.target.files[0];
+            var nextSibling = $(this).next('.custom-file-label');
+            var btnVerPdf = $('#btn_ver_pdf_m');
+
+            if (file && file.type === 'application/pdf') {
+                nextSibling.text(file.name);
+                if (pdfObjectUrl_m) {
+                    URL.revokeObjectURL(pdfObjectUrl_m);
+                }
+                pdfObjectUrl_m = URL.createObjectURL(file);
+                btnVerPdf.show();
+            } else {
+                nextSibling.text('Elegir archivo...');
+                btnVerPdf.hide();
+                if (pdfObjectUrl_m) {
+                    URL.revokeObjectURL(pdfObjectUrl_m);
+                    pdfObjectUrl_m = null;
+                }
+            }
+        });
+
+        // 2. Al hacer clic en el botón, cargar la URL y abrir el modal
+        $('#btn_ver_pdf_m').on('click', function() {
+            if (pdfObjectUrl_m) {
+                $('#iframePreviewPdf').attr('src', pdfObjectUrl_m);
+                $('#modalPreviewPdf').modal('show');
+            }
+        });
+
+        // 3. Al cerrar el modal, limpiar el iframe para liberar memoria
+        $('#modalPreviewPdf').on('hidden.bs.modal', function() {
+            $('#iframePreviewPdf').attr('src', '');
+        });
+
         function limpiarFormularioMP() {
             $('#form_regis_doc_m button[type="submit"]').prop('disabled', false);
             $('#form_regis_doc_m')[0].reset();
             $('#datatablesSimple_m').DataTable().ajax.reload();
 
-            // Limpiar Select2
+            // 1. Forzar el select a "seleccionar..." (esto disparará el hide del paso 2 automáticamente)
+            $('#tipo_remitente_m').val('').trigger('change');
+
+            // 2. Limpiar Select2
             $('#tipo_documento_m').val('0').trigger('change');
             $('#para_su_m').val('0').trigger('change');
             $('#dependencia_enviar_m').val(null).trigger('change').prop('disabled', false);
             $('#docentes_select_m').val(null).trigger('change');
             $('#egresados_select_m').val(null).trigger('change');
-            $('#alumnos_select_m').val(null).trigger('change'); // 👈 NUEVO
+            $('#alumnos_select_m').val(null).trigger('change');
             $('#usuario_m').val(null).trigger('change');
             $('#entidad_m').val(null).trigger('change');
 
-            // Ocultar contenedores
+            // 3. Ocultar contenedores (por seguridad, aunque el trigger de arriba ya lo hace)
             $('#container_docentes_m').hide();
             $('#container_egresados_m').hide();
-            $('#container_alumnos_m').hide(); // 👈 NUEVO
+            $('#container_alumnos_m').hide();
             $('#div_entidad_m_externa').hide();
-            $('#div_persona_m_natural').show();
+            $('#div_persona_m_natural').hide();
+            $('#div_nuevo_persona_m_natural').hide();
 
+            // 4. Limpiar campos sueltos
             $('#num_expe_m').val('');
             $('#num_ex_m').hide();
             $('#detalle_fisico_m').fadeOut().removeAttr('required').val('');
 
+            // $('#doc_referencia_m').val('');
+            // $('#container_doc_referencia').hide();
+
+            // 5. Resetear archivo PDF
             $('#archivo_pdf_m').val('');
             $('#archivo_pdf_m').next('.custom-file-label').html('Elegir archivo...');
+            $('#btn_ver_pdf_m').hide();
+            $('#iframePreviewPdf').attr('src', '');
 
-            // Limpiar elementos dinámicos
+            if (pdfObjectUrl_m) {
+                URL.revokeObjectURL(pdfObjectUrl_m);
+                pdfObjectUrl_m = null;
+            }
+
+            // 6. Limpiar elementos dinámicos
             $('#input_docente_shadow_m').remove();
             $('#input_egresado_shadow_m').remove();
-            $('#input_alumno_shadow_m').remove(); // 👈 NUEVO
+            $('#input_alumno_shadow_m').remove();
             $('#btn-reset_m').remove();
             $('#btn-reset-egresados_m').remove();
-            $('#btn-reset-alumnos_m').remove(); // 👈 NUEVO
+            $('#btn-reset-alumnos_m').remove();
 
+            // 7. Limpiar mensajes de error
             $('span[id$="_error"]').text('');
         }
+
+        $(document).on('click', '#btnCerrarPreviewPdf', function(e) {
+            e.preventDefault(); // Evita comportamientos por defecto
+            $('#modalPreviewPdf').modal('hide'); // Fuerza el cierre del modal
+            $('#iframePreviewPdf').attr('src', ''); // Limpia el iframe para detener la carga/audio
+        });
+
+        // También aseguramos que se limpie si se cierra haciendo clic fuera del modal
+        $('#modalPreviewPdf').on('hidden.bs.modal', function() {
+            $('#iframePreviewPdf').attr('src', '');
+        });
     </script>
 @endpush
