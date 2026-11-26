@@ -232,9 +232,35 @@
                                                                             <input type="text"
                                                                                 name="numero_documento_externo_m"
                                                                                 class="form-control"
-                                                                                placeholder="Ej: Oficio N.º 123-2026-MPP">
+                                                                                placeholder="Ej: Oficio N.º 123-2026-MPP"
+                                                                                value="{{ old('numero_documento_externo_m', $queryDoc->numero_documento_externo ?? '') }}">
                                                                         </div>
                                                                     </div>
+
+                                                                    {{-- 👇 NUEVOS CAMPOS AGREGADOS 👇 --}}
+                                                                    <div class="col-sm-6">
+                                                                        <div class="form-group">
+                                                                            <label><i
+                                                                                    class="fas fa-envelope text-info mr-1"></i>
+                                                                                Correo electrónico:</label>
+                                                                            <input type="email" name="correo_entidad_m"
+                                                                                id="correo_entidad_m" class="form-control"
+                                                                                placeholder="Ej: contacto@empresa.com"
+                                                                                value="{{ old('correo_entidad_m', $queryDoc->correo ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-sm-6">
+                                                                        <div class="form-group">
+                                                                            <label><i class="fas fa-phone text-info mr-1"></i>
+                                                                                Número de celular:</label>
+                                                                            <input type="text" name="celular_entidad_m"
+                                                                                id="celular_entidad_m" class="form-control"
+                                                                                maxlength="9" placeholder="Ej: 900300100"
+                                                                                value="{{ old('celular_entidad_m', $queryDoc->celular ?? '') }}">
+                                                                        </div>
+                                                                    </div>
+                                                                    {{-- 👆 FIN DE NUEVOS CAMPOS 👆 --}}
+
                                                                     <div class="col-sm-12 text-right">
                                                                         <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
                                                                             target="_blank"
@@ -981,6 +1007,9 @@
 
                     // Llenamos el input del número de documento
                     $('input[name="numero_documento_externo_m"]').val("{{ $queryDoc->numero_documento_externo }}");
+
+                    $('input[name="correo_entidad_m"]').val("{{ $queryDoc->correo ?? '' }}");
+                    $('input[name="celular_entidad_m"]').val("{{ $queryDoc->celular ?? '' }}");
                 }
 
                 // CASO PERSONA NATURAL

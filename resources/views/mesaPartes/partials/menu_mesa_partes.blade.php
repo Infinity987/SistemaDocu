@@ -190,7 +190,7 @@
                                                     <div class="form-group">
                                                         <label for="num_expe_m">
                                                             <i class="fas fa-fingerprint text-secondary mr-1"></i> N°
-                                                            Exp:
+                                                            Exp -:
                                                         </label>
                                                         <input class="form-control bg-light" type="text"
                                                             id="num_expe_m" name="num_expe_m" readonly
@@ -311,11 +311,13 @@
                                                     <div class="card card-outline card-info shadow-sm">
                                                         <div class="card-body p-3">
                                                             <div class="row">
+                                                                <!-- Fila 1: Entidad y N° Documento -->
                                                                 <div class="col-sm-6">
                                                                     <div class="form-group">
                                                                         <label><i
                                                                                 class="fas fa-building text-info mr-1"></i>
-                                                                            Entidad remitente:</label>
+                                                                            Entidad remitente: <span
+                                                                                class="text-danger">*</span></label>
                                                                         <select id="entidad_m"
                                                                             name="id_entidad_m_externa"
                                                                             class="form-control select2"></select>
@@ -327,15 +329,47 @@
                                                                     <div class="form-group">
                                                                         <label><i
                                                                                 class="fas fa-id-card text-info mr-1"></i>
-                                                                            N° Documento Externo:</label>
+                                                                            N° Documento (RUC/DNI): <span
+                                                                                class="text-danger">*</span></label>
                                                                         <input type="text"
+                                                                            id="numero_documento_externo_m"
                                                                             name="numero_documento_externo_m"
                                                                             class="form-control"
-                                                                            placeholder="Ej: Oficio N.º 123-2026-MPP">
+                                                                            placeholder="Ej: 20123456789">
                                                                         <span id="numero_documento_externo_m_error"
                                                                             class="text-danger small"></span>
                                                                     </div>
                                                                 </div>
+
+                                                                <!-- Fila 2: Correo y Celular (NUEVOS CAMPOS) -->
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-envelope text-info mr-1"></i>
+                                                                            Correo electrónico:</label>
+                                                                        <input type="email" id="correo_entidad_m"
+                                                                            name="correo_entidad_m"
+                                                                            class="form-control"
+                                                                            placeholder="Ej: contacto@empresa.com">
+                                                                        <span id="correo_entidad_m_error"
+                                                                            class="text-danger small"></span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-sm-6">
+                                                                    <div class="form-group">
+                                                                        <label><i
+                                                                                class="fas fa-phone text-info mr-1"></i>
+                                                                            Número de celular:</label>
+                                                                        <input type="number" id="celular_entidad_m"
+                                                                            name="celular_entidad_m"
+                                                                            class="form-control" maxlength="9"
+                                                                            placeholder="Ej: 900300100">
+                                                                        <span id="celular_entidad_m_error"
+                                                                            class="text-danger small"></span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Fila 3: Enlace a SUNAT -->
                                                                 <div class="col-sm-12 text-right">
                                                                     <a href="https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"
                                                                         target="_blank"
@@ -1006,7 +1040,6 @@
                 if (e.which < 48 || e.which > 57) e.preventDefault();
             });
 
-            // Resetear al cerrar el modal para que siempre inicie en Persona Natural
             // Resetear TODO al cerrar el modal para que siempre inicie limpio
             $('#exampleModalCenter_m').on('hidden.bs.modal', function() {
                 $('#tipo_remitente_m').val('').trigger(
@@ -1275,7 +1308,6 @@
                     setTimeout(() => {
                         document.activeElement.blur();
                         $('body').trigger('focus');
-                        $('#exampleModalCenter_m').modal('hide');
                     }, 50);
 
                     // CASO A: Éxito con advertencias (algunas dependencias no tenían jefe)
@@ -1378,9 +1410,11 @@
                 $('#doc_referencia_m').val(''); // Limpiar el campo si cambia a otro tipo
             }
 
-            if (!idTipo) {
+            if (!idTipo || idTipo === '0' || idTipo === 0) {
                 $('#num_ex_m').hide();
-                return;
+                $('#num_expe_m').val(''); // Limpiar el valor por seguridad
+                $('#fecha_actual_m').val(''); // Limpiar la fecha también
+                return; // Salimos de la función, NO hace la petición AJAX
             }
 
             // URL con los parámetros dinámicos
@@ -1731,7 +1765,7 @@
             $('#tipo_remitente_m').val('').trigger('change');
 
             // 2. Limpiar Select2
-            $('#tipo_documento_m').val('0').trigger('change');
+            $('#tipo_documento_m').val('0');
             $('#para_su_m').val('0').trigger('change');
             $('#dependencia_enviar_m').val(null).trigger('change').prop('disabled', false);
             $('#docentes_select_m').val(null).trigger('change');
