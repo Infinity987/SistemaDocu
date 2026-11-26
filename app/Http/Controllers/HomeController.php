@@ -50,7 +50,7 @@ class HomeController extends Controller
                 'docente'    => redirect('/docente/horario'),
                 'alumno'     => redirect('/alumno/matriReali'),
                 'postulante' => redirect()->route('postulante.index'),
-                'egresado'   => redirect('/egresado/index'),
+                'egresado'   => redirect('/alumno/matriPorCurri'),
                 'admision'   => redirect('admin/procesos'),
 
                 'Dirección',

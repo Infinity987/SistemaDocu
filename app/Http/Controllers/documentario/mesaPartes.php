@@ -1311,7 +1311,7 @@ class mesaPartes extends Controller
                 ->first();
             DB::commit();
             return view('mesaPartes.showEmitido')->with('dependencias', $dependencias)->with('detalle_tramite', $detalle_tramite)->with('queryDoc', $queryDoc)->with('queryMovi', $queryMovi)->with('dependenciasSelect', $dependenciasSelect)->with('estadoMayor', $estadoMayor)->with('queryRecepDepenFech', $queryRecepDepenFech)->with('usu', $usu)->with('rol', $rol)->with('id_depen', $id_depen)->with('cont_est', $cont_est)->with('pdfdocumento', $pdfdocumento)->with('docentesSeleccionados', $docentesSeleccionados)->with('egresadosSeleccionados', $egresadosSeleccionados) // 👈 NUEVO
-                ->with('alumnosSeleccionados', $alumnosSeleccionados);    // 👈 NUEVO;
+                ->with('alumnosSeleccionados', $alumnosSeleccionados);
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);
