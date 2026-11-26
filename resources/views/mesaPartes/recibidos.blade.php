@@ -46,7 +46,45 @@
 
 @section('content')
     @canany(['documentario.mesapar.bandeja', 'alumno.matricula.index', 'docente.index'])
-        <div class="container-fluid">
+        <div class="container-fluid">     
+           
+            @if (session()->has('gmail_link'))
+                {{-- 1. Script para auto-descargar el PDF apenas cargue la página --}}
+                @if (session()->has('pdf_descargar') && file_exists(session('pdf_descargar')))
+                    <script>
+                        window.addEventListener('load', function() {
+                            setTimeout(function() {
+                                const link = document.createElement('a');
+                                link.href = "{{ asset('documentos/documentos_director_pdf/' . basename(session('pdf_descargar'))) }}";
+                                link.download = "{{ basename(session('pdf_descargar')) }}";
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            }, 500); // Pequeño retraso para asegurar que la página cargó
+                        });
+                    </script>
+                    @php session()->forget('pdf_descargar'); @endphp
+                @endif
+
+                {{-- 2. Alerta visual con el botón para abrir Gmail --}}
+                <div class="alert alert-success border-success shadow-sm mb-4" role="alert">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div>
+                            <h5 class="alert-heading mb-1 text-success">
+                                <i class="fas fa-check-circle me-2"></i> ¡Documento Registrado con Éxito!
+                            </h5>
+                            <p class="mb-0 text-dark">
+                                El sistema ha guardado el documento y descargado el PDF automáticamente. 
+                                Ahora haz clic en el botón para abrir Gmail, <strong>arrastra el archivo PDF descargado</strong> y presiona Enviar.
+                            </p>
+                        </div>
+                        <a href="{{ session('gmail_link') }}" target="_blank" class="btn btn-danger btn-lg shadow-sm">
+                            <i class="fab fa-google me-2"></i> Abrir Gmail y Enviar
+                        </a>
+                    </div>
+                </div>
+            @endif
+ 
             <div class="row">
                 <input type="hidden" id="emisor" name="emisor" value ="{{ $depen }}">
                 {{--    TABLE    --}}

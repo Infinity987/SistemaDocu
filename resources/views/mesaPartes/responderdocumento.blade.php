@@ -4,6 +4,52 @@
 
 @section('content_header')
 
+<style>
+    /* 1. Mejorar la legibilidad general */
+    body, .form-control, .form-select, .btn {
+        font-size: 1.05rem !important; /* Un poco más grande que el estándar */
+    }
+
+    /* 2. Hacer que los campos de texto sean más obvios y fáciles de clickear */
+    .form-control, .form-select {
+        border-width: 2px !important;
+        border-color: #dee2e6 !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd !important; /* Azul fuerte al hacer clic */
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+    }
+
+    /* 3. Etiquetas (Labels) muy claras */
+    .form-label {
+        font-weight: 600 !important;
+        color: #212529 !important; /* Gris muy oscuro, casi negro */
+        margin-bottom: 0.4rem !important;
+    }
+
+    /* 4. Botones de selección (Radio) más grandes y amigables */
+    .btn-check:checked + .btn-outline-primary,
+    .btn-check:checked + .btn-outline-success,
+    .btn-check:checked + .btn-outline-info,
+    .btn-check:checked + .btn-outline-warning {
+        border-width: 2px !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    }
+
+    /* 5. Zona de carga de archivos más invitante */
+    .border-dashed {
+        border-color: #0d6efd !important;
+        background-color: #f8f9fa !important;
+        cursor: pointer;
+    }
+    .border-dashed:hover {
+        background-color: #e9ecef !important;
+        border-color: #0a58ca !important;
+    }
+</style>
+
 
     <div class="callout callout-danger">
         <section class="content-header p-0">
